@@ -50,6 +50,7 @@ Usage:
 
 
 Show the available options
+
 `
 python sopare.py --help
 `
@@ -65,6 +66,7 @@ Learning and adding new words to the dictionary requires
 a silent environment. Of course you can change and adopt
 the entries manually as the dictionary is stored in 
 JSON format.
+
 `
 python sopare.py -p -v -o samples/computer.raw -l computer
 `
