@@ -1,0 +1,179 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+Copyright (C) 2015 Martin Kauss (yo@bishoph.org)
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may
+not use this file except in compliance with the License. You may obtain
+a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+License for the specific language governing permissions and limitations
+under the License.
+"""
+
+import json
+import wave
+from path import __wavedestination__
+
+class util:
+
+ # min. sequence of silence for trim
+ TRIM_SILENCE = 8
+ # min value to detect a silence period
+ MIN_SILENCE_COUNTER = 15
+ # value to detect words and not syllables
+ MIN_WORD_LENGTH_DETECTOR = 20
+
+ def __init__(self, debug):
+  self.debug = debug
+
+ def trim(self, tendency_model):
+  for p in range (len(tendency_model)-1, 0, -1):
+   if (tendency_model[p] > self.TRIM_SILENCE):
+      if (p+4 < len(tendency_model)):
+       p += 4
+      return tendency_model[0:p]
+  return tendency_model
+
+ def tokenizer(self, data, rawdata):
+  tokens = [ ]
+  positions = [ ]
+  final_positions = [ ]
+  avg = 0
+  for n in data:
+   avg += n
+  avg = avg / len(data)
+  if (self.debug):
+   print ("avg = "+str(avg))
+  pos = 0
+  seeker = False
+  freq_count = 0
+  laststart = 0
+  silence_avg = 0
+  silence_counter = 0
+  for n in data:
+   if (n >= avg):
+    if (seeker == True):
+     seeker = False
+     if (silence_counter > self.MIN_SILENCE_COUNTER):
+      if (self.debug):
+       print ("silence found at "+str(laststart))
+      positions.append(laststart)
+       
+    silence_counter = 0
+    silence_avg = 0
+    freq_count += 1
+    if (freq_count > self.MIN_WORD_LENGTH_DETECTOR):
+     seeker = True
+    else:
+     seeker = False
+   if (n < avg and seeker == True):
+    # we need to find a short period of "silence"
+    laststart = pos
+    silence_counter += 1
+    silence_avg += n
+   pos += 1
+
+
+  last = 0
+  token = 0
+  for p in positions:
+   diff = p - last
+   if (diff >= self.MIN_WORD_LENGTH_DETECTOR):
+    final_positions.append(p)
+   elif (token > 1):
+    final_positions[len(final_positions)-1] = p
+   token += 1 
+   last = p
+
+  last = 0
+  token = 0
+  if (len(final_positions) > 0):
+   for p in final_positions:
+    tokens.append(data[last:p])
+    self.savewave(last, p, token, rawdata)
+    token += 1
+    last = p
+   if (last <= len(data)):
+    tokens.append(data[last:])
+    self.savewave(last, len(data), token, rawdata)
+  else:
+   tokens.append(data)
+  if (self.debug):
+   print ("final tokens "+str(tokens))
+  return tokens
+
+ def get_characteristic_by_name_from_dict(self, dict, JSON_DICT):
+  dict_objects = JSON_DICT['dict']
+  for do in dict_objects:
+   if (dict == do['id']):
+    c = do['characteristic']
+    return c
+  return None
+
+ def add2dict(self, obj, dict, learn):
+  json_obj = self.getDICT()
+  if (learn == True and self.get_characteristic_by_name_from_dict(dict, json_obj) != None):
+   dict_objects = json_obj['dict']
+   for do in dict_objects:
+    if (dict == do['id']):
+     do['characteristic'] = obj
+  else:
+   json_obj['dict'].append({'id': dict, 'characteristic': obj})
+  self.writeDICT(json_obj)
+  return json_obj
+
+ def writeDICT(self, json_data):
+  with open("dict/dict.json", 'w') as json_file:
+   json.dump(json_data, json_file)
+  json_file.close()
+
+ def getDICT(self):
+  with open("dict/dict.json") as json_file:
+   json_data = json.load(json_file)
+  json_file.close()
+  return json_data
+
+ def deletefromdict(self, dict):
+  json_obj = self.getDICT()
+  new_dict = { 'dict': [ ] }
+  dict_objects = json_obj['dict']
+  for do in dict_objects:
+   if (do['id'] != dict):
+    new_dict['dict'].append(do)
+  self.writeDICT(new_dict)
+
+ def savewave(self, start, pos, num, raw):
+  if (self.debug):
+   print ("raw length = "+str(len(raw)))
+  wf = wave.open(__wavedestination__+"token"+str(num)+".wav", 'wb')
+  wf.setnchannels(1)
+  wf.setsampwidth(2)
+  wf.setframerate(44100)
+  s = start/2
+  e = pos/2
+  if (self.debug):
+   print ("s / e = "+str(s)+ " / "+str(e))
+  data = raw[s:e]
+  if (self.debug):
+   print ("data length = "+str(len(data)))
+  wf.writeframes(b''.join(data))
+  wf.close()
+
+ def normalize(self, data, normalize):
+  return data
+  newdata = [ ]
+  factor = float(max(data) / normalize)
+  for obj in data:
+   if (len(obj) == 1 and obj[0] == -999):
+    pass
+   else:
+    normalized = [(n / factor ) for n in obj]
+    newdata.append(normalized)
+  return newdata
