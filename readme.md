@@ -45,6 +45,11 @@ Installation:
 
  git clone https://github.com/bishoph/sopare.git .
 
+ Then you should create these directories:
+
+ mkdir tokens
+ mkdir samples
+
 
 Usage:
 
