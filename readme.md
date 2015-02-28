@@ -48,9 +48,12 @@ Installation:
 
 Usage:
 
-`
+
 Show the available options
+`
 python sopare.py --help
+`
+
 
 The next command turns the verbose mode on, waits for a peak,
 records the input and saves it in raw form to the file 
@@ -62,8 +65,9 @@ Learning and adding new words to the dictionary requires
 a silent environment. Of course you can change and adopt
 the entries manually as the dictionary is stored in 
 JSON format.
-
+`
 python sopare.py -p -v -o samples/computer.raw -l computer
+`
 
 
 This command listens endless and compares the input with 
@@ -73,12 +77,15 @@ Currently the "tokens" are converted into "tokenN.wav" files
 so that you can debug. There are some config options
 available when you look into the code ;)
 
+`
 python sopare.py -e
+`
 
 
 You can delete the newly created entry from the dictionary
 simple by running the command
 
+`
 python sopare.py -d computer
 `
 
