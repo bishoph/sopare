@@ -1,12 +1,14 @@
 This is the **SO**und **PA**ttern **RE**cognition project written in Python.
-Currently the project is in a very early stage and best it can be described as prototype.
-In a nutshell the project listens endless and compares the input based on simple characteristics
-with entries stored in a dictionary. The output is an array with some information about a potential match.
-Here is an example output when I said the word computer twice:
+In a nutshell the project listens to input and creates simple characteristics.
+These characteristics are compared to characteristics stored in a dictionary.
+The output is an array with some information about a potential match.
+
+Here is an example output when I said the words computer and light:
 
 `
 Match = [[0, u'computer', 100, 'psel']]
-Match = [[1, u'computer', 100, 'psel']]
+
+Match = [[1, u'light', 100, 'psel']]
 `
 
 More background information: https://sway.com/BQ8uXDse9LLhL0Zf
@@ -45,14 +47,18 @@ Installation:
 
  git clone https://github.com/bishoph/sopare.git .
 
- Then you should create these directories:
+ Then you should create the following directories:
 
- mkdir tokens
- mkdir samples
+`
+ tokens
+`
+
+` 
+ samples
+`
 
 
 Usage:
-
 
 Show the available options
 
@@ -96,3 +102,14 @@ simple by running the command
 python sopare.py -d computer
 `
 
+
+Next steps/TODOs:
+
+  * Find and add more characteristics to enhance the accuracy
+  * Add plugin architecture for further processing of the results
+
+
+
+Project status:
+
+Currently the project is in a early stage and can be described best as prototype.
