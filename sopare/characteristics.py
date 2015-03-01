@@ -72,6 +72,10 @@ class characteristic:
   max_topstart = topstart
   min_topend = topend
   max_topend = topend
+  min_base = base
+  max_base = base
+  min_topspace = topspace
+  max_topspace = topspace
 
   if (dict_entry != None):
    for elements in dict_entry:
@@ -91,6 +95,14 @@ class characteristic:
      min_topend = elements['min_topend']
     if ('max_topend' in elements):
      max_topend = elements['max_topend']
+    if ('min_base' in elements):
+     min_base = elements['min_base']
+    if ('max_base' in elements):
+     max_base = elements['max_base']
+    if ('min_topspace' in elements):
+     min_topspace = elements['min_topspace']
+    if ('max_topspace' in elements):
+     max_topspace = elements['max_topspace']
 
    if (length < min_length):
     min_length = length
@@ -112,8 +124,18 @@ class characteristic:
    if (topend > max_topend):
     max_topend = topend
 
+   if (base < min_base):
+    min_base = base
+   if (base > max_base):
+    max_base = base
+
+   if (topspace < min_topspace):
+    min_topspace = topspace
+   if (topspace > max_topspace):
+    max_topspave = topspace
+
   if (learn):
-   model_characteristic.append({'min_length': min_length, 'max_length': max_length, 'min_peaks': min_peaks, 'max_peaks': max_peaks, 'min_topstart': min_topstart, 'max_topstart': max_topstart, 'min_topend': min_topend, 'max_topend': max_topend})
+   model_characteristic.append({'min_length': min_length, 'max_length': max_length, 'min_peaks': min_peaks, 'max_peaks': max_peaks, 'min_topstart': min_topstart, 'max_topstart': max_topstart, 'min_topend': min_topend, 'max_topend': max_topend, 'min_base': min_base, 'max_base': max_base, 'min_topspace': min_topspace, 'max_topspace': max_topspace})
   else:
    model_characteristic.append({'max': peak, 'base': base, 'peakspace': peakspace, 'peaks': len(top), 'length': length, 'topstart': topstart, 'topend': topend, 'topspace': topspace})
 

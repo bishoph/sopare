@@ -115,6 +115,10 @@ class approach:
    max_topstart = 0
    min_topend = 0
    max_topend = 0
+   min_base = 0
+   max_base = 0
+   min_topspace = 0
+   max_topspace = 0
 
    max = 0
    length = 0
@@ -122,6 +126,7 @@ class approach:
    base = 0 
    topstart = 0
    topend = 0
+   topspace = 0
 
    for elements in dict_characteristic:
     if ('min_length' in elements):
@@ -140,6 +145,15 @@ class approach:
      min_topend = elements['min_topend']
     if ('max_topend' in elements):
      max_topend = elements['max_topend']
+    if ('min_base' in elements):
+     min_base = elements['min_base']
+    if ('max_base' in elements):
+     max_base = elements['max_base']
+    if ('min_topspace' in elements):
+     min_topspace = elements['min_topspace']
+    if ('max_topspace' in elements):
+     max_topspace = elements['max_topspace']
+
 
    for elements in current_characteristic:
     if ('length' in elements):
@@ -153,7 +167,9 @@ class approach:
     if ('peaks' in elements):
      peaks = elements['peaks']
     if ('max' in elements):
-     max = elements['max']   
+     max = elements['max'] 
+    if ('topspace' in elements):
+     topspace = elements['topspace']  
 
    match_statistics = ""
    score = 0
@@ -163,7 +179,7 @@ class approach:
     return results
 
    if (peaks >= min_peaks and peaks <= max_peaks):
-    score += 40
+    score += 30
     counter += 1
     match_statistics += "p"
    if (topstart >= min_topstart and topstart <= max_topstart):
@@ -175,11 +191,19 @@ class approach:
     counter += 1
     match_statistics += "e"
    if (length >= min_length and peaks <= max_length):
-    score += 40
+    score += 30
     counter += 1
     match_statistics += "l"
+   if (base >= min_base and base <= max_base):
+    score += 10
+    counter += 1
+    match_statistics += "b"
+   if (topspace >= min_topspace and topspace <= max_topspace):
+    score += 10
+    counter += 1
+    match_statistics += "c"
    if (counter > 0):
-    score = score * counter / 4
+    score = score * counter / 6
   
    if (self.debug):
     print ("we got score "+str(score) + " for "+id)  
