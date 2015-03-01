@@ -5,11 +5,11 @@ The output is an array with some information about a potential match.
 
 Here is an example output when I said the words computer and light:
 
-`
-Match = [[0, u'computer', 100, 'psel']]
+```
+ Match = [[0, u'computer', 100, 'psel']]
 
-Match = [[1, u'light', 100, 'psel']]
-`
+ Match = [[1, u'light', 100, 'psel']]
+```
 
 More background information: https://sway.com/BQ8uXDse9LLhL0Zf
 
