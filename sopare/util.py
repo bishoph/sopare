@@ -30,8 +30,9 @@ class util:
  # value to detect words and not syllables
  MIN_WORD_LENGTH_DETECTOR = 20
 
- def __init__(self, debug):
+ def __init__(self, debug, wave):
   self.debug = debug
+  self.wave = wave
 
  def trim(self, tendency_model):
   for p in range (len(tendency_model)-1, 0, -1):
@@ -97,12 +98,14 @@ class util:
   if (len(final_positions) > 0):
    for p in final_positions:
     tokens.append(data[last:p])
-    self.savewave(last, p, token, rawdata)
+    if (self.wave):
+     self.savewave(last, p, token, rawdata)
     token += 1
     last = p
    if (last <= len(data)):
     tokens.append(data[last:])
-    self.savewave(last, len(data), token, rawdata)
+    if (self.wave):
+     self.savewave(last, len(data), token, rawdata)
   else:
    tokens.append(data)
   if (self.debug):

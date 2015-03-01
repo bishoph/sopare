@@ -29,11 +29,12 @@ class processor:
  MAX_SLILENCE_AFTER_START=2
  MAX_TIME=4
 
- def __init__(self, endless_loop, debug, plot, outfile, dict, buffering, THRESHOLD = 500, live = True):
+ def __init__(self, endless_loop, debug, plot, wave, outfile, dict, buffering, THRESHOLD = 500, live = True):
   self.append = False
   self.endless_loop = endless_loop
   self.debug = debug
   self.plot = plot
+  self.wave = wave
   self.out = None
   if (outfile != None):
    self.out = io.open(outfile, 'wb')
@@ -45,7 +46,7 @@ class processor:
   self.silence_timer = 0
   self.fragment = [ ]
   self.condense = condense.packing(debug, plot)
-  self.analyzer = analyze.approach(debug, plot, dict)
+  self.analyzer = analyze.approach(debug, plot, wave, dict)
   self.silence_buffer = [ ]
 
  def reset(self):

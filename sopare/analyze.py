@@ -29,11 +29,12 @@ class approach:
  # only add matches that score at least MIN_MATCHES_TO_CONSIDER to results
  MIN_MATCHES_TO_CONSIDER = 2
 
- def __init__(self, debug, plot, dict):
+ def __init__(self, debug, plot, wave, dict):
   self.debug = debug
   self.plot = plot
+  self.wave = wave
   self.dict = dict
-  self.util = util.util(debug)
+  self.util = util.util(debug, wave)
   self.JSON_DICT = self.util.getDICT()
   self.character = characteristics.characteristic(self.debug)
 

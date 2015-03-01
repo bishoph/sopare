@@ -25,9 +25,10 @@ import io
 
 class recorder:
 
- def __init__(self, endless_loop, debug, plot, outfile, infile, dict, THRESHOLD = 500):
+ def __init__(self, endless_loop, debug, plot, wave, outfile, infile, dict, THRESHOLD = 500):
   self.debug = debug
   self.plot = plot
+  self.wave = wave
   self.outfile = outfile
   self.dict = dict
   self.CHUNK = 512
@@ -50,7 +51,7 @@ class recorder:
                 frames_per_buffer=self.CHUNK)
 
   if (infile == None):
-   self.buffering = buffering.buffering(self.queue, endless_loop, self.debug, self.plot, self.outfile, self.dict, THRESHOLD)
+   self.buffering = buffering.buffering(self.queue, endless_loop, self.debug, self.plot, self.wave, self.outfile, self.dict, THRESHOLD)
    self.recording(endless_loop)
   else:
    self.readfromfile(infile, THRESHOLD)
@@ -58,7 +59,7 @@ class recorder:
  def readfromfile(self, infile, THRESHOLD):
   print("* reading file "+infile)
   import processing
-  proc = processing.processor(False, self.debug, self.plot, None, self.dict, None, THRESHOLD)
+  proc = processing.processor(False, self.debug, self.plot, self.wave, None, self.dict, None, THRESHOLD)
   file = io.open(infile, 'rb', buffering=self.CHUNK*2)
   while True:
    buf = file.read(self.CHUNK*2)
