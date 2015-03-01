@@ -73,7 +73,7 @@ def main(argv):
 
 def delete_word(dict, debug):
  print ("deleting "+dict+" from dictionary")
- utilities = util.util(debug)
+ utilities = util.util(debug, False)
  utilities.deletefromdict(dict)
 
 def usage():
