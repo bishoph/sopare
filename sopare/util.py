@@ -24,7 +24,7 @@ from path import __wavedestination__
 class util:
 
  # min. sequence of silence for trim
- TRIM_SILENCE = 8
+ TRIM_SILENCE = 100
  # min value to detect a silence period
  MIN_SILENCE_COUNTER = 15
  # value to detect words and not syllables
@@ -41,6 +41,17 @@ class util:
        p += 4
       return tendency_model[0:p]
   return tendency_model
+
+ def ltrim(self, data):
+  silence = 0
+  for p in range(0, len(data)-1):
+   if (data[p] < self.TRIM_SILENCE):
+    silence += 1
+    if (silence == self.MIN_SILENCE_COUNTER):
+     return data[0:p]
+   else:
+    silence = 0
+  return data  
 
  def tokenizer(self, data, rawdata):
   tokens = [ ]
@@ -108,9 +119,17 @@ class util:
      self.savewave(last, len(data), token, rawdata)
   else:
    tokens.append(data)
+
   if (self.debug):
-   print ("final tokens "+str(tokens))
-  return tokens
+   print ("tokens before trim "+str(tokens))
+
+  final_tokens = [ ]
+  for token in tokens:
+   final_tokens.append(self.ltrim(token))
+
+  if (self.debug):
+   print ("final tokens "+str(final_tokens))
+  return final_tokens
 
  def get_characteristic_by_name_from_dict(self, dict, JSON_DICT):
   dict_objects = JSON_DICT['dict']
