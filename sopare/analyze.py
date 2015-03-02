@@ -119,6 +119,8 @@ class approach:
    max_base = 0
    min_topspace = 0
    max_topspace = 0
+   min_peak = 0
+   max_peak = 0
 
    max = 0
    length = 0
@@ -153,7 +155,10 @@ class approach:
      min_topspace = elements['min_topspace']
     if ('max_topspace' in elements):
      max_topspace = elements['max_topspace']
-
+    if ('min_peak' in elements):
+     min_peak = elements['min_peak']
+    if ('max_peak' in elements):
+     max_peak = elements['max_peak']
 
    for elements in current_characteristic:
     if ('length' in elements):
@@ -179,19 +184,19 @@ class approach:
     return results
 
    if (peaks >= min_peaks and peaks <= max_peaks):
-    score += 30
+    score += 10
     counter += 1
     match_statistics += "p"
    if (topstart >= min_topstart and topstart <= max_topstart):
-    score += 10
+    score += 15
     counter += 1
     match_statistics += "s"
    if (topend >= min_topend and topend <= max_topend):
-    score += 10
+    score += 15
     counter += 1
     match_statistics += "e"
    if (length >= min_length and peaks <= max_length):
-    score += 30
+    score += 10
     counter += 1
     match_statistics += "l"
    if (base >= min_base and base <= max_base):
@@ -199,11 +204,15 @@ class approach:
     counter += 1
     match_statistics += "b"
    if (topspace >= min_topspace and topspace <= max_topspace):
-    score += 10
+    score += 20
     counter += 1
     match_statistics += "c"
+   if (max >= min_peak and max <= max_peak):
+    score += 20
+    counter += 1
+    match_statistics += "m"
    if (counter > 0):
-    score = score * counter / 6
+    score = score * counter / 7
   
    if (self.debug):
     print ("we got score "+str(score) + " for "+id)  

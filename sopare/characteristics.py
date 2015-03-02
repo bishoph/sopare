@@ -58,7 +58,7 @@ class characteristic:
   topspace = 0
   topstart = 0
   topend = 0
-  if (len(top) > 1):
+  if (len(top) >= 1):
    topspace = top[len(top)-1][1]-top[0][1]
    topstart = top[0][1]
    topend = top[len(top)-1][1]
@@ -67,7 +67,6 @@ class characteristic:
   max_length = length
   min_peaks = len(top)
   max_peaks = len(top)
-
   min_topstart = topstart
   max_topstart = topstart
   min_topend = topend
@@ -76,6 +75,8 @@ class characteristic:
   max_base = base
   min_topspace = topspace
   max_topspace = topspace
+  min_peak = peak
+  max_peak = peak 
 
   if (dict_entry != None):
    for elements in dict_entry:
@@ -103,6 +104,10 @@ class characteristic:
      min_topspace = elements['min_topspace']
     if ('max_topspace' in elements):
      max_topspace = elements['max_topspace']
+    if ('min_peak' in elements):
+     min_peak = elements['min_peak']
+    if (min_peak in elements):
+     max_peak = elements['max_peak']
 
    if (length < min_length):
     min_length = length
@@ -134,8 +139,13 @@ class characteristic:
    if (topspace > max_topspace):
     max_topspave = topspace
 
+   if (peak < min_peak):
+    min_peak = peak
+   if (peak > max_peak):
+    max_peak = peak
+
   if (learn):
-   model_characteristic.append({'min_length': min_length, 'max_length': max_length, 'min_peaks': min_peaks, 'max_peaks': max_peaks, 'min_topstart': min_topstart, 'max_topstart': max_topstart, 'min_topend': min_topend, 'max_topend': max_topend, 'min_base': min_base, 'max_base': max_base, 'min_topspace': min_topspace, 'max_topspace': max_topspace})
+   model_characteristic.append({'min_length': min_length, 'max_length': max_length, 'min_peaks': min_peaks, 'max_peaks': max_peaks, 'min_topstart': min_topstart, 'max_topstart': max_topstart, 'min_topend': min_topend, 'max_topend': max_topend, 'min_base': min_base, 'max_base': max_base, 'min_topspace': min_topspace, 'max_topspace': max_topspace, 'min_peak': min_peak, 'max_peak': max_peak})
   else:
    model_characteristic.append({'max': peak, 'base': base, 'peakspace': peakspace, 'peaks': len(top), 'length': length, 'topstart': topstart, 'topend': topend, 'topspace': topspace})
 
