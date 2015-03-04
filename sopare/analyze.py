@@ -121,6 +121,8 @@ class approach:
    max_topspace = 0
    min_peak = 0
    max_peak = 0
+   min_highfreq = 0
+   max_highfreq = 0
 
    max = 0
    length = 0
@@ -129,6 +131,7 @@ class approach:
    topstart = 0
    topend = 0
    topspace = 0
+   highfreq = 0 
 
    for elements in dict_characteristic:
     if ('min_length' in elements):
@@ -159,6 +162,10 @@ class approach:
      min_peak = elements['min_peak']
     if ('max_peak' in elements):
      max_peak = elements['max_peak']
+    if ('min_highfreq' in elements):
+     min_highfreq = elements['min_highfreq']
+    if ('max_highfreq' in elements):
+     max_highfreq = elements['max_highfreq']
 
    for elements in current_characteristic:
     if ('length' in elements):
@@ -175,6 +182,8 @@ class approach:
      max = elements['max'] 
     if ('topspace' in elements):
      topspace = elements['topspace']  
+    if ('highfreq' in elements):
+     highfreq = elements['highfreq']
 
    match_statistics = ""
    score = 0
@@ -184,35 +193,39 @@ class approach:
     return results
 
    if (peaks >= min_peaks and peaks <= max_peaks):
-    score += 10
+    score += 12
     counter += 1
-    match_statistics += "p"
+    match_statistics += "a"
    if (topstart >= min_topstart and topstart <= max_topstart):
-    score += 15
-    counter += 1
-    match_statistics += "s"
-   if (topend >= min_topend and topend <= max_topend):
-    score += 15
-    counter += 1
-    match_statistics += "e"
-   if (length >= min_length and peaks <= max_length):
-    score += 10
-    counter += 1
-    match_statistics += "l"
-   if (base >= min_base and base <= max_base):
-    score += 10
+    score += 12
     counter += 1
     match_statistics += "b"
-   if (topspace >= min_topspace and topspace <= max_topspace):
-    score += 20
+   if (topend >= min_topend and topend <= max_topend):
+    score += 12
     counter += 1
     match_statistics += "c"
-   if (max >= min_peak and max <= max_peak):
-    score += 20
+   if (length >= min_length and peaks <= max_length):
+    score += 12
     counter += 1
-    match_statistics += "m"
+    match_statistics += "d"
+   if (base >= min_base and base <= max_base):
+    score += 12
+    counter += 1
+    match_statistics += "e"
+   if (topspace >= min_topspace and topspace <= max_topspace):
+    score += 12
+    counter += 1
+    match_statistics += "f"
+   if (max >= min_peak and max <= max_peak):
+    score += 12
+    counter += 1
+    match_statistics += "g"
+   if (highfreq >= min_highfreq and highfreq <= max_highfreq):
+    score += 12
+    counter += 1
+    match_statistics += "h"
    if (counter > 0):
-    score = score * counter / 7
+    score = score * counter / 8
   
    if (self.debug):
     print ("we got score "+str(score) + " for "+id)  
