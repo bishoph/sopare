@@ -19,14 +19,15 @@ under the License.
 
 import json
 import wave
+import uuid
 from path import __wavedestination__
 
 class util:
 
  # min. sequence of silence for trim
- TRIM_SILENCE = 100
+ TRIM_SILENCE = 1000
  # min value to detect a silence period
- MIN_SILENCE_COUNTER = 15
+ MIN_SILENCE_COUNTER = 10
  # value to detect words and not syllables
  MIN_WORD_LENGTH_DETECTOR = 20
 
@@ -35,11 +36,12 @@ class util:
   self.wave = wave
 
  def trim(self, tendency_model):
+  COMPUTE_SILENCE = (sum(tendency_model) / len(tendency_model) * 2)
   for p in range (len(tendency_model)-1, 0, -1):
-   if (tendency_model[p] > self.TRIM_SILENCE):
-      if (p+4 < len(tendency_model)):
-       p += 4
-      return tendency_model[0:p]
+   if (tendency_model[p] > COMPUTE_SILENCE):
+    if (p+4 < len(tendency_model)):
+     p += 4
+    return tendency_model[0:p]
   return tendency_model
 
  def ltrim(self, data):
@@ -139,15 +141,9 @@ class util:
     return c
   return None
 
- def add2dict(self, obj, dict, learn):
+ def add2dict(self, obj, dict):
   json_obj = self.getDICT()
-  if (learn == True and self.get_characteristic_by_name_from_dict(dict, json_obj) != None):
-   dict_objects = json_obj['dict']
-   for do in dict_objects:
-    if (dict == do['id']):
-     do['characteristic'] = obj
-  else:
-   json_obj['dict'].append({'id': dict, 'characteristic': obj})
+  json_obj['dict'].append({'id': dict, 'characteristic': obj, 'uuid': str(uuid.uuid4())})
   self.writeDICT(json_obj)
   return json_obj
 
@@ -165,37 +161,30 @@ class util:
  def deletefromdict(self, dict):
   json_obj = self.getDICT()
   new_dict = { 'dict': [ ] }
+  if (dict != '*'):
+   dict_objects = json_obj['dict']
+   for do in dict_objects:
+    if (do['id'] != dict):
+     new_dict['dict'].append(do)
+  self.writeDICT(new_dict)
+
+ def deleteuuidfromdict(self, uuid):
+  json_obj = self.getDICT()
+  new_dict = { 'dict': [ ] }
   dict_objects = json_obj['dict']
   for do in dict_objects:
-   if (do['id'] != dict):
+   if (do['uuid'] != uuid):
     new_dict['dict'].append(do)
   self.writeDICT(new_dict)
 
- def savewave(self, start, pos, num, raw):
-  if (self.debug):
-   print ("raw length = "+str(len(raw)))
-  wf = wave.open(__wavedestination__+"token"+str(num)+".wav", 'wb')
+ def saverawwave(self, filename, start, end, raw):
+  wf = wave.open(__wavedestination__+filename+".wav", 'wb')
   wf.setnchannels(1)
   wf.setsampwidth(2)
   wf.setframerate(44100)
-  s = start/2
-  e = pos/2
-  if (self.debug):
-   print ("s / e = "+str(s)+ " / "+str(e))
-  data = raw[s:e]
-  if (self.debug):
-   print ("data length = "+str(len(data)))
+  data = raw[start:end] 
   wf.writeframes(b''.join(data))
-  wf.close()
 
  def normalize(self, data, normalize):
-  return data
-  newdata = [ ]
-  factor = float(max(data) / normalize)
-  for obj in data:
-   if (len(obj) == 1 and obj[0] == -999):
-    pass
-   else:
-    normalized = [(n / factor ) for n in obj]
-    newdata.append(normalized)
+  newdata = [(float(i)/sum(data)*normalize) for i in data]
   return newdata

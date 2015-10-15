@@ -46,7 +46,7 @@ class buffering(multiprocessing.Process):
   self.queue.close()
 
  def stop(self):
-  print ("stopping buffering")
+  print ("stop buffering")
   self.PROCESS_ROUND_DONE = True
 
   

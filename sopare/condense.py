@@ -17,34 +17,13 @@ License for the specific language governing permissions and limitations
 under the License.
 """
 
-import numpy
-import visual
+class packing():
 
-class packing:
-
- def __init__(self, debug, plot):
-  self.debug = debug
-  self.plot = plot
+ def __init__(self):
   self.SLICE = 32
-  self.buffer = [ ]
-  self.rawbuf = [ ]
-  self.visual = visual.visual()
 
- def getrawdata(self):
-  return self.buffer[:]
-
- def getrawbuf(self):
-  return self.rawbuf
-
- def reset(self):
-  if (self.plot):
-   self.visual.create_sample(self.buffer, 'sample.png')
-  self.buffer = [ ]
-
- def compress(self, buf):
-  self.rawbuf.append(buf)
+ def compress(self, data):
   compressed = [ ]
-  data = numpy.fromstring(buf, dtype=numpy.int16)
   current_h = 0
   current_l = 0
   c_h = 1
@@ -52,7 +31,6 @@ class packing:
   h_first = False
   counter = 0
   for a in data:
-   self.buffer.append(a)
    if (a > 0):
     current_h += a
     c_h += 1
@@ -84,3 +62,25 @@ class packing:
     counter += 1
   return compressed
   
+ def model_tendency(self, data):
+  last = 0
+  last_high = 0
+  tendency = [ ]
+  counter = 0
+  for n in data:
+   if (n < 0):
+    n = 0 - n
+   if (n >= 0 and n > last_high):
+     last_high = n
+   if (counter == 8):
+    if (last < last_high):
+     tendency.append(int(last))
+    elif (last > last_high):
+     tendency.append(int(last))
+    last = last_high
+    last_high = 0
+    counter = 0
+   else:
+    counter += 1
+  return tendency
+

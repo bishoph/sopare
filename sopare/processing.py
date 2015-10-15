@@ -19,8 +19,7 @@ under the License.
 
 import audioop
 import time
-import condense
-import analyze
+import prepare
 import io
 import buffering
 
@@ -28,6 +27,7 @@ class processor:
 
  MAX_SLILENCE_AFTER_START=2
  MAX_TIME=4
+ TOKEN_IDENTIFIER=5
 
  def __init__(self, endless_loop, debug, plot, wave, outfile, dict, buffering, THRESHOLD = 500, live = True):
   self.append = False
@@ -44,19 +44,10 @@ class processor:
   self.live = live
   self.timer = 0
   self.silence_timer = 0
-  self.fragment = [ ]
-  self.condense = condense.packing(debug, plot)
-  self.analyzer = analyze.approach(debug, plot, wave, dict)
+  self.silence_counter = 0
+  self.prepare = prepare.preparing(debug, plot, wave, dict)
   self.silence_buffer = [ ]
 
- def reset(self):
-  self.append = False
-  self.timer = 0
-  self.out = None
-  self.silence_timer = 0
-  self.fragment = [ ]
-  self.condense.reset()  
- 
  def stop(self, message, timeout):
   if (self.debug > 0):
    print (message)
@@ -64,9 +55,10 @@ class processor:
    self.out.close()
   self.append = False
   self.silence_timer = 0
-  self.analyzer.analyze(self.fragment, self.condense.getrawbuf())
-  self.fragment = [ ]
-  self.condense.reset()
+  if (self.endless_loop == False):
+   self.prepare.stop()
+  else:
+   self.prepare.done()
   if (self.buffering != None):
    self.buffering.stop()
 
@@ -75,31 +67,39 @@ class processor:
 
   if (current > self.THRESHOLD):
    self.silence_timer = 0
+   self.silence_counter = 0
    if (self.append == False):
     self.append = True
     self.timer = time.time()
     self.silence_timer = 0
     print ("starting append mode")
-    self.fragement = [ ]
     if (len(self.silence_buffer) > 0 ):
+     first = True
      for silence_buffer_buf in self.silence_buffer:
-      self.fragment.append(self.condense.compress(silence_buffer_buf))
-      self.silence_buffer = [ ]
+      self.prepare.prepare(silence_buffer_buf, first)
+      if (first):
+       first = False
+     self.silence_buffer = [ ]
   else:
    self.silence_buffer.append(buf)
-   if (len(self.silence_buffer) > 3):
+   self.silence_counter += 1
+   if (len(self.silence_buffer) > 5):
     del self.silence_buffer[0]
 
    if (self.append == True and self.silence_timer == 0):
     self.silence_timer = time.time() + processor.MAX_SLILENCE_AFTER_START
-    #self.fragment.append([-999])
 
   if (self.append == True):
-   self.fragment.append(self.condense.compress(buf))
+   if (self.silence_counter > processor.TOKEN_IDENTIFIER):
+    self.prepare.prepare(buf, True)
+    self.silence_counter = 0
+   else:
+    self.prepare.prepare(buf, False)
+
    if (self.out != None and self.out.closed != True):
     self.out.write(buf)
 
   if (self.append == True and self.silence_timer > 0 and self.silence_timer < time.time() and self.live == True):
-   self.stop("stopping append mode because of silence", True)
+   self.stop("stop append mode because of silence", True)
   if (self.append == True and self.timer+processor.MAX_TIME < time.time()):
-   self.stop("stopping append mode because time is up", False)
+   self.stop("stop append mode because time is up", False)

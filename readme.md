@@ -3,12 +3,11 @@ In a nutshell the project listens to input and creates simple characteristics.
 These characteristics are compared to characteristics stored in a dictionary.
 The output is an array with some information about a potential match.
 
-Here is an example output when I said the words computer and light:
+Here is an example output when I said the word light:
 
 ```
- Match = [[0, u'computer', 100, 'psel']]
+ [[u'l'], [u'i'], [u'c', u'h'], [u'c', u'h'], [u't']]
 
- Match = [[1, u'light', 100, 'psel']]
 ```
 
 More background information: https://sway.com/BQ8uXDse9LLhL0Zf
@@ -71,12 +70,9 @@ The next command turns the verbose mode on, waits for a peak,
 records the input and saves it in raw form to the file 
 "samples/computer.raw", finds the characteristic and adds the
 word "computer" to the dictionary, plots the results and stops.
-If you run the same command more often, existing entries in
-the dictionary are updated if a change is detected (learn).
-Learning and adding new words to the dictionary requires
-a silent environment. Of course you can change and adopt
-the entries manually as the dictionary is stored in 
-JSON format.
+Adding new words to the dictionary requires a silent environment. 
+Of course you can change and adopt the entries manually as the dictionary
+is stored in JSON format.
 
 `
 python sopare.py -p -v -o samples/computer.raw -l computer
@@ -95,12 +91,21 @@ python sopare.py -e
 `
 
 
-You can delete the newly created entry from the dictionary
+You can delete all entries from the dictionary
 simple by running the command
 
 `
 python sopare.py -d computer
 `
+
+Each entry in the dictionary has a uuid and you
+can remove single entries by using this command
+
+`
+python sopare.py -r UUID
+`
+
+
 
 
 Next steps/TODOs:
@@ -112,4 +117,4 @@ Next steps/TODOs:
 
 Project status:
 
-Currently the project is in a early stage and can be described best as prototype.
+Currently the project is in a very early stage and can be described best as prototype.

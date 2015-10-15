@@ -81,7 +81,7 @@ class recorder:
      buf = self.stream.read(self.CHUNK)
      self.queue.put(buf) 
     else:
-     print ("Buffering not alive, stopping recording")
+     print ("Buffering not alive, stop recording")
      break
    except IOError as e:
     print ("stream read error "+str(e))
@@ -90,7 +90,7 @@ class recorder:
   sys.exit()
 
  def stop(self):
-  print("stopping endless recording")
+  print("stop endless recording")
   try:
    self.queue.cancel_join_thread()
    self.buffering.terminate()

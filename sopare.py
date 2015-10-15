@@ -36,7 +36,7 @@ def main(argv):
 
  if (len(argv) > 0):
   try:                                
-   opts, args = getopt.getopt(argv, "hepvwo:i:l:d:", ["help", "endless", "plot", "verbose", "wave", "out=", "in=", "learn=", "delete="])
+   opts, args = getopt.getopt(argv, "hepvwo:i:l:d:r:", ["help", "endless", "plot", "verbose", "wave", "out=", "in=", "learn=", "delete=", "remove-uuid="])
   except getopt.GetoptError:
    usage()
    sys.exit(2)
@@ -67,12 +67,23 @@ def main(argv):
    if opt in ("-d", "--delete"):
     delete_word(arg, debug) 
     sys.exit(0)
+   if opt in ("-r", "--remove-uuid"):
+    delete_uuid(arg, debug)
+    sys.exit(0)
    if opt in ("-i", "--in"):
     infile = arg
- recorder.recorder(endless_loop, debug, plot, wave, outfile, infile, dict)
+ recorder.recorder(endless_loop, debug, plot, wave, outfile, infile, dict, 500)
+
+def delete_uuid(uuid, debug):
+ print ("removing uuid "+uuid+" from dictionary")
+ utilities = util.util(debug, False)
+ utilities.deleteuuidfromdict(uuid)
 
 def delete_word(dict, debug):
- print ("deleting "+dict+" from dictionary")
+ if (dict != "*"):
+  print ("deleting "+dict+" from dictionary")
+ else:
+  print ("deleting all enttries from dictionary")
  utilities = util.util(debug, False)
  utilities.deletefromdict(dict)
 
@@ -87,7 +98,7 @@ def usage():
  print (" -i --in [samples/filename]  : read [samples/filename]")
  print (" -l --learn [word]     : add/modify [word] to/in dictionary")
  print ("                         (only without loop option)")
- print (" -d --delete [word]    : delete [word] from dictionary and exit")
+ print (" -d --delete [word]    : delete [word] from dictionary and exit. '*' deletes everyting!")
  print
 
 main(sys.argv[1:])
