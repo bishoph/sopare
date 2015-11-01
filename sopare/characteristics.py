@@ -24,26 +24,48 @@ class characteristic:
 
  def getcharacteristic(self, fft, tendency):
   chunked_fft_freq = [ ]
-  chunked_fft_avg = [ ]
-  fft = abs(fft)
+  chunked_fft_min = [ ]
+  chunked_fft_max = [ ]
   fft_max = max(fft)
   fft_min = min(fft)
-  fft_avg = sum(fft)/len(fft)
   steps = 100
   
   for i in range(0, len(fft), steps):
-   chunk_sum = int(sum(fft[i:i+steps]))
-   chunk_avg = int(sum(fft[i:i+steps])/steps)
-   if (chunk_avg > fft_avg):
-    chunked_fft_freq.append(i)
-    chunked_fft_avg.append(chunk_avg)
+   chunk_min = min(fft[i:i+steps])
+   chunk_max = max(fft[i:i+steps])
+   chunked_fft_freq.append(i)
+   chunked_fft_min.append(int(abs(chunk_min)))
+   chunked_fft_max.append(int(abs(chunk_max)))
   
+  fft_max_approach = self.get_approach(chunked_fft_max, False)
+  fft_min_approach = self.get_approach(chunked_fft_min, True)
+
   if (len(chunked_fft_freq) <= 3):
    return None
-  tendency_characteristic = self.get_tendency(tendency)
-  model_characteristic = {'fft_freq': chunked_fft_freq, 'fft_avg': chunked_fft_avg, 'tendency': tendency_characteristic }
+
+  tendency_characteristic = self.get_approach(tendency, False)
+  model_characteristic = {'fft_freq': chunked_fft_freq , 'fft_max': fft_max_approach, 'fft_min': fft_min_approach, 'tendency': tendency_characteristic }
    
   return model_characteristic
+
+ def get_approach(self, data, doabs):
+  if (doabs):
+   data = [ abs(i) for i in data]
+  result = [0] * len(data)
+  m = max(data)+1
+  l = 0
+  f = 0
+  pos = 0
+  for z in range(0, len(data)):
+   pos = z
+   for i,a in enumerate(data):
+    if (a < m and a > l):
+     l = a
+     pos = i
+   result[pos] = len(data)-z
+   m = l
+   l = 0
+  return result
 
  def get_tendency(self, tendency):
   tendency_characteristic = [ ]

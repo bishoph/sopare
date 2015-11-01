@@ -82,5 +82,5 @@ class packing():
     counter = 0
    else:
     counter += 1
-  return tendency
+  return tendency[1:]
 

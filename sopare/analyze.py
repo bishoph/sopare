@@ -22,14 +22,16 @@ import util
 
 class analyze():
 
- MIN_RATIO = .6
- MIN_SIMILARITY = 60
- CONVERGENCY = .5
+ MIN_RATIO = .3
+ MIN_SIMILARITY = 85
+ CONVERGENCY = 3
+ MAX_LEN_DIFF = 15
 
  def __init__(self, debug):
   self.debug = debug
   self.util = util.util(debug, None)
   self.DICT = self.util.getDICT()
+  self.differ = difflib.SequenceMatcher(None, [], [])
   self.reset()
 
  def reset(self):
@@ -43,7 +45,7 @@ class analyze():
    for i,e in  enumerate(elements):
     dict = e['dict']
     sim = e['similarity']
-    stringify.append(dict)
+    stringify.append((dict, sim))
    best_bets.append(stringify) 
 
   if (self.debug):
@@ -55,7 +57,9 @@ class analyze():
    
  def compare(self, counter, characteristic):
   fft_freq = characteristic['fft_freq']
-  fft_avg = characteristic['fft_avg']
+  #fft_avg = characteristic['fft_avg']
+  fft_min = characteristic['fft_min']
+  fft_max = characteristic['fft_max']
   tendency = characteristic['tendency']
   sm = difflib.SequenceMatcher(None, fft_freq, [])
   sm2 = difflib.SequenceMatcher(None, tendency, [])
@@ -66,7 +70,8 @@ class analyze():
   for dict_entries in self.DICT['dict']:
    dict_characteristic = dict_entries['characteristic']
    dict_fft_freq = dict_characteristic['fft_freq']
-   dict_fft_avg = dict_characteristic['fft_avg']
+   dict_fft_min = dict_characteristic['fft_min']
+   dict_fft_max = dict_characteristic['fft_max']
    dict_tendency = dict_characteristic['tendency']
    dict = dict_entries['id']
    sm.set_seq2(dict_fft_freq)
@@ -74,29 +79,30 @@ class analyze():
    freq_ratio = sm.ratio()
    tendency_ratio = sm2.ratio()
    if (freq_ratio > analyze.MIN_RATIO):
-    avg_similarity = self.compare_avg(fft_freq, fft_avg, dict_fft_freq, dict_fft_avg)
-    if (avg_similarity > analyze.MIN_SIMILARITY):
-     guess = { 'dict': dict, 'similarity': avg_similarity*tendency_ratio, 'pos': counter}
+    object_similarity = self.compare_object(fft_freq, fft_min, fft_max, dict_fft_freq, dict_fft_min, dict_fft_max)
+    if (object_similarity > analyze.MIN_SIMILARITY):
+     guess = { 'dict': dict, 'similarity': object_similarity, 'pos': counter}
      guess_results.append(guess)
   if (len(guess_results) > 0):
    self.first_approach.append(guess_results)
 
- def compare_avg(self, fft_freq, fft_avg, dict_fft_freq, dict_fft_avg):
-  c_similarities = [ ]
-  d_similarities = [ ]
-  found = 0
-  for i, ff in enumerate(fft_freq):
-   if (ff in dict_fft_freq):
-    ds_pos = dict_fft_freq.index(ff)
-    c_similarities.append(i)
-    d_similarities.append(ds_pos)
-
-  for i in range(0,len(c_similarities)):
-   a = fft_avg[c_similarities[i]]
-   b = dict_fft_avg[d_similarities[i]]
-   if (a==b or ( (a + (a*analyze.CONVERGENCY))  > b and (a - (a*analyze.CONVERGENCY)) < b)):
-    found +=1
-  
-  return found*100/len(c_similarities)
+ def compare_object(self, fft_freq, fft_min, fft_max, dict_fft_freq, dict_fft_min, dict_fft_max):
+  zipped = zip(fft_freq, fft_min, fft_max, dict_fft_min, dict_fft_max)
+  l = len(zipped)
+  ll = len(dict_fft_freq)
+  lll = ll -l
+  if (lll > analyze.MAX_LEN_DIFF):
+   if (self.debug):
+    print ('No match due to MAX_LEN_DIFF '+str(lll))
+   return 0 # maybe we need to be more tolerant...
+  matches = 0
+  for z in zipped:
+   fr, fmi, fma, dfmi, dfma = z
+   if (fmi == dfmi or (dfmi < fmi + analyze.CONVERGENCY and fmi - analyze.CONVERGENCY < dfmi)):
+    matches = matches + 1
+   if (fma == dfma or (dfma < fma + analyze.CONVERGENCY and fma - analyze.CONVERGENCY < dfma)):
+    matches = matches + 1
+  guessing = ((matches/2)*100/l)
+  return guessing
    
   

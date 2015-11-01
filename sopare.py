@@ -95,10 +95,12 @@ def usage():
  print (" -v --verbose         : enable verbose mode\n")
  print (" -w --wave            : creates wav files (token/tokenN.wav) for each detected word")
  print (" -o --out [samples/filename]  : write to [samples/filename]")
- print (" -i --in [samples/filename]  : read [samples/filename]")
- print (" -l --learn [word]     : add/modify [word] to/in dictionary")
+ print (" -i --in [samples/filename]   : read [samples/filename]")
+ print (" -l --learn [word]    : add/modify [word] to/in dictionary")
  print ("                         (only without loop option)")
- print (" -d --delete [word]    : delete [word] from dictionary and exit. '*' deletes everyting!")
+ print (" -r --remove-uuid : removes a single entry from dictionary")
+ print ("                         (only without loop option)")
+ print (" -d --delete [word] : delete [word] from dictionary and exit. '*' deletes everyting!")
  print
 
 main(sys.argv[1:])

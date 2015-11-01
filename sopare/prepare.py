@@ -31,10 +31,10 @@ class preparing():
   self.wave = wave
   self.dict = dict
   self.NOISE = 500
-  self.reset()
   self.visual = visual.visual()
   self.util = util.util(debug, wave)
   self.filter = filter.filtering(debug, plot, dict, wave)
+  self.reset()
 
  def done(self):
   if (self.debug):
@@ -61,6 +61,7 @@ class preparing():
   self.buffer = [ ]
   self.rawbuf = [ ]
   self.tokens = [ ]  
+  self.filter.reset()
 
  def prepare(self, buf, new_token):
   self.rawbuf.extend(buf)
@@ -71,6 +72,7 @@ class preparing():
     self.filter.filter(self.buffer[self.last_token_start:len(self.buffer)], self.token_counter)
     self.token_counter += 1
     self.gotdata = True
+    self.gotdatacounter = 0
    elif (self.gotdata and self.gotdatacounter < 2):
     self.gotdatacounter +=1
     self.tokens.append([self.last_token_start, len(self.buffer)])
@@ -78,7 +80,6 @@ class preparing():
     self.token_counter += 1
    else:
     self.gotdata = False
-    self.gotdatacounter = 0    
     if (self.debug):
      print ('not enough variance/noise. skipping token ['+str(self.last_token_start) + ',' + str(len(self.buffer))+']')
    self.last_token_start = len(self.buffer)
