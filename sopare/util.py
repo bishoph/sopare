@@ -24,122 +24,88 @@ from path import __wavedestination__
 
 class util:
 
- # min. sequence of silence for trim
- TRIM_SILENCE = 1000
- # min value to detect a silence period
- MIN_SILENCE_COUNTER = 10
- # value to detect words and not syllables
- MIN_WORD_LENGTH_DETECTOR = 20
-
  def __init__(self, debug, wave):
   self.debug = debug
   self.wave = wave
 
- def trim(self, tendency_model):
-  COMPUTE_SILENCE = (sum(tendency_model) / len(tendency_model) * 2)
-  for p in range (len(tendency_model)-1, 0, -1):
-   if (tendency_model[p] > COMPUTE_SILENCE):
-    if (p+4 < len(tendency_model)):
-     p += 4
-    return tendency_model[0:p]
-  return tendency_model
-
- def ltrim(self, data):
-  silence = 0
-  for p in range(0, len(data)-1):
-   if (data[p] < self.TRIM_SILENCE):
-    silence += 1
-    if (silence == self.MIN_SILENCE_COUNTER):
-     return data[0:p]
-   else:
-    silence = 0
-  return data  
-
- def tokenizer(self, data, rawdata):
-  tokens = [ ]
-  positions = [ ]
-  final_positions = [ ]
-  avg = 0
-  for n in data:
-   avg += n
-  avg = avg / len(data)
-  if (self.debug):
-   print ("avg = "+str(avg))
-  pos = 0
-  seeker = False
-  freq_count = 0
-  laststart = 0
-  silence_avg = 0
-  silence_counter = 0
-  for n in data:
-   if (n >= avg):
-    if (seeker == True):
-     seeker = False
-     if (silence_counter > self.MIN_SILENCE_COUNTER):
-      if (self.debug):
-       print ("silence found at "+str(laststart))
-      positions.append(laststart)
-       
-    silence_counter = 0
-    silence_avg = 0
-    freq_count += 1
-    if (freq_count > self.MIN_WORD_LENGTH_DETECTOR):
-     seeker = True
-    else:
-     seeker = False
-   if (n < avg and seeker == True):
-    # we need to find a short period of "silence"
-    laststart = pos
-    silence_counter += 1
-    silence_avg += n
-   pos += 1
-
-
-  last = 0
-  token = 0
-  for p in positions:
-   diff = p - last
-   if (diff >= self.MIN_WORD_LENGTH_DETECTOR):
-    final_positions.append(p)
-   elif (token > 1):
-    final_positions[len(final_positions)-1] = p
-   token += 1 
-   last = p
-
-  last = 0
-  token = 0
-  if (len(final_positions) > 0):
-   for p in final_positions:
-    tokens.append(data[last:p])
-    if (self.wave):
-     self.savewave(last, p, token, rawdata)
-    token += 1
-    last = p
-   if (last <= len(data)):
-    tokens.append(data[last:])
-    if (self.wave):
-     self.savewave(last, len(data), token, rawdata)
+ def learndict(self, num, characteristic, dict):
+  json_data =  self.getDICT()
+  dict_model = self.get_characteristic_by_name_from_dict(dict, json_data)
+  if (dict_model == None):
+   dict_model = { 'tokens': [ self.create_zone_model(num, characteristic) ] }
+   self.add2dict(dict_model, dict)
   else:
-   tokens.append(data)
+   dict_model = self.enhance_zone_model(num, characteristic, dict_model)
+   self.changedict(dict_model, dict)
 
-  if (self.debug):
-   print ("tokens before trim "+str(tokens))
+ def enhance_zone_model(self, num, characteristic, dict_model):
+  tokens = dict_model['characteristic']['tokens']
+  token = None
+  for t in tokens:
+   if ('num' in t and t['num'] == num):
+    token = t   
+  if (token == None):
+   if (self.debug):
+    print ('Creating new zone model due to new num '+str(num))
+   zone_model = self.create_zone_model(num, characteristic)
+   dict_model['characteristic']['tokens'].append(zone_model)
+  else:
+   if (self.debug):
+    print ('Enhancing existing zone model num = '+str(num))
+   self.modify_zone_model(num, characteristic, token)
+  return dict_model
 
-  final_tokens = [ ]
-  for token in tokens:
-   final_tokens.append(self.ltrim(token))
+ def modify_zone_model(self, num, characteristic, token):
+  self.zoning('fft_min', 'fft_min_min', characteristic, token, 0)
+  self.zoning('fft_max', 'fft_max_min', characteristic, token, 0)
+  self.zoning('fft_min', 'fft_min_max', characteristic, token, 1)
+  self.zoning('fft_max', 'fft_max_max', characteristic, token, 1)
+  if (characteristic['fft_freq'] < token['fft_freq_min']):
+   token['fft_freq_min'] = characteristic['fft_freq']
+  if (characteristic['fft_freq'] > token['fft_freq_max']):
+   token['fft_freq_max'] = characteristic['fft_freq']
+  if (characteristic['tendency']['peaks'] < token['tendency']['peaks_min']):
+   token['peaks_min'] = characteristic['tendency']['peaks']
+  if (characteristic['tendency']['peaks']  > token['tendency']['peaks_max']):
+   token['peaks_max'] = characteristic['tendency']['peaks']
+  if (characteristic['tendency']['len'] < token['tendency']['len_min']):
+   token['tendency']['len_min'] = characteristic['tendency']['len']
+  if (characteristic['tendency']['len'] < token['tendency']['len_max']):
+   token['tendency']['len_max'] = characteristic['tendency']['len']
+   
 
-  if (self.debug):
-   print ("final tokens "+str(final_tokens))
-  return final_tokens
+ def zoning(self, id1, id2, characteristic, token, action):
+  obj = zip(characteristic[id1], token[id2])
+  for i, o in enumerate(obj):
+   co, to = o
+   if (action == 0 and co < to):
+    token[id2][i] = co
+   elif (action == 1 and co > to):
+    token[id2][i] = co
 
- def get_characteristic_by_name_from_dict(self, dict, JSON_DICT):
-  dict_objects = JSON_DICT['dict']
+ def create_zone_model(self, num, characteristic):
+  characteristic_tendency = { 'peaks_min': characteristic['tendency']['peaks'] , 'peaks_max': characteristic['tendency']['peaks'], 'len_min': characteristic['tendency']['len'], 'len_max': characteristic['tendency']['len'] } 
+  dict_model = { 'num': num, 'fft_freq_min': characteristic['fft_freq'], 'fft_freq_max': characteristic['fft_freq'], 'fft_max_max': characteristic['fft_max'], 'fft_max_min': characteristic['fft_max'], 'fft_min_max': characteristic['fft_min'], 'fft_min_min': characteristic['fft_min'], 'tendency': characteristic_tendency } 
+  return dict_model 
+
+ def get_characteristic_by_name_from_dict(self, dict, JSON_DATA):
+  dict_objects = JSON_DATA['dict']
   for do in dict_objects:
    if (dict == do['id']):
-    c = do['characteristic']
-    return c
+    return do
   return None
+
+ def changedict(self, obj, dict):
+  json_obj = self.getDICT()
+  new_dict = { 'dict': [ ] }
+  dict_objects = json_obj['dict']
+  for do in dict_objects:
+   if (do['id'] != dict):
+    new_dict['dict'].append(do)
+   else:
+    new_dict['dict'].append(obj)
+  self.writeDICT(new_dict)
+  return new_dict
 
  def add2dict(self, obj, dict):
   json_obj = self.getDICT()

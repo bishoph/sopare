@@ -27,7 +27,7 @@ class processor:
 
  MAX_SLILENCE_AFTER_START=2
  MAX_TIME=4
- TOKEN_IDENTIFIER=5
+ TOKEN_IDENTIFIER=10
 
  def __init__(self, endless_loop, debug, plot, wave, outfile, dict, buffering, THRESHOLD = 500, live = True):
   self.append = False

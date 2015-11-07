@@ -17,92 +17,57 @@ License for the specific language governing permissions and limitations
 under the License.
 """
 
-import difflib
 import util
 
 class analyze():
 
- MIN_RATIO = .3
- MIN_SIMILARITY = 85
- CONVERGENCY = 3
- MAX_LEN_DIFF = 15
+ MIN_SIMILARITY = 40
 
  def __init__(self, debug):
   self.debug = debug
   self.util = util.util(debug, None)
   self.DICT = self.util.getDICT()
-  self.differ = difflib.SequenceMatcher(None, [], [])
   self.reset()
 
  def reset(self):
   self.first_approach = [ ]
 
  def get_best_results(self):
-  best_results = [ ]
-  best_bets = [ ]
-  for elements in self.first_approach:
-   stringify = [ ]
-   for i,e in  enumerate(elements):
-    dict = e['dict']
-    sim = e['similarity']
-    stringify.append((dict, sim))
-   best_bets.append(stringify) 
-
-  if (self.debug):
-   print best_bets
-
-  print best_bets
-
-  return best_results
+  print self.first_approach
+  return self.first_approach
    
  def compare(self, counter, characteristic):
-  fft_freq = characteristic['fft_freq']
-  #fft_avg = characteristic['fft_avg']
-  fft_min = characteristic['fft_min']
-  fft_max = characteristic['fft_max']
-  tendency = characteristic['tendency']
-  sm = difflib.SequenceMatcher(None, fft_freq, [])
-  sm2 = difflib.SequenceMatcher(None, tendency, [])
-  avg_similarity = 0
-
-  guess_results = [ ]
-
   for dict_entries in self.DICT['dict']:
-   dict_characteristic = dict_entries['characteristic']
-   dict_fft_freq = dict_characteristic['fft_freq']
-   dict_fft_min = dict_characteristic['fft_min']
-   dict_fft_max = dict_characteristic['fft_max']
-   dict_tendency = dict_characteristic['tendency']
-   dict = dict_entries['id']
-   sm.set_seq2(dict_fft_freq)
-   sm2.set_seq2(dict_tendency)
-   freq_ratio = sm.ratio()
-   tendency_ratio = sm2.ratio()
-   if (freq_ratio > analyze.MIN_RATIO):
-    object_similarity = self.compare_object(fft_freq, fft_min, fft_max, dict_fft_freq, dict_fft_min, dict_fft_max)
-    if (object_similarity > analyze.MIN_SIMILARITY):
-     guess = { 'dict': dict, 'similarity': object_similarity, 'pos': counter}
-     guess_results.append(guess)
-  if (len(guess_results) > 0):
-   self.first_approach.append(guess_results)
-
- def compare_object(self, fft_freq, fft_min, fft_max, dict_fft_freq, dict_fft_min, dict_fft_max):
-  zipped = zip(fft_freq, fft_min, fft_max, dict_fft_min, dict_fft_max)
-  l = len(zipped)
-  ll = len(dict_fft_freq)
-  lll = ll -l
-  if (lll > analyze.MAX_LEN_DIFF):
    if (self.debug):
-    print ('No match due to MAX_LEN_DIFF '+str(lll))
-   return 0 # maybe we need to be more tolerant...
-  matches = 0
+    print ('comparing characteristic against '+dict_entries['id'])
+   dict_characteristic = dict_entries['characteristic']
+   characteristic_tokens = dict_characteristic['tokens']
+   for token in characteristic_tokens:
+    guess = self.compare_token(characteristic['fft_min'], characteristic['fft_max'], token['fft_min_min'], token['fft_min_max'], token['fft_max_min'], token['fft_max_max'])
+    convergency = self.compare_tendency(characteristic, token)
+    match = guess + convergency
+    if (match > analyze.MIN_SIMILARITY):
+     self.first_approach.append((dict_entries['id'], token['num'], counter, guess, convergency))
+
+ def compare_tendency(self, characteristic, token):
+  convergency = 0
+  if (characteristic['fft_freq'] >= token['fft_freq_min'] and characteristic['fft_freq'] <= token['fft_freq_min']):
+   convergency += 10 
+  if (characteristic['tendency']['len'] >= token['tendency']['len_min'] and characteristic['tendency']['len'] <= token['tendency']['len_max']):
+   convergency += 10
+  if (characteristic['tendency']['peaks'] >= token['tendency']['peaks_min'] and characteristic['tendency']['peaks'] <= token['tendency']['peaks_max']):
+   convergency += 10
+  return convergency
+  
+
+ def compare_token(self, fft_min, fft_max, fft_min_min, fft_min_max, fft_max_min, fft_max_max):
+  zipped = zip(fft_min, fft_max, fft_min_min, fft_min_max, fft_max_min, fft_max_max)
+  match = 0
   for z in zipped:
-   fr, fmi, fma, dfmi, dfma = z
-   if (fmi == dfmi or (dfmi < fmi + analyze.CONVERGENCY and fmi - analyze.CONVERGENCY < dfmi)):
-    matches = matches + 1
-   if (fma == dfma or (dfma < fma + analyze.CONVERGENCY and fma - analyze.CONVERGENCY < dfma)):
-    matches = matches + 1
-  guessing = ((matches/2)*100/l)
+   a, b, c, d, e, f = z
+   if (a >= c and a <= d and b >= e and b <= f):
+    match += 1
+  guessing = match*100/len(zipped)    
   return guessing
    
   

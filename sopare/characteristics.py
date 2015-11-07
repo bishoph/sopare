@@ -37,21 +37,20 @@ class characteristic:
    chunked_fft_min.append(int(abs(chunk_min)))
    chunked_fft_max.append(int(abs(chunk_max)))
   
-  fft_max_approach = self.get_approach(chunked_fft_max, False)
-  fft_min_approach = self.get_approach(chunked_fft_min, True)
+  fft_max_approach = self.get_approach(chunked_fft_max)
+  fft_min_approach = self.get_approach(chunked_fft_min)
 
   if (len(chunked_fft_freq) <= 3):
    return None
 
-  tendency_characteristic = self.get_approach(tendency, False)
-  model_characteristic = {'fft_freq': chunked_fft_freq , 'fft_max': fft_max_approach, 'fft_min': fft_min_approach, 'tendency': tendency_characteristic }
+  tendency_characteristic = self.get_tendency(tendency)
+  model_characteristic = {'fft_freq': len(chunked_fft_freq) , 'fft_max': fft_max_approach, 'fft_min': fft_min_approach, 'tendency': tendency_characteristic }
    
   return model_characteristic
 
- def get_approach(self, data, doabs):
-  if (doabs):
-   data = [ abs(i) for i in data]
-  result = [0] * len(data)
+ def get_approach(self, data):
+  data = [abs(i) for i in data]
+  result = [len(data)] * len(data)
   m = max(data)+1
   l = 0
   f = 0
@@ -62,31 +61,22 @@ class characteristic:
     if (a < m and a > l):
      l = a
      pos = i
-   result[pos] = len(data)-z
+   result[pos] = z
    m = l
    l = 0
   return result
 
- def get_tendency(self, tendency):
-  tendency_characteristic = [ ]
-  peak = max(tendency)
-  lowercut = peak  / 4
-  high = 0
-  highpos = 0
-  pos = 0
-  toppeaks = 0
+ def get_tendency(self, data):
   peaks = 0
-  for n in tendency:
+  lowercut = (sum(data)/len(data))*1.3
+  high = 0
+  for n in data:
    if (n > high):
     high = n
-    highpos = pos
-    currentpeak = pos
-    peaks += 1
    elif (n < lowercut):
-    if (high > 0):
-     toppeaks += 1
-     high = 0
-   pos += 1
-  tendency_characteristic.append(peaks)
-  tendency_characteristic.append(toppeaks)
-  return tendency_characteristic
+    if (high > lowercut):
+     peaks += 1
+    high = 0
+  tendency = { 'len': len(data), 'peaks': peaks }
+  return tendency
+  

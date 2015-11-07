@@ -43,6 +43,7 @@ class worker(multiprocessing.Process):
   self.analyze = analyze.analyze(debug)
   self.characteristic = characteristics.characteristic(debug)
   self.running = True
+  self.counter = 0
   self.reset()
   self.DICT = self.util.getDICT()
   self.start()
@@ -59,7 +60,10 @@ class worker(multiprocessing.Process):
   self.analyze.reset()
 
  def do_analysis(self):
-  best_results = self.analyze.get_best_results()
+  if (self.counter > 1):
+   self.counter = self.counter - 1
+   print ("COUNTER = "+str(self.counter))
+   best_results = self.analyze.get_best_results()
 
  def run(self):
   if (self.debug):
@@ -98,18 +102,16 @@ class worker(multiprocessing.Process):
     self.do_analysis()
     self.running = False
 
-  if (self.dict != None):  
-   if (len(self.dict) == len(self.character)):
-    n = 0
-    for c in self.character:
-     if (c != None):
-      dict_id = self.dict[n:n+1]
-      self.DICT = self.util.add2dict(c, dict_id) 
-      n += 1
-   else:
-    for c in self.character:
-     if (c != None):
-      self.DICT = self.util.add2dict(c, self.dict)
+
+  # delete last item from list
+  if (len(self.character) > 1):
+   self.character.pop(1)
+  for i,c in enumerate(self.character):
+   if (c != None):
+    if (self.debug):
+     print (c)
+    if (self.dict != None):  
+     self.DICT = self.util.learndict(i, c, self.dict)
 
   if (self.wave):
    scaled = numpy.int16(self.rawbuf/numpy.max(numpy.abs(self.rawbuf)) * 32767)
