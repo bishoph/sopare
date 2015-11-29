@@ -60,10 +60,39 @@ class worker(multiprocessing.Process):
   self.analyze.reset()
 
  def do_analysis(self):
-  if (self.counter > 1):
-   self.counter = self.counter - 1
-   print ("COUNTER = "+str(self.counter))
+   if (self.counter == 0):
+    return
+   print ('do_analysis on '+str(self.counter)+ ' tokens')
    best_results = self.analyze.get_best_results()
+   pre_sorted_results = { }
+   for r in best_results:
+    a,b,c,d = r
+    if (a in pre_sorted_results):
+     o = pre_sorted_results[a]
+     o['f'] += 1
+     o['v'] += c
+     o['t'].append(b)
+    else:
+     pre_sorted_results[a] = { 't': [b], 'v': c, 'l': d, 'f': 1 }
+   sorted_results = [ ]
+   for r in pre_sorted_results:
+    o = pre_sorted_results[r]
+    v = o['v']
+    l = o['l']
+    f = o['f']
+    if (self.counter >= f and self.counter <= l):
+     m = l/f
+     if (m > 0):
+      rv = v / m
+     else:
+      rv = v / l
+    else:
+     rv = v / self.counter
+    sorted_results.append((r, rv))
+   sorted_results = sorted(sorted_results,key=lambda x: (-x[1],x[0]))
+   if (self.debug):
+    print pre_sorted_results
+   print sorted_results
 
  def run(self):
   if (self.debug):
@@ -72,7 +101,8 @@ class worker(multiprocessing.Process):
    obj = self.queue.get()
    if (obj['action'] == 'data'):
     raw_token = obj['token']
-    self.rawbuf.extend(raw_token)
+    if (self.wave):
+     self.rawbuf.extend(raw_token)
     fft = obj['fft']
     self.rawfft.extend(fft)
     raw_token_compressed = self.condense.compress(raw_token)
@@ -80,7 +110,7 @@ class worker(multiprocessing.Process):
 
     characteristic = self.characteristic.getcharacteristic(fft, raw_tendency)
     if (self.debug):
-     print ('characteristic = ' + str(self.counter) + ' ' + str(characteristic))    
+     print ('characteristic = ' + str(self.counter) + ' ' + str(characteristic))
 
     if (self.dict != None):
      self.character.append( characteristic )
@@ -90,7 +120,7 @@ class worker(multiprocessing.Process):
 
     if (self.wave):
      scaled = numpy.int16(raw_token/numpy.max(numpy.abs(raw_token)) * 32767)
-     write('tokens/token'+str(self.counter)+self.uid+'.wav', 44100, scaled) 
+     write('tokens/token'+str(self.counter)+self.uid+'.wav', 44100, scaled)
 
     if (self.plot):
      self.visual.create_sample(raw_tendency, 'token'+str(self.counter)+'.png')
@@ -102,10 +132,6 @@ class worker(multiprocessing.Process):
     self.do_analysis()
     self.running = False
 
-
-  # delete last item from list
-  if (len(self.character) > 1):
-   self.character.pop(1)
   for i,c in enumerate(self.character):
    if (c != None):
     if (self.debug):

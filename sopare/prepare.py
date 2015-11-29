@@ -24,71 +24,101 @@ import util
 import filter
 
 class preparing():
+ 
+ PITCH = 500
+ MIN_TOKEN_LENGTH = 10
 
  def __init__(self, debug, plot, wave, dict):
   self.debug = debug
   self.plot = plot
   self.wave = wave
   self.dict = dict
-  self.NOISE = 500
   self.visual = visual.visual()
   self.util = util.util(debug, wave)
   self.filter = filter.filtering(debug, plot, dict, wave)
   self.reset()
 
- def done(self):
+ def tokenize(self):
   if (self.debug):
-   print ('elements (tokens) in buffer: '+str(self.tokens))
-  #if (self.wave):
-  # for index, obj in enumerate(self.tokens):
-  #  self.util.saverawwave('token'+str(index), obj[0], obj[1], self.rawbuf)
-  self.reset()
+   print ('token: '+str(self.last_token_start) +':'+str(len(self.buffer)))
+  self.filter.filter(self.buffer[self.last_token_start:len(self.buffer)])
+  self.last_token_start = len(self.buffer)
 
  def stop(self):
   self.filter.stop()
   if (self.plot):
    self.visual.create_sample(self.buffer, 'sample.png')
+  self.filter_reset()
   self.reset()
 
  def reset(self):
-  self.avg = 0
-  self.token_counter = 1
+  self.counter = 0
+  self.silence = 0
+  self.token_start = False
+  self.min_token_length = 0
+  self.min_word_length = 0
+  self.new_token = False
   self.last_token_start = 0
-  self.chunk_counter = 0
-  self.chunk_avg = 0
-  self.gotdata = False
-  self.gotdatacounter = 0
+  self.token_counter = 0
+  self.last_dmax = 0
+  self.last_adaptive = 0
+  self.adaptive = 0
   self.buffer = [ ]
-  self.rawbuf = [ ]
-  self.tokens = [ ]  
-  self.filter.reset()
 
- def prepare(self, buf, new_token):
-  self.rawbuf.extend(buf)
+ def filter_reset(self):
+  if (self.token_counter > 0):
+   self.filter.reset()
+  
+ def prepare(self, buf, volume):
   data = numpy.fromstring(buf, dtype=numpy.int16)
-  if (new_token == True and len(self.buffer) > 0):
-   if ((self.chunk_avg/self.chunk_counter) > self.NOISE):
-    self.tokens.append([self.last_token_start, len(self.buffer)])
-    self.filter.filter(self.buffer[self.last_token_start:len(self.buffer)], self.token_counter)
-    self.token_counter += 1
-    self.gotdata = True
-    self.gotdatacounter = 0
-   elif (self.gotdata and self.gotdatacounter < 2):
-    self.gotdatacounter +=1
-    self.tokens.append([self.last_token_start, len(self.buffer)])
-    self.filter.filter(self.buffer[self.last_token_start:len(self.buffer)], self.token_counter)
-    self.token_counter += 1
-   else:
-    self.gotdata = False
-    if (self.debug):
-     print ('not enough variance/noise. skipping token ['+str(self.last_token_start) + ',' + str(len(self.buffer))+']')
-   self.last_token_start = len(self.buffer)
-   self.chunk_counter = 0
-   self.chunk_avg = 0
   self.buffer.extend(data)
-  dmin = min(data)
-  dmax = max(data)
-  ddiff = dmax-dmin
-  self.chunk_counter += 1
-  self.chunk_avg += ddiff
+  self.counter += 1
+  abs_data = abs(data)
+  dmax = max(abs_data)
+  self.adaptive += sum(abs_data)
+  self.adaptive = self.adaptive / self.counter
+  self.min_token_length += 1
+  self.min_word_length += 1
 
+  #print self.counter, self.token_counter, volume, dmax, self.adaptive
+
+  # meed to add min word length to not start to early
+  if (dmax > self.last_dmax and self.adaptive > self.last_adaptive and self.new_token == True and self.token_start == True and self.silence < 10 and self.min_word_length > 30 and dict == None):
+   if (self.debug):
+    print ('potentially a new word at '+str(self.counter) + ' '+str(self.new_token) + ' ' + str(self.token_start))
+   self.filter_reset()
+   self.reset()
+   self.min_word_length = 0
+  self.last_dmax = dmax
+  self.last_adaptive = self.adaptive
+
+  if (self.new_token == True and self.silence < 10):
+   self.new_token = False
+   self.tokenize()
+   self.token_counter += 1
+   self.min_token_length = 0
+   self.adaptive = 0
+
+  # silence / token end
+  if (self.adaptive < preparing.PITCH or volume < 100 or dmax < 100):
+   self.silence += 1
+   if (self.silence == 10 and self.new_token == False and self.min_token_length >= preparing.MIN_TOKEN_LENGTH):
+    #if (self.debug):
+    # print ('Silence end token at '+str(self.counter))
+    self.new_token = True
+    self.token_start = False
+
+  # pitch / token end 
+  if (volume < preparing.PITCH and self.new_token == False and self.token_start == True and self.min_token_length >= preparing.MIN_TOKEN_LENGTH):
+   #if (self.debug):
+   # print ('Pitch token end at '+str(self.counter))
+   self.slience = 0
+   self.new_token = True 
+   self.token_start = False
+
+  # pitch / token start 
+  if (self.adaptive > preparing.PITCH or volume > preparing.PITCH and self.new_token == True and self.token_start == False):
+   #if (self.debug):
+   # print ('Token start at '+str(self.counter))
+   self.token_start = True
+   self.slience = 0

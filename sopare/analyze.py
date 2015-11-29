@@ -22,6 +22,7 @@ import util
 class analyze():
 
  MIN_SIMILARITY = 40
+ BEST_RESULTS_MIN = 60
 
  def __init__(self, debug):
   self.debug = debug
@@ -30,11 +31,23 @@ class analyze():
   self.reset()
 
  def reset(self):
-  self.first_approach = [ ]
+  self.first_approach = { }
 
  def get_best_results(self):
-  print self.first_approach
-  return self.first_approach
+  best_resuts = [ ]
+  for dict in self.first_approach:
+   arr = self.first_approach[dict]
+   f = 0
+   p = 0
+   for a in arr:
+    t, n, l, g, c = a
+    if (t == n):
+     f += 1
+     p += (g+c)
+     if (self.debug):
+      print dict, t, g, c, l
+     best_resuts.append((dict, t, g+c, l))
+  return best_resuts
    
  def compare(self, counter, characteristic):
   for dict_entries in self.DICT['dict']:
@@ -43,31 +56,57 @@ class analyze():
    dict_characteristic = dict_entries['characteristic']
    characteristic_tokens = dict_characteristic['tokens']
    for token in characteristic_tokens:
-    guess = self.compare_token(characteristic['fft_min'], characteristic['fft_max'], token['fft_min_min'], token['fft_min_max'], token['fft_max_min'], token['fft_max_max'])
+    guess = self.compare_token(characteristic['fft_avg'], token['fft_avg_min'], token['fft_avg_max'])
     convergency = self.compare_tendency(characteristic, token)
     match = guess + convergency
     if (match > analyze.MIN_SIMILARITY):
-     self.first_approach.append((dict_entries['id'], token['num'], counter, guess, convergency))
+     self.add2approach(dict_entries['id'], token['num'], counter, len(characteristic_tokens), guess, convergency)
 
+ def add2approach(self, d, t, n, l, g, c):
+  if (d in self.first_approach):
+   o = self.first_approach[d]
+   o.append((t,n,l,g,c))
+  else:
+   self.first_approach[d] = [(t,n,l,g,c)]
+   
  def compare_tendency(self, characteristic, token):
   convergency = 0
-  if (characteristic['fft_freq'] >= token['fft_freq_min'] and characteristic['fft_freq'] <= token['fft_freq_min']):
+  if (characteristic['fft_freq'] >= token['fft_freq_min'] and characteristic['fft_freq'] <= token['fft_freq_max']):
    convergency += 10 
+  else:
+   convergency -= 5
   if (characteristic['tendency']['len'] >= token['tendency']['len_min'] and characteristic['tendency']['len'] <= token['tendency']['len_max']):
-   convergency += 10
+   convergency += 50
+  else:
+   convergency -= 40
   if (characteristic['tendency']['peaks'] >= token['tendency']['peaks_min'] and characteristic['tendency']['peaks'] <= token['tendency']['peaks_max']):
-   convergency += 10
+   convergency += 15
+  else:
+   convergency -= 10
+  if (characteristic['tendency']['avg'] >= token['tendency']['avg_min'] and characteristic['tendency']['avg'] <= token['tendency']['avg_max']):
+   convergency += 30
+  else:
+   convergency -= 20
+  if (characteristic['tendency']['delta'] >= token['tendency']['delta_min'] and characteristic['tendency']['delta'] <= token['tendency']['delta_max']):
+   convergency += 5
+  else:
+   convergency -= 3
+
   return convergency
   
 
- def compare_token(self, fft_min, fft_max, fft_min_min, fft_min_max, fft_max_min, fft_max_max):
-  zipped = zip(fft_min, fft_max, fft_min_min, fft_min_max, fft_max_min, fft_max_max)
+ def compare_token(self, fft_avg, fft_avg_min, fft_avg_max):
+  zipped = zip(fft_avg, fft_avg_min, fft_avg_max)
   match = 0
-  for z in zipped:
-   a, b, c, d, e, f = z
-   if (a >= c and a <= d and b >= e and b <= f):
-    match += 1
-  guessing = match*100/len(zipped)    
+  importance = [ 4,4,4,3,3,2,2,2,1 ]
+  for i,z in enumerate(zipped):
+   a, b, c = z
+   if (a >= b and a <= c):
+    factor = .1
+    if (i < len(importance)):
+     factor = importance[i]
+    match += factor
+  guessing = int(match*100/len(zipped))
   return guessing
    
   

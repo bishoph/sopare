@@ -28,6 +28,30 @@ class util:
   self.debug = debug
   self.wave = wave
 
+ def showdictentry(self, dict):
+  json_data = self.getDICT()
+  dict_entries = self.get_characteristic_by_name_from_dict(dict, json_data)
+  if (dict_entries != None):
+   dict_characteristic = dict_entries['characteristic']
+   characteristic_tokens = dict_characteristic['tokens']
+   for i, token in enumerate(characteristic_tokens):
+    maxv = str(token['fft_avg_max'])
+    minv = str(token['fft_avg_min'])
+    maxv = maxv[1:len(maxv)-1]
+    minv = minv[1:len(minv)-1]    
+    print ('max-avg ['+str(i)+'] '+dict+', '+maxv)
+    print ('min-avg ['+str(i)+'] '+dict+', '+minv)
+   print
+   for i, token in enumerate(characteristic_tokens):
+    print ('max-freq ['+str(i)+'] '+dict+', '+str(token['fft_freq_max']))
+    print ('min-freq ['+str(i)+'] '+dict+', '+str(token['fft_freq_min']))
+   print
+   for i, token in enumerate(characteristic_tokens):
+    tendency = token['tendency']
+    print ('['+str(i)+'] = '+str(tendency))
+  else:
+   print ('No dict entry available!') 
+
  def learndict(self, num, characteristic, dict):
   json_data =  self.getDICT()
   dict_model = self.get_characteristic_by_name_from_dict(dict, json_data)
@@ -56,10 +80,8 @@ class util:
   return dict_model
 
  def modify_zone_model(self, num, characteristic, token):
-  self.zoning('fft_min', 'fft_min_min', characteristic, token, 0)
-  self.zoning('fft_max', 'fft_max_min', characteristic, token, 0)
-  self.zoning('fft_min', 'fft_min_max', characteristic, token, 1)
-  self.zoning('fft_max', 'fft_max_max', characteristic, token, 1)
+  self.zoning('fft_avg', 'fft_avg_min', characteristic, token, 0)
+  self.zoning('fft_avg', 'fft_avg_max', characteristic, token, 1)
   if (characteristic['fft_freq'] < token['fft_freq_min']):
    token['fft_freq_min'] = characteristic['fft_freq']
   if (characteristic['fft_freq'] > token['fft_freq_max']):
@@ -70,29 +92,48 @@ class util:
    token['peaks_max'] = characteristic['tendency']['peaks']
   if (characteristic['tendency']['len'] < token['tendency']['len_min']):
    token['tendency']['len_min'] = characteristic['tendency']['len']
-  if (characteristic['tendency']['len'] < token['tendency']['len_max']):
+  if (characteristic['tendency']['len'] > token['tendency']['len_max']):
    token['tendency']['len_max'] = characteristic['tendency']['len']
-   
+  if (characteristic['tendency']['avg'] < token['tendency']['avg_min']):
+   token['tendency']['avg_min'] = characteristic['tendency']['avg']
+  if (characteristic['tendency']['avg'] > token['tendency']['avg_max']):
+   token['tendency']['avg_max'] = characteristic['tendency']['avg'] 
+  if (characteristic['tendency']['delta'] < token['tendency']['delta_min']):
+   token['tendency']['delta_min'] = characteristic['tendency']['delta']
+  if (characteristic['tendency']['delta'] > token['tendency']['delta_max']):
+   token['tendency']['delta_max'] = characteristic['tendency']['delta']
 
  def zoning(self, id1, id2, characteristic, token, action):
+  # we want a high precision even in our model and this means
+  # too big steps are counter productive and we make sure that
+  # our steps are somehow smooth.
+  # Higher values means faster learning but also potential inaccuracy
+  # and false positives!
+   
+  max_steps = 1000
+
   obj = zip(characteristic[id1], token[id2])
   for i, o in enumerate(obj):
    co, to = o
    if (action == 0 and co < to):
+    if (to-co > max_steps):
+     co = to - max_steps
     token[id2][i] = co
    elif (action == 1 and co > to):
+    if (co-to > max_steps):
+     co = to + max_steps
     token[id2][i] = co
 
  def create_zone_model(self, num, characteristic):
-  characteristic_tendency = { 'peaks_min': characteristic['tendency']['peaks'] , 'peaks_max': characteristic['tendency']['peaks'], 'len_min': characteristic['tendency']['len'], 'len_max': characteristic['tendency']['len'] } 
-  dict_model = { 'num': num, 'fft_freq_min': characteristic['fft_freq'], 'fft_freq_max': characteristic['fft_freq'], 'fft_max_max': characteristic['fft_max'], 'fft_max_min': characteristic['fft_max'], 'fft_min_max': characteristic['fft_min'], 'fft_min_min': characteristic['fft_min'], 'tendency': characteristic_tendency } 
+  characteristic_tendency = { 'peaks_min': characteristic['tendency']['peaks'] , 'peaks_max': characteristic['tendency']['peaks'], 'len_min': characteristic['tendency']['len'], 'len_max': characteristic['tendency']['len'], 'avg_min': characteristic['tendency']['avg'], 'avg_max': characteristic['tendency']['avg'], 'delta_min': characteristic['tendency']['delta'], 'delta_max': characteristic['tendency']['delta'] } 
+  dict_model = { 'num': num, 'fft_freq_min': characteristic['fft_freq'], 'fft_freq_max': characteristic['fft_freq'], 'fft_avg_max': characteristic['fft_avg'], 'fft_avg_min': characteristic['fft_avg'], 'tendency': characteristic_tendency }
   return dict_model 
 
  def get_characteristic_by_name_from_dict(self, dict, JSON_DATA):
-  dict_objects = JSON_DATA['dict']
-  for do in dict_objects:
-   if (dict == do['id']):
-    return do
+  dict_entries = JSON_DATA['dict']
+  for de in dict_entries:
+   if (dict == de['id']):
+    return de
   return None
 
  def changedict(self, obj, dict):

@@ -20,7 +20,7 @@ under the License.
 class packing():
 
  def __init__(self):
-  self.SLICE = 32
+  self.SLICE = 16
 
  def compress(self, data):
   compressed = [ ]

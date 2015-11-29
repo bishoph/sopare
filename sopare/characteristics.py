@@ -23,29 +23,22 @@ class characteristic:
   self.debug = debug
 
  def getcharacteristic(self, fft, tendency):
+  fft = [abs(i) for i in fft]
   chunked_fft_freq = [ ]
-  chunked_fft_min = [ ]
-  chunked_fft_max = [ ]
-  fft_max = max(fft)
-  fft_min = min(fft)
+  chunked_fft_avg = [ ]
   steps = 100
   
   for i in range(0, len(fft), steps):
-   chunk_min = min(fft[i:i+steps])
-   chunk_max = max(fft[i:i+steps])
+   chunk_avg = sum(fft[i:i+steps])/steps
    chunked_fft_freq.append(i)
-   chunked_fft_min.append(int(abs(chunk_min)))
-   chunked_fft_max.append(int(abs(chunk_max)))
+   chunked_fft_avg.append(int(abs(chunk_avg)))
   
-  fft_max_approach = self.get_approach(chunked_fft_max)
-  fft_min_approach = self.get_approach(chunked_fft_min)
-
   if (len(chunked_fft_freq) <= 3):
    return None
 
   tendency_characteristic = self.get_tendency(tendency)
-  model_characteristic = {'fft_freq': len(chunked_fft_freq) , 'fft_max': fft_max_approach, 'fft_min': fft_min_approach, 'tendency': tendency_characteristic }
-   
+  model_characteristic = {'fft_freq': len(chunked_fft_freq) , 'fft_avg': chunked_fft_avg, 'tendency': tendency_characteristic }
+
   return model_characteristic
 
  def get_approach(self, data):
@@ -68,7 +61,9 @@ class characteristic:
 
  def get_tendency(self, data):
   peaks = 0
-  lowercut = (sum(data)/len(data))*1.3
+  avg = (sum(data)/len(data))
+  delta = data[0]-data[len(data)-1]
+  lowercut = avg*1.1
   high = 0
   for n in data:
    if (n > high):
@@ -77,6 +72,6 @@ class characteristic:
     if (high > lowercut):
      peaks += 1
     high = 0
-  tendency = { 'len': len(data), 'peaks': peaks }
+  tendency = { 'len': len(data), 'peaks': peaks, 'avg': avg, 'delta': delta }
   return tendency
   
