@@ -18,6 +18,7 @@ under the License.
 """
 
 import util
+from globalvars import IMPORTANCE
 
 class analyze():
 
@@ -98,13 +99,12 @@ class analyze():
  def compare_token(self, fft_avg, fft_avg_min, fft_avg_max):
   zipped = zip(fft_avg, fft_avg_min, fft_avg_max)
   match = 0
-  importance = [ 4,4,4,3,3,2,2,2,1 ]
   for i,z in enumerate(zipped):
    a, b, c = z
    if (a >= b and a <= c):
     factor = .1
-    if (i < len(importance)):
-     factor = importance[i]
+    if (i < len(IMPORTANCE)):
+     factor = IMPORTANCE[i]
     match += factor
   guessing = int(match*100/len(zipped))
   return guessing

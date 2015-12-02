@@ -26,7 +26,7 @@ import buffering
 class processor:
 
  MAX_SLILENCE_AFTER_START = 2
- MAX_TIME = 4
+ MAX_TIME = 6
  TOKEN_IDENTIFIER = 5
 
  def __init__(self, endless_loop, debug, plot, wave, outfile, dict, buffering, THRESHOLD = 500, live = True):

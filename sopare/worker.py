@@ -62,7 +62,6 @@ class worker(multiprocessing.Process):
  def do_analysis(self):
    if (self.counter == 0):
     return
-   print ('do_analysis on '+str(self.counter)+ ' tokens')
    best_results = self.analyze.get_best_results()
    pre_sorted_results = { }
    for r in best_results:
@@ -92,7 +91,8 @@ class worker(multiprocessing.Process):
    sorted_results = sorted(sorted_results,key=lambda x: (-x[1],x[0]))
    if (self.debug):
     print pre_sorted_results
-   print sorted_results
+   if (len(sorted_results) > 0):
+    print ('based on '+str(self.counter) + ' tokens we guess >> ' + str(sorted_results))
 
  def run(self):
   if (self.debug):

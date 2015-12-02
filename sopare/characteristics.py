@@ -26,7 +26,7 @@ class characteristic:
   fft = [abs(i) for i in fft]
   chunked_fft_freq = [ ]
   chunked_fft_avg = [ ]
-  steps = 100
+  steps = 50
   
   for i in range(0, len(fft), steps):
    chunk_avg = sum(fft[i:i+steps])/steps

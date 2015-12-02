@@ -20,6 +20,7 @@ under the License.
 import json
 import wave
 import uuid
+from globalvars import IMPORTANCE
 from path import __wavedestination__
 
 class util:
@@ -110,18 +111,24 @@ class util:
   # Higher values means faster learning but also potential inaccuracy
   # and false positives!
    
-  max_steps = 1000
+  max_steps = 500
 
   obj = zip(characteristic[id1], token[id2])
   for i, o in enumerate(obj):
    co, to = o
    if (action == 0 and co < to):
     if (to-co > max_steps):
-     co = to - max_steps
+     factor = .1
+     if (i < len(IMPORTANCE)):
+      factor = IMPORTANCE[i]
+     co = int(to - (max_steps*factor))
     token[id2][i] = co
    elif (action == 1 and co > to):
     if (co-to > max_steps):
-     co = to + max_steps
+     factor = .1
+     if (i < len(IMPORTANCE)):
+      factor = IMPORTANCE[i]
+     co = int(to + (max_steps * factor))
     token[id2][i] = co
 
  def create_zone_model(self, num, characteristic):

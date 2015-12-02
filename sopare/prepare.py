@@ -39,12 +39,14 @@ class preparing():
   self.reset()
 
  def tokenize(self):
-  if (self.debug):
-   print ('token: '+str(self.last_token_start) +':'+str(len(self.buffer)))
-  self.filter.filter(self.buffer[self.last_token_start:len(self.buffer)])
-  self.last_token_start = len(self.buffer)
+  if (len(self.buffer) > 0 and self.last_token_start < len(self.buffer)):
+   if (self.debug):
+    print ('token: '+str(self.last_token_start) +':'+str(len(self.buffer)))
+   self.filter.filter(self.buffer[self.last_token_start:len(self.buffer)])
+   self.last_token_start = len(self.buffer)
 
  def stop(self):
+  self.tokenize()
   self.filter.stop()
   if (self.plot):
    self.visual.create_sample(self.buffer, 'sample.png')
@@ -63,6 +65,7 @@ class preparing():
   self.last_dmax = 0
   self.last_adaptive = 0
   self.adaptive = 0
+  self.word_zoning = 0
   self.buffer = [ ]
 
  def filter_reset(self):
@@ -75,20 +78,46 @@ class preparing():
   self.counter += 1
   abs_data = abs(data)
   dmax = max(abs_data)
-  self.adaptive += sum(abs_data)
+  cur_sum = sum(abs_data)
+  self.adaptive += cur_sum
   self.adaptive = self.adaptive / self.counter
   self.min_token_length += 1
   self.min_word_length += 1
 
-  #print self.counter, self.token_counter, volume, dmax, self.adaptive
+  new_word = False
 
-  # meed to add min word length to not start to early
-  if (dmax > self.last_dmax and self.adaptive > self.last_adaptive and self.new_token == True and self.token_start == True and self.silence < 10 and self.min_word_length > 30 and dict == None):
+  if (cur_sum < 100000):
+   self.word_zoning += 1
+  else:
+   self.word_zoning = 0   
+
+  # we need also a max. length of a word until we cut it out!
+  if (self.min_word_length > 50):
+    new_word = True
+    #print ('TOO LONG ' + str(len(self.buffer)))
+
+  # long silence indicates -> new word
+  if (self.silence > 40 and self.new_token == True and self.token_start == True and self.min_word_length > 10):
+   new_word = True
+   #print ('SILENCE ' + str(len(self.buffer)))
+
+  # signal drop is most likely -> new word
+  if (self.word_zoning >= 10 and self.dict == None):
+   new_word = True
+   #print ('ZONING ' + str(len(self.buffer)));
+
+  # rise after descent, min word length to not start to early -> new word
+  if (dmax > self.last_dmax and self.adaptive > self.last_adaptive and self.new_token == True and self.token_start == True and self.silence < 20 and self.min_word_length > 50 and self.dict == None):
+   new_word = True
+   #print ('RISE AFTER DESCENT ' + str(len(self.buffer)))
+
+  if (new_word == True):
    if (self.debug):
     print ('potentially a new word at '+str(self.counter) + ' '+str(self.new_token) + ' ' + str(self.token_start))
    self.filter_reset()
    self.reset()
    self.min_word_length = 0
+
   self.last_dmax = dmax
   self.last_adaptive = self.adaptive
 
@@ -103,22 +132,16 @@ class preparing():
   if (self.adaptive < preparing.PITCH or volume < 100 or dmax < 100):
    self.silence += 1
    if (self.silence == 10 and self.new_token == False and self.min_token_length >= preparing.MIN_TOKEN_LENGTH):
-    #if (self.debug):
-    # print ('Silence end token at '+str(self.counter))
     self.new_token = True
     self.token_start = False
 
   # pitch / token end 
   if (volume < preparing.PITCH and self.new_token == False and self.token_start == True and self.min_token_length >= preparing.MIN_TOKEN_LENGTH):
-   #if (self.debug):
-   # print ('Pitch token end at '+str(self.counter))
    self.slience = 0
    self.new_token = True 
    self.token_start = False
 
   # pitch / token start 
   if (self.adaptive > preparing.PITCH or volume > preparing.PITCH and self.new_token == True and self.token_start == False):
-   #if (self.debug):
-   # print ('Token start at '+str(self.counter))
    self.token_start = True
    self.slience = 0
