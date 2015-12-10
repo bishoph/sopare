@@ -92,24 +92,24 @@ class preparing():
    self.word_zoning = 0   
 
   # we need also a max. length of a word until we cut it out!
-  if (self.min_word_length > 50):
-    new_word = True
-    #print ('TOO LONG ' + str(len(self.buffer)))
+  #if (self.min_word_length > 50 and (self.word_zoning >= 1 or self.silence >= 3)):
+  #  new_word = True
+  #  print ('TOO LONG ' + str(len(self.buffer)))
 
   # long silence indicates -> new word
   if (self.silence > 40 and self.new_token == True and self.token_start == True and self.min_word_length > 10):
    new_word = True
-   #print ('SILENCE ' + str(len(self.buffer)))
+   print ('SILENCE ' + str(len(self.buffer)))
 
   # signal drop is most likely -> new word
-  if (self.word_zoning >= 10 and self.dict == None):
+  if (self.word_zoning >= 10 and self.min_word_length >= 40):
    new_word = True
-   #print ('ZONING ' + str(len(self.buffer)));
+   print ('ZONING ' + str(len(self.buffer)));
 
   # rise after descent, min word length to not start to early -> new word
-  if (dmax > self.last_dmax and self.adaptive > self.last_adaptive and self.new_token == True and self.token_start == True and self.silence < 20 and self.min_word_length > 50 and self.dict == None):
+  if (dmax > self.last_dmax and self.adaptive > self.last_adaptive and self.new_token == True and self.token_start == True and self.silence < 20 and self.min_word_length > 50):
    new_word = True
-   #print ('RISE AFTER DESCENT ' + str(len(self.buffer)))
+   print ('RISE AFTER DESCENT ' + str(len(self.buffer)))
 
   if (new_word == True):
    if (self.debug):

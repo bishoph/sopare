@@ -126,7 +126,7 @@ class worker(multiprocessing.Process):
      self.visual.create_sample(raw_tendency, 'token'+str(self.counter)+'.png')
      self.visual.create_sample(fft, 'fft'+str(self.counter)+'.png')
     self.counter += 1
-   elif (obj['action'] == 'reset'):
+   elif (obj['action'] == 'reset' and self.dict == None):
     self.reset()
    elif (obj['action'] == 'stop'):
     self.do_analysis()
