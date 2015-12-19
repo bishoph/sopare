@@ -17,10 +17,13 @@ License for the specific language governing permissions and limitations
 under the License.
 """
 
+import characteristics
 import json
 import wave
 import uuid
-from globalvars import IMPORTANCE
+import numpy
+import globalvars
+from scipy.io.wavfile import write
 from path import __wavedestination__
 
 class util:
@@ -28,6 +31,7 @@ class util:
  def __init__(self, debug, wave):
   self.debug = debug
   self.wave = wave
+  self.characteristic = characteristics.characteristic(debug)
 
  def showdictentry(self, dict):
   json_data = self.getDICT()
@@ -47,6 +51,14 @@ class util:
     print ('max-freq ['+str(i)+'] '+dict+', '+str(token['fft_freq_max']))
     print ('min-freq ['+str(i)+'] '+dict+', '+str(token['fft_freq_min']))
    print
+   for i, token in enumerate(characteristic_tokens):
+    min_approach = str(self.characteristic.get_approach(token['fft_avg_min']))
+    max_approach = str(self.characteristic.get_approach(token['fft_avg_max']))
+    maxv = max_approach[1:len(max_approach)-1]
+    minv = min_approach[1:len(min_approach)-1]
+    print ('max_approach ['+str(i)+'] '+dict+', '+maxv)
+    print ('min_approach ['+str(i)+'] '+dict+', '+minv)
+   print   
    for i, token in enumerate(characteristic_tokens):
     tendency = token['tendency']
     print ('['+str(i)+'] = '+str(tendency))
@@ -119,15 +131,15 @@ class util:
    if (action == 0 and co < to):
     if (to-co > max_steps):
      factor = .1
-     if (i < len(IMPORTANCE)):
-      factor = IMPORTANCE[i]
+     if (i < len(globalvars.ACCURACY)):
+      factor = globalvars.ACCURACY[i]
      co = int(to - (max_steps*factor))
     token[id2][i] = co
    elif (action == 1 and co > to):
     if (co-to > max_steps):
      factor = .1
-     if (i < len(IMPORTANCE)):
-      factor = IMPORTANCE[i]
+     if (i < len(globalvars.ACCURACY)):
+      factor = globalvars.ACCURACY[i]
      co = int(to + (max_steps * factor))
     token[id2][i] = co
 
@@ -163,7 +175,7 @@ class util:
 
  def writeDICT(self, json_data):
   with open("dict/dict.json", 'w') as json_file:
-   json.dump(json_data, json_file)
+   json.dump(json_data, json_file, indent=1, separators=(',', ': '))
   json_file.close()
 
  def getDICT(self):
@@ -192,13 +204,17 @@ class util:
   self.writeDICT(new_dict)
 
  def saverawwave(self, filename, start, end, raw):
-  wf = wave.open(__wavedestination__+filename+".wav", 'wb')
+  wf = wave.open(__wavedestination__+filename+'.wav', 'wb')
   wf.setnchannels(1)
   wf.setsampwidth(2)
   wf.setframerate(44100)
   data = raw[start:end] 
   wf.writeframes(b''.join(data))
 
- def normalize(self, data, normalize):
-  newdata = [(float(i)/sum(data)*normalize) for i in data]
+ def savefilteredwave(self, filename, buffer):
+  scaled = numpy.int16(buffer/numpy.max(numpy.abs(buffer)) * 32767)
+  write(__wavedestination__+filename+'.wav', 44100, scaled)  
+
+ def normalize(self, data, normalization):
+  newdata = [int(float(i)/sum(data)*normalization) for i in data]
   return newdata

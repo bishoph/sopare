@@ -44,13 +44,16 @@ class worker(multiprocessing.Process):
   self.characteristic = characteristics.characteristic(debug)
   self.running = True
   self.counter = 0
+  self.reset_counter = 0
+  self.rawbuf = [ ]
   self.reset()
   self.DICT = self.util.getDICT()
   self.start()
 
  def reset(self):
-  self.do_analysis()
   self.counter = 0
+  if (self.wave and len(self.rawbuf) > 0):
+   self.save_wave_buf()
   self.rawbuf = [ ]
   self.rawfft = [ ]
   self.raw = [ ]
@@ -58,41 +61,10 @@ class worker(multiprocessing.Process):
   self.character = [ ]
   self.uid = str(uuid.uuid4())
   self.analyze.reset()
+  self.reset_counter += 1
 
- def do_analysis(self):
-   if (self.counter == 0):
-    return
-   best_results = self.analyze.get_best_results()
-   pre_sorted_results = { }
-   for r in best_results:
-    a,b,c,d = r
-    if (a in pre_sorted_results):
-     o = pre_sorted_results[a]
-     o['f'] += 1
-     o['v'] += c
-     o['t'].append(b)
-    else:
-     pre_sorted_results[a] = { 't': [b], 'v': c, 'l': d, 'f': 1 }
-   sorted_results = [ ]
-   for r in pre_sorted_results:
-    o = pre_sorted_results[r]
-    v = o['v']
-    l = o['l']
-    f = o['f']
-    if (self.counter >= f and self.counter <= l):
-     m = l/f
-     if (m > 0):
-      rv = v / m
-     else:
-      rv = v / l
-    else:
-     rv = v / self.counter
-    sorted_results.append((r, rv))
-   sorted_results = sorted(sorted_results,key=lambda x: (-x[1],x[0]))
-   if (self.debug):
-    print pre_sorted_results
-   if (len(sorted_results) > 0):
-    print ('based on '+str(self.counter) + ' tokens we guess >> ' + str(sorted_results))
+ def save_wave_buf(self):
+  self.util.savefilteredwave('filtered_results'+str(self.reset_counter), self.rawbuf)
 
  def run(self):
   if (self.debug):
@@ -104,24 +76,19 @@ class worker(multiprocessing.Process):
     if (self.wave):
      self.rawbuf.extend(raw_token)
     fft = obj['fft']
-    self.rawfft.extend(fft)
+    if (self.plot):
+     self.rawfft.extend(fft)
+    meta = obj['meta']
     raw_token_compressed = self.condense.compress(raw_token)
     raw_tendency = self.condense.model_tendency(raw_token_compressed)
-
     characteristic = self.characteristic.getcharacteristic(fft, raw_tendency)
-    if (self.debug):
-     print ('characteristic = ' + str(self.counter) + ' ' + str(characteristic))
-
-    if (self.dict != None):
-     self.character.append( characteristic )
-
+    self.character.append((characteristic, meta))
     if (characteristic != None):
-     self.analyze.compare(self.counter, characteristic)
-
-    if (self.wave):
-     scaled = numpy.int16(raw_token/numpy.max(numpy.abs(raw_token)) * 32767)
-     write('tokens/token'+str(self.counter)+self.uid+'.wav', 44100, scaled)
-
+     if (self.debug):
+      print ('characteristic = ' + str(self.counter) + ' ' + str(characteristic))
+      print ('meta = '+str(meta))
+     if (self.wave):
+      self.util.savefilteredwave('token'+str(self.counter)+self.uid, raw_token)
     if (self.plot):
      self.visual.create_sample(raw_tendency, 'token'+str(self.counter)+'.png')
      self.visual.create_sample(fft, 'fft'+str(self.counter)+'.png')
@@ -129,10 +96,20 @@ class worker(multiprocessing.Process):
    elif (obj['action'] == 'reset' and self.dict == None):
     self.reset()
    elif (obj['action'] == 'stop'):
-    self.do_analysis()
+    self.analyze.do_analysis(self.character)
     self.running = False
 
-  for i,c in enumerate(self.character):
+   if (self.counter > 0 and meta != None):
+    for m in meta:
+     if (m['token'] == 'long silence'):
+      if (self.dict == None):
+       self.analyze.do_analysis(self.character)
+       self.reset()
+
+  # end of while
+
+  for i, ch in enumerate(self.character):
+   c, meta = ch
    if (c != None):
     if (self.debug):
      print (c)
@@ -140,9 +117,10 @@ class worker(multiprocessing.Process):
      self.DICT = self.util.learndict(i, c, self.dict)
 
   if (self.wave):
-   scaled = numpy.int16(self.rawbuf/numpy.max(numpy.abs(self.rawbuf)) * 32767)
-   write('tokens/filtered_results.wav', 44100, scaled)
+   self.save_wave_buf()
+
   self.queue.close()
 
   if (self.plot):
    self.visual.create_sample(self.rawfft, 'fft.png')
+

@@ -32,23 +32,42 @@ class characteristic:
    chunk_avg = sum(fft[i:i+steps])/steps
    chunked_fft_freq.append(i)
    chunked_fft_avg.append(int(abs(chunk_avg)))
-  
+
+  right_trim = len(chunked_fft_avg)
+  for i in range(len(chunked_fft_avg)-1,0,-1):
+   if (chunked_fft_avg[i] == 0 and right_trim == i + 1):
+    right_trim = i
+
+  if (right_trim < len(chunked_fft_avg)):
+   chunked_fft_freq = chunked_fft_freq[0:right_trim]
+   chunked_fft_avg = chunked_fft_avg[0:right_trim]
+
+  # we return nothing if the fft_freq len is below 3 as it is useless  
   if (len(chunked_fft_freq) <= 3):
    return None
 
   tendency_characteristic = self.get_tendency(tendency)
-  model_characteristic = {'fft_freq': len(chunked_fft_freq) , 'fft_avg': chunked_fft_avg, 'tendency': tendency_characteristic }
+
+  # we return nothing if the avg is below 100 
+  # or we got just below 20 frequencies
+  # as this seems to be garbage
+  if (tendency_characteristic['avg'] < 40 or len(chunked_fft_freq) < 20):
+   return None
+
+  fft_approach = self.get_approach(chunked_fft_avg)
+  model_characteristic = {'fft_freq': len(chunked_fft_freq) , 'fft_approach': fft_approach, 'fft_avg': chunked_fft_avg, 'tendency': tendency_characteristic }
 
   return model_characteristic
 
  def get_approach(self, data):
   data = [abs(i) for i in data]
-  result = [len(data)] * len(data)
+  ld = len(data)
+  result = [ld] * ld
   m = max(data)+1
   l = 0
   f = 0
   pos = 0
-  for z in range(0, len(data)):
+  for z in range(0, ld):
    pos = z
    for i,a in enumerate(data):
     if (a < m and a > l):

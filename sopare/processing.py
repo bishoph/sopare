@@ -25,7 +25,7 @@ import buffering
 
 class processor:
 
- MAX_SLILENCE_AFTER_START = 2
+ MAX_SLILENCE_AFTER_START = 3
  MAX_TIME = 6
  TOKEN_IDENTIFIER = 5
 
@@ -43,6 +43,9 @@ class processor:
   self.THRESHOLD = THRESHOLD
   self.live = live
   self.timer = 0
+  self.silence_timer = 0
+  self.silence_counter = 0
+  self.silence_buffer = [ ]
   self.prepare = prepare.preparing(debug, plot, wave, dict)
 
  def stop(self, message, timeout):
@@ -68,12 +71,25 @@ class processor:
      print ('starting append mode')
     self.silence_timer = time.time()
     self.timer = time.time()
+    for sbuf in self.silence_buffer:
+     self.prepare.prepare(sbuf, volume)
+    self.silence_buffer = [ ]
    self.append = True
+   self.silence_counter = 0
+  else:
+   self.silence_counter += 1
+   self.silence_buffer.append(buf)
+   if (len(self.silence_buffer) > 3):
+    del self.silence_buffer[0]
   if (self.out != None and self.out.closed != True):
    self.out.write(buf)
   if (self.append == True):
    self.prepare.prepare(buf, volume)
-  if (self.append == True and self.silence_timer > 0 and self.silence_timer + processor.MAX_SLILENCE_AFTER_START < time.time() and self.live == True):
+  if (self.append == True and self.silence_timer > 0 and self.silence_timer + processor.MAX_SLILENCE_AFTER_START < time.time() and self.live == True and self.endless_loop == False):
    self.stop("stop append mode because of silence", True)
-  if (self.append == True and self.timer + processor.MAX_TIME < time.time()):
+  if (self.append == True and self.timer + processor.MAX_TIME < time.time() and self.live == True and self.endless_loop == False):
    self.stop("stop append mode because time is up", False)
+  if (self.append == True and self.live == True and self.endless_loop == True and self.silence_counter > 300):
+   self.append = False
+   self.stop("endless loop silence detected", True)
+   

@@ -75,7 +75,7 @@ def main(argv):
     sys.exit(0)
    if opt in ("-i", "--in"):
     infile = arg
- recorder.recorder(endless_loop, debug, plot, wave, outfile, infile, dict, 500)
+ recorder.recorder(endless_loop, debug, plot, wave, outfile, infile, dict, 300)
 
 def delete_uuid(uuid, debug):
  print ("removing uuid "+uuid+" from dictionary")

@@ -35,12 +35,12 @@ class filtering():
  def reset(self):
   self.queue.put({ 'action': 'reset' })
 
- def filter(self, data):
+ def filter(self, data, meta):
   fft = numpy.fft.rfft(data)
   fft[9000:] = 0
   fft[:20] = 0
   data = numpy.fft.irfft(fft)
-  obj = { 'action': 'data', 'token': data, 'fft': fft }
+  obj = { 'action': 'data', 'token': data, 'fft': fft, 'meta': meta }
   self.queue.put(obj)
 
    
