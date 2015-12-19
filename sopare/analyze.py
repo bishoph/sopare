@@ -185,24 +185,24 @@ class analyze():
   convergency = 0
   if (characteristic['fft_freq'] >= token['fft_freq_min'] and characteristic['fft_freq'] <= token['fft_freq_max']):
    convergency += 10 
-  #else:
-  # convergency -= 5
+  else:
+   convergency -= 5
   if (characteristic['tendency']['len'] >= token['tendency']['len_min'] and characteristic['tendency']['len'] <= token['tendency']['len_max']):
    convergency += 50
-  #else:
-  # convergency -= 40
+  else:
+   convergency -= 40
   if (characteristic['tendency']['peaks'] >= token['tendency']['peaks_min'] and characteristic['tendency']['peaks'] <= token['tendency']['peaks_max']):
    convergency += 15
-  #else:
-  # convergency -= 10
+  else:
+   convergency -= 10
   if (characteristic['tendency']['avg'] >= token['tendency']['avg_min'] and characteristic['tendency']['avg'] <= token['tendency']['avg_max']):
    convergency += 30
-  #else:
-  # convergency -= 20
+  else:
+   convergency -= 20
   if (characteristic['tendency']['delta'] >= token['tendency']['delta_min'] and characteristic['tendency']['delta'] <= token['tendency']['delta_max']):
    convergency += 5
-  #else:
-  # convergency -= 3
+  else:
+   convergency -= 3
   return convergency
   
  def compare_token(self, fft_avg, fft_avg_min, fft_avg_max):
