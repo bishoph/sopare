@@ -51,7 +51,7 @@ class characteristic:
   # we return nothing if the avg is below 100 
   # or we got just below 20 frequencies
   # as this seems to be garbage
-  if (tendency_characteristic['avg'] < 40 or len(chunked_fft_freq) < 20):
+  if (tendency_characteristic['avg'] < 80 or len(chunked_fft_freq) < 20):
    return None
 
   fft_approach = self.get_approach(chunked_fft_avg)

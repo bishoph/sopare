@@ -36,7 +36,7 @@ def main(argv):
 
  if (len(argv) > 0):
   try:                                
-   opts, args = getopt.getopt(argv, "hepvws:o:i:l:d:r:", ["help", "endless", "plot", "verbose", "wave", "show=", "out=", "in=", "learn=", "delete=", "remove-uuid="])
+   opts, args = getopt.getopt(argv, "hepvwcs:o:i:l:d:r:", ["help", "endless", "plot", "verbose", "wave", "content", "show=", "out=", "in=", "learn=", "delete=", "remove-uuid="])
   except getopt.GetoptError:
    usage()
    sys.exit(2)
@@ -73,9 +73,12 @@ def main(argv):
    if opt in ("-s", "--show"):
     show_word_entries(arg, debug)
     sys.exit(0)
+   if opt in ("-c", "--content"):
+    show_dict_ids(debug)
+    sys.exit(0)
    if opt in ("-i", "--in"):
     infile = arg
- recorder.recorder(endless_loop, debug, plot, wave, outfile, infile, dict, 300)
+ recorder.recorder(endless_loop, debug, plot, wave, outfile, infile, dict, 500)
 
 def delete_uuid(uuid, debug):
  print ("removing uuid "+uuid+" from dictionary")
@@ -96,6 +99,11 @@ def show_word_entries(dict, debug):
  utilities = util.util(debug, False)
  utilities.showdictentry(dict)
 
+def show_dict_ids(debug):
+ print ("current entries in dictionary:")
+ utilities = util.util(debug, False)
+ utilities.showdictentriesbyid()
+
 def usage():
  print ("usage:\n")
  print (" -h --help            : this help\n")
@@ -104,6 +112,7 @@ def usage():
  print (" -v --verbose         : enable verbose mode\n")
  print (" -w --wave            : creates wav files (token/tokenN.wav) for each detected word")
  print (" -s --show            : show/print [dict] entry")
+ print (" -c --content         : list all dict entries")
  print (" -o --out [samples/filename]  : write to [samples/filename]")
  print (" -i --in [samples/filename]   : read [samples/filename]")
  print (" -l --learn [word]    : add/modify [word] to/in dictionary")

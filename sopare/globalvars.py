@@ -1,7 +1,17 @@
 # Used to learn, analyze and compare sounds.
-# If the comparator array is longer the value 0.1
-# is used in the appropriate functions
-IMPORTANCE = [ 20,10,5,3,2,2,2,2,2,2, 2,2,1,1,1,1,1,1,1 ]
+# Position starts at 0 from the fft approach which means 
+# that the first positions in the array are the most important ones.
+IMPORTANCE = [ 10,9,8,7,6,5,5,1,1,1, 1,1,1,1,1,1,1,1,1,1,  1,1,1,1,1,1,1,1,1,1,  1,1,1,1,1,1,1,1,1,1 ]
 
-# Learning curve. Smaller numbers learn slower but gives you normally a better accuracy
+# Tolerance table to find matches.
+# Higher values means more tolerance and therefor potential false positives!
+# Position is taken from the fft approach which means that
+# the first positions are the most important ones.
+WITHIN_RANGE = [ 0,1,2,3,4,4, 5,5,5,5,5, 6,6,6,6,6 ]
+
+# Learning curve. Smaller numbers learn slower but gives you normally a better accuracy.
+# As the current recognition is based on the fft approach for each token rather than 
+# real values we just don't care much about this.
+# If the comparator array is longer the value 0.1
+# is used in the appropriate functions.
 ACCURACY = [ 1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1 ]

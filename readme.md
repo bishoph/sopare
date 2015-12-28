@@ -1,12 +1,12 @@
 This is the **SO**und **PA**ttern **RE**cognition project written in Python.
-In a nutshell the project listens to input and creates simple characteristics.
+In a nutshell the project listens to mic input and creates simple characteristics.
 These characteristics are compared to characteristics stored in a dictionary.
 The output is an array of potential best guess matches.
 
 Here is an example output when I said the word light (in German!):
 
 ```
- [(u'licht', 131), (u'dach', 94)]
+ [[0, 506, u'licht'], [1, 115, u'licht'], [0, 4, u'dach'], [1, -39, u'dach']]
 
 ```
 
@@ -37,6 +37,7 @@ Dependencies:
   * Python
   * pyaudio (apt-get install python-pyaudio)
   * numpy (apt-get install python-numpy)
+  * scipy (apt-get install python-scipy)
   * mathplot (apt-get install python-matplotlib)
 
   
@@ -107,10 +108,8 @@ python sopare.py -r UUID
 
 
 
-
 Next steps/TODOs:
 
-  * Need to write a better word tokenizer
   * Think about optimization and pattern uniqueness for very similar sounds like light and night
   * Add plugin architecture for further processing of the results
 
