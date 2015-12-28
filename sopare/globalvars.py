@@ -4,12 +4,12 @@
 IMPORTANCE = [ 10,9,8,7,6,5,5,1,1,1, 1,1,1,1,1,1,1,1,1,1,  1,1,1,1,1,1,1,1,1,1,  1,1,1,1,1,1,1,1,1,1 ]
 
 # Tolerance table to find matches.
-# Higher values means more tolerance and therefor potential false positives!
+# Higher values mean more tolerance and therefor potential false positives!
 # Position is taken from the fft approach which means that
 # the first positions are the most important ones.
 WITHIN_RANGE = [ 0,1,2,3,4,4, 5,5,5,5,5, 6,6,6,6,6 ]
 
-# Learning curve. Smaller numbers learn slower but gives you normally a better accuracy.
+# Learning curve. Smaller numbers learn slower but give you normally a better accuracy.
 # As the current recognition is based on the fft approach for each token rather than 
 # real values we just don't care much about this.
 # If the comparator array is longer the value 0.1
