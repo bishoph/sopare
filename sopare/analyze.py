@@ -20,6 +20,9 @@ under the License.
 import util
 import characteristics
 import globalvars
+import path
+import imp
+import os
 
 class analyze():
 
@@ -31,7 +34,24 @@ class analyze():
   self.util = util.util(debug, None)
   self.characteristic = characteristics.characteristic(debug)
   self.DICT = self.util.getDICT()
+  self.plugins = [ ]
+  self.load_plugins()
   self.reset()
+
+ def load_plugins(self):
+  if (self.debug):
+   print ('checking for plugins...')
+  plugins = os.listdir(path.__plugindestination__)
+  for p in plugins:
+   try:
+    plugin = os.path.join(path.__plugindestination__, p)
+    if (self.debug):
+     print ('loading and initialzing '+plugin)
+    f, filename, description = imp.find_module('__init__', [plugin])
+    loaded_plugin = imp.load_module('__init__', f, filename, description)
+    self.plugins.append(loaded_plugin)
+   except ImportError, err:
+    print 'ImportError:', err
 
  def reset(self):
   self.first_approach = { }
@@ -54,7 +74,8 @@ class analyze():
 
   if (matches != None):
    sorted_matches = sorted(matches, key=lambda x: -x[1])
-   print sorted_matches
+   for p in self.plugins:
+    p.run(sorted_matches)
 
  def word_scan(self, words_start_guess, data):
   words = { }
@@ -261,6 +282,8 @@ class analyze():
     else:
      approach_match += self.find_approach_match(i, b, cfft)
     consider += 1
+  if (self.debug):
+   print ('match array :'+str(match_array))
   guess = int(perfect_match + approach_match * 100 / consider)
   return guess
 
