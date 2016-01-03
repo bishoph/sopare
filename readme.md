@@ -16,7 +16,7 @@ More background information: https://sway.com/BQ8uXDse9LLhL0Zf
 Scope and goals:
  
   * Real time audio processing
-  * Must run on small credit card sized, ARM powered computers like Rasbberry Pi, Banana Pi and alike
+  * Must run on small credit card sized, ARM powered computers like Raspberry Pi, Banana Pi and alike
   * Pattern/voice recognition for only a few words
   * Must work offline without immanent dependencies to cloud APIs
 
