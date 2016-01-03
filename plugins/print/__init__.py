@@ -17,18 +17,7 @@ License for the specific language governing permissions and limitations
 under the License.
 """
 
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as pyplot
-from path import __plotdestination__
+# Default plugin for output of analysis
 
-class visual:
-
- def __init__(self):
-  self.init = 1
-
- def create_sample(self, data, filename):
-  pyplot.plot(data)
-  pyplot.savefig(__plotdestination__+filename)
-  pyplot.clf()
-   
+def run(data):
+ print(data)

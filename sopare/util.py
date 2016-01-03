@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright (C) 2015 Martin Kauss (yo@bishoph.org)
+Copyright (C) 2015, 2016 Martin Kauss (yo@bishoph.org)
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may
 not use this file except in compliance with the License. You may obtain
@@ -33,6 +33,11 @@ class util:
   self.wave = wave
   self.characteristic = characteristics.characteristic(debug)
 
+ def showdictentriesbyid(self):
+  json_data = self.getDICT()
+  for dict_entries in json_data['dict']:
+   print dict_entries['id']
+
  def showdictentry(self, dict):
   json_data = self.getDICT()
   dict_entries = self.get_characteristic_by_name_from_dict(dict, json_data)
@@ -52,13 +57,10 @@ class util:
     print ('min-freq ['+str(i)+'] '+dict+', '+str(token['fft_freq_min']))
    print
    for i, token in enumerate(characteristic_tokens):
-    min_approach = str(self.characteristic.get_approach(token['fft_avg_min']))
-    max_approach = str(self.characteristic.get_approach(token['fft_avg_max']))
-    maxv = max_approach[1:len(max_approach)-1]
-    minv = min_approach[1:len(min_approach)-1]
-    print ('max_approach ['+str(i)+'] '+dict+', '+maxv)
-    print ('min_approach ['+str(i)+'] '+dict+', '+minv)
-   print   
+    for z, approach in enumerate(token['fft_approach']):
+     sa = str(approach)
+     sa = sa[1:len(sa)-1]
+     print ('approach ['+str(i)+'-'+str(z)+'], '+str(sa))
    for i, token in enumerate(characteristic_tokens):
     tendency = token['tendency']
     print ('['+str(i)+'] = '+str(tendency))
@@ -80,7 +82,8 @@ class util:
   token = None
   for t in tokens:
    if ('num' in t and t['num'] == num):
-    token = t   
+    token = t
+    break
   if (token == None):
    if (self.debug):
     print ('Creating new zone model due to new num '+str(num))
@@ -95,6 +98,7 @@ class util:
  def modify_zone_model(self, num, characteristic, token):
   self.zoning('fft_avg', 'fft_avg_min', characteristic, token, 0)
   self.zoning('fft_avg', 'fft_avg_max', characteristic, token, 1)
+  token['fft_approach'].append(characteristic['fft_approach'])
   if (characteristic['fft_freq'] < token['fft_freq_min']):
    token['fft_freq_min'] = characteristic['fft_freq']
   if (characteristic['fft_freq'] > token['fft_freq_max']):
@@ -145,7 +149,7 @@ class util:
 
  def create_zone_model(self, num, characteristic):
   characteristic_tendency = { 'peaks_min': characteristic['tendency']['peaks'] , 'peaks_max': characteristic['tendency']['peaks'], 'len_min': characteristic['tendency']['len'], 'len_max': characteristic['tendency']['len'], 'avg_min': characteristic['tendency']['avg'], 'avg_max': characteristic['tendency']['avg'], 'delta_min': characteristic['tendency']['delta'], 'delta_max': characteristic['tendency']['delta'] } 
-  dict_model = { 'num': num, 'fft_freq_min': characteristic['fft_freq'], 'fft_freq_max': characteristic['fft_freq'], 'fft_avg_max': characteristic['fft_avg'], 'fft_avg_min': characteristic['fft_avg'], 'tendency': characteristic_tendency }
+  dict_model = { 'num': num, 'fft_approach': [ characteristic['fft_approach'] ] , 'fft_freq_min': characteristic['fft_freq'], 'fft_freq_max': characteristic['fft_freq'], 'fft_avg_max': characteristic['fft_avg'], 'fft_avg_min': characteristic['fft_avg'], 'tendency': characteristic_tendency }
   return dict_model 
 
  def get_characteristic_by_name_from_dict(self, dict, JSON_DATA):

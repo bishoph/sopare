@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright (C) 2015 Martin Kauss (yo@bishoph.org)
+Copyright (C) 2015, 2016 Martin Kauss (yo@bishoph.org)
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may
 not use this file except in compliance with the License. You may obtain
@@ -51,7 +51,7 @@ class characteristic:
   # we return nothing if the avg is below 100 
   # or we got just below 20 frequencies
   # as this seems to be garbage
-  if (tendency_characteristic['avg'] < 40 or len(chunked_fft_freq) < 20):
+  if (tendency_characteristic['avg'] < 80 or len(chunked_fft_freq) < 20):
    return None
 
   fft_approach = self.get_approach(chunked_fft_avg)

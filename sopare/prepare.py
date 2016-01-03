@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright (C) 2015 Martin Kauss (yo@bishoph.org)
+Copyright (C) 2015, 2016 Martin Kauss (yo@bishoph.org)
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may
 not use this file except in compliance with the License. You may obtain
@@ -38,6 +38,7 @@ class preparing():
   self.util = util.util(debug, wave)
   self.filter = filter.filtering(debug, plot, dict, wave)
   self.reset()
+  self.plot_buffer = [ ]
 
  def tokenize(self, meta):
   if (len(self.buffer) > 0 and self.last_token_start < len(self.buffer)):
@@ -51,7 +52,7 @@ class preparing():
   self.tokenize([{ 'token': 'stop' }])
   self.filter.stop()
   if (self.plot):
-   self.visual.create_sample(self.buffer, 'sample.png')
+   self.visual.create_sample(self.plot_buffer, 'sample.png')
   self.filter_reset()
   self.reset()
 
@@ -77,6 +78,8 @@ class preparing():
   
  def prepare(self, buf, volume):
   data = numpy.fromstring(buf, dtype=numpy.int16)
+  if (self.plot):
+   self.plot_buffer.extend(data)
   self.buffer.extend(data)
   self.counter += 1
   abs_data = abs(data)
