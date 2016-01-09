@@ -25,80 +25,80 @@ import io
 
 class recorder:
 
- def __init__(self, endless_loop, debug, plot, wave, outfile, infile, dict, THRESHOLD = 500):
-  self.debug = debug
-  self.plot = plot
-  self.wave = wave
-  self.outfile = outfile
-  self.dict = dict
-  self.CHUNK = 512
-  self.FORMAT = pyaudio.paInt16
-  # mono
-  self.CHANNELS = 1
-  self.RATE = 44100
-  self.pa = pyaudio.PyAudio()
-  self.queue = multiprocessing.Queue()
+    def __init__(self, endless_loop, debug, plot, wave, outfile, infile, dict, THRESHOLD = 500):
+        self.debug = debug
+        self.plot = plot
+        self.wave = wave
+        self.outfile = outfile
+        self.dict = dict
+        self.CHUNK = 512
+        self.FORMAT = pyaudio.paInt16
+        # mono
+        self.CHANNELS = 1
+        self.RATE = 44100
+        self.pa = pyaudio.PyAudio()
+        self.queue = multiprocessing.Queue()
   
-  if (debug):
-   defaultCapability = self.pa.get_default_host_api_info()
-   print defaultCapability
+        if (debug):
+            defaultCapability = self.pa.get_default_host_api_info()
+            print defaultCapability
 
-  self.stream = self.pa.open(format=self.FORMAT,
+        self.stream = self.pa.open(format=self.FORMAT,
                 channels=self.CHANNELS,
                 rate=self.RATE,
                 input=True,
                 output=False,
                 frames_per_buffer=self.CHUNK)
 
-  if (infile == None):
-   self.buffering = buffering.buffering(self.queue, endless_loop, self.debug, self.plot, self.wave, self.outfile, self.dict, THRESHOLD)
-   self.recording(endless_loop)
-  else:
-   self.readfromfile(infile, THRESHOLD)
+        if (infile == None):
+            self.buffering = buffering.buffering(self.queue, endless_loop, self.debug, self.plot, self.wave, self.outfile, self.dict, THRESHOLD)
+            self.recording(endless_loop)
+        else:
+            self.readfromfile(infile, THRESHOLD)
 
- def readfromfile(self, infile, THRESHOLD):
-  print("* reading file "+infile)
-  import processing
-  proc = processing.processor(False, self.debug, self.plot, self.wave, None, self.dict, None, THRESHOLD)
-  file = io.open(infile, 'rb', buffering=self.CHUNK*2)
-  while True:
-   buf = file.read(self.CHUNK*2)
-   if buf:
-    proc.check_silence(buf)
-   else:
-    break
-  file.close
-  proc.stop("end of file", False)	
-  print("* done ")
-  self.stop()
-  sys.exit()
+    def readfromfile(self, infile, THRESHOLD):
+        print("* reading file "+infile)
+        import processing
+        proc = processing.processor(False, self.debug, self.plot, self.wave, None, self.dict, None, THRESHOLD)
+        file = io.open(infile, 'rb', buffering=self.CHUNK*2)
+        while True:
+            buf = file.read(self.CHUNK*2)
+            if buf:
+                proc.check_silence(buf)
+            else:
+                break
+        file.close
+        proc.stop("end of file")
+        print("* done ")
+        self.stop()
+        sys.exit()
 
- def recording(self, endless_loop):
-  print("start endless recording")
-  while True:
-   try:
-    if (self.buffering.is_alive()):
-     buf = self.stream.read(self.CHUNK)
-     self.queue.put(buf) 
-    else:
-     print ("Buffering not alive, stop recording")
-     break
-   except IOError as e:
-    print ("stream read error "+str(e))
-    pass
-  self.stop()
-  sys.exit()
+    def recording(self, endless_loop):
+        print("start endless recording")
+        while True:
+            try:
+                if (self.buffering.is_alive()):
+                    buf = self.stream.read(self.CHUNK)
+                    self.queue.put(buf) 
+                else:
+                    print ("Buffering not alive, stop recording")
+                    break
+            except IOError as e:
+                print ("stream read error "+str(e))
+                pass
+        self.stop()
+        sys.exit()
 
- def stop(self):
-  print("stop endless recording")
-  try:
-   self.queue.cancel_join_thread()
-   self.buffering.terminate()
-  except:
-   pass
-  self.stream.stop_stream()
-  self.stream.close()
-  self.pa.terminate()
+    def stop(self):
+        print("stop endless recording")
+        try:
+            self.queue.cancel_join_thread()
+            self.buffering.terminate()
+        except:
+            pass
+        self.stream.stop_stream()
+        self.stream.close()
+        self.pa.terminate()
 
 
 

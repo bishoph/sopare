@@ -20,4 +20,4 @@ under the License.
 # Default plugin for output of analysis
 
 def run(data):
- print(data)
+    print(data)

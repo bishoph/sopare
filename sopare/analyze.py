@@ -18,7 +18,6 @@ under the License.
 """
 
 import util
-import characteristics
 import globalvars
 import path
 import imp
@@ -26,13 +25,9 @@ import os
 
 class analyze():
 
- MIN_SIMILARITY = 40
- BEST_RESULTS_MIN = 60
-
  def __init__(self, debug):
   self.debug = debug
   self.util = util.util(debug, None)
-  self.characteristic = characteristics.characteristic(debug)
   self.DICT = self.util.getDICT()
   self.plugins = [ ]
   self.load_plugins()
@@ -48,8 +43,7 @@ class analyze():
     if (self.debug):
      print ('loading and initialzing '+plugin)
     f, filename, description = imp.find_module('__init__', [plugin])
-    loaded_plugin = imp.load_module('__init__', f, filename, description)
-    self.plugins.append(loaded_plugin)
+    self.plugins.append(imp.load_module(p, f, filename, description))
    except ImportError, err:
     print 'ImportError:', err
 
@@ -121,7 +115,7 @@ class analyze():
     else:
      break
    word_match = word_match / wdl
-   matches.append([s, word_match, id])
+   matches.append([s, word_match, id, wdl])
 
  def full_compare(self, words, data, matches):
   for id in words:
@@ -154,7 +148,7 @@ class analyze():
        append = False
        break
     if (append == True):
-     matches.append([s, word_match, id])
+     matches.append([s, word_match, id, wdl])
 
  def fast_token_compare(self, characteristic, id, pos):
   match = 0
@@ -210,22 +204,6 @@ class analyze():
    best_guesses.append([guess, pos, dict_entries['id']])
   return best_guesses
 
- def get_best_results(self):
-  best_resuts = [ ]
-  for dict in self.first_approach:
-   arr = self.first_approach[dict]
-   f = 0
-   p = 0
-   for a in arr:
-    t, n, l, g, c = a
-    if (t == n):
-     f += 1
-     p += (g+c)
-     if (self.debug):
-      print dict, t, g, c, l
-     best_resuts.append((dict, t, g+c, l))
-  return best_resuts
-   
  def compare_tendency(self, characteristic, token):
   convergency = 0
   if (characteristic['fft_freq'] >= token['fft_freq_min'] and characteristic['fft_freq'] <= token['fft_freq_max']):

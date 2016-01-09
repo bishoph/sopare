@@ -24,11 +24,11 @@ from path import __plotdestination__
 
 class visual:
 
- def __init__(self):
-  self.init = 1
+    def __init__(self):
+        self.init = 1
 
- def create_sample(self, data, filename):
-  pyplot.plot(data)
-  pyplot.savefig(__plotdestination__+filename)
-  pyplot.clf()
+    def create_sample(self, data, filename):
+        pyplot.plot(data)
+        pyplot.savefig(__plotdestination__+filename)
+        pyplot.clf()
    

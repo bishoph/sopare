@@ -24,103 +24,107 @@ import sopare.recorder as recorder
 from sopare.version import __version__
 
 def main(argv):
- endless_loop = False
- debug = False
- outfile = None
- infile = None
- dict = None
- plot = False
- wave = False
+    endless_loop = False
+    debug = False
+    outfile = None
+    infile = None
+    dict = None
+    plot = False
+    wave = False
 
- print ("sopare "+__version__)
+    print ("sopare "+__version__)
 
- if (len(argv) > 0):
-  try:                                
-   opts, args = getopt.getopt(argv, "hepvwcs:o:i:l:d:r:", ["help", "endless", "plot", "verbose", "wave", "content", "show=", "out=", "in=", "learn=", "delete=", "remove-uuid="])
-  except getopt.GetoptError:
-   usage()
-   sys.exit(2)
-  for opt, arg in opts: 
-   if (opt in ("-h", "--help")):
-    usage()
-    sys.exit(0)
-   if (opt in ("-e", "--endless")):
-    endless_loop = True
-   if (opt in ("-v", "--verbose")):
-    debug = True
-   if (opt in ("-w", "--wave")):
-    wave = True
-   if (opt in ("-p", "--plot")):
-    if (endless_loop == False):
-     plot = True
-    else:
-     print ("Plotting only works without loop option!")
-     sys.exit(0)
-   if opt in ("-o", "--output"):
-    outfile = arg
-   if opt in ("-l", "--learn"):
-    if (endless_loop == False):
-     dict = arg
-    else:
-     print ("Changing dictionary only works without loop option!")
-     sys.exit(0)
-   if opt in ("-d", "--delete"):
-    delete_word(arg, debug) 
-    sys.exit(0)
-   if opt in ("-r", "--remove-uuid"):
-    delete_uuid(arg, debug)
-    sys.exit(0)
-   if opt in ("-s", "--show"):
-    show_word_entries(arg, debug)
-    sys.exit(0)
-   if opt in ("-c", "--content"):
-    show_dict_ids(debug)
-    sys.exit(0)
-   if opt in ("-i", "--in"):
-    infile = arg
- recorder.recorder(endless_loop, debug, plot, wave, outfile, infile, dict, 500)
+    if (len(argv) > 0):
+        try:                                
+            opts, args = getopt.getopt(argv, "hepvwcs:o:i:l:d:r:", [
+"help", "endless", "plot", "verbose",   "wave", "content", "show=", "out=",
+"in=", "learn=", "delete=", "remove-uuid="])
+        except getopt.GetoptError:
+            usage()
+            sys.exit(2)
+        for opt, arg in opts: 
+            if (opt in ("-h", "--help")):
+                usage()
+                sys.exit(0)
+            if (opt in ("-e", "--endless")):
+                endless_loop = True
+            if (opt in ("-v", "--verbose")):
+                debug = True
+            if (opt in ("-w", "--wave")):
+                wave = True
+            if (opt in ("-p", "--plot")):
+                if (endless_loop == False):
+                    plot = True
+                else:
+                    print ("Plotting only works without loop option!")
+                    sys.exit(0)
+            if opt in ("-o", "--output"):
+                outfile = arg
+            if opt in ("-l", "--learn"):
+                if (endless_loop == False):
+                    dict = arg
+                else:
+                    print ("Changing dictionary only works without loop option!")
+                    sys.exit(0)
+            if opt in ("-d", "--delete"):
+                delete_word(arg, debug)
+                sys.exit(0)
+            if opt in ("-r", "--remove-uuid"):
+                delete_uuid(arg, debug)
+                sys.exit(0)
+            if opt in ("-s", "--show"):
+                show_word_entries(arg, debug)
+                sys.exit(0)
+            if opt in ("-c", "--content"):
+                show_dict_ids(debug)
+                sys.exit(0)
+            if opt in ("-i", "--in"):
+                infile = arg
+    recorder.recorder(endless_loop, debug, plot, wave, outfile, 
+                      infile, dict, 500)
 
 def delete_uuid(uuid, debug):
- print ("removing uuid "+uuid+" from dictionary")
- utilities = util.util(debug, False)
- utilities.deleteuuidfromdict(uuid)
+    print ("removing uuid "+uuid+" from dictionary")
+    utilities = util.util(debug, False)
+    utilities.deleteuuidfromdict(uuid)
 
 def delete_word(dict, debug):
- if (dict != "*"):
-  print ("deleting "+dict+" from dictionary")
- else:
-  print ("deleting all enttries from dictionary")
- utilities = util.util(debug, False)
- utilities.deletefromdict(dict)
+    if (dict != "*"):
+        print ("deleting "+dict+" from dictionary")
+    else:
+        print ("deleting all enttries from dictionary")
+    utilities = util.util(debug, False)
+    utilities.deletefromdict(dict)
 
 def show_word_entries(dict, debug):
- print (dict+" entries in dictionary:")
- print
- utilities = util.util(debug, False)
- utilities.showdictentry(dict)
+    print (dict+" entries in dictionary:")
+    print
+    utilities = util.util(debug, False)
+    utilities.showdictentry(dict)
 
 def show_dict_ids(debug):
- print ("current entries in dictionary:")
- utilities = util.util(debug, False)
- utilities.showdictentriesbyid()
+    print ("current entries in dictionary:")
+    utilities = util.util(debug, False)
+    utilities.showdictentriesbyid()
 
 def usage():
- print ("usage:\n")
- print (" -h --help            : this help\n")
- print (" -e --endless         : loop forever\n")
- print (" -p --plot            : plot results (only without loop option)")
- print (" -v --verbose         : enable verbose mode\n")
- print (" -w --wave            : creates wav files (token/tokenN.wav) for each detected word")
- print (" -s --show            : show/print [dict] entry")
- print (" -c --content         : list all dict entries")
- print (" -o --out [samples/filename]  : write to [samples/filename]")
- print (" -i --in [samples/filename]   : read [samples/filename]")
- print (" -l --learn [word]    : add/modify [word] to/in dictionary")
- print ("                         (only without loop option)")
- print (" -r --remove-uuid : removes a single entry from dictionary")
- print ("                         (only without loop option)")
- print (" -d --delete [word] : delete [word] from dictionary and exit. '*' deletes everyting!")
- print
+    print ("usage:\n")
+    print (" -h --help            : this help\n")
+    print (" -e --endless         : loop forever\n")
+    print (" -p --plot            : plot results (only without loop option)")
+    print (" -v --verbose         : enable verbose mode\n")
+    print (""" -w --wave            : creates wav files (token/tokenN.wav) for 
+                    each detected word""")
+    print (" -s --show            : show/print [dict] entry")
+    print (" -c --content         : list all dict entries")
+    print (" -o --out [samples/filename]  : write to [samples/filename]")
+    print (" -i --in [samples/filename]   : read [samples/filename]")
+    print (" -l --learn [word]    : add/modify [word] to/in dictionary")
+    print ("                         (only without loop option)")
+    print (" -r --remove-uuid : removes a single entry from dictionary")
+    print ("                         (only without loop option)")
+    print (" -d --delete [word] : delete [word] from dictionary and exit. '*' deletes everyting!")
+    print
 
 main(sys.argv[1:])
 

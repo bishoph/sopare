@@ -19,36 +19,35 @@ under the License.
 
 import multiprocessing
 import processing
-import sys
 
 class buffering(multiprocessing.Process):
 
- def __init__(self, queue, endless_loop, debug, plot, wave, outfile, dict, THRESHOLD):
-  multiprocessing.Process.__init__(self, name="buffering queue")
-  self.queue = queue
-  self.endless_loop = endless_loop
-  self.debug = debug
-  self.plot = plot
-  self.proc = processing.processor(endless_loop, debug, plot, wave, outfile, dict, self, THRESHOLD)
-  self.PROCESS_ROUND_DONE = False
-  self.start()
+    def __init__(self, queue, endless_loop, debug, plot, wave, outfile, dict, THRESHOLD):
+        multiprocessing.Process.__init__(self, name="buffering queue")
+        self.queue = queue
+        self.endless_loop = endless_loop
+        self.debug = debug
+        self.plot = plot
+        self.proc = processing.processor(endless_loop, debug, plot, wave, outfile, dict, self, THRESHOLD)
+        self.PROCESS_ROUND_DONE = False
+        self.start()
   
- def run(self):
-  if (self.debug):
-   print ("buffering queue runner")
-  while True:
-   if (self.endless_loop == False and self.PROCESS_ROUND_DONE):
-    break
-   buf = self.queue.get()
-   self.proc.check_silence(buf)
-  if (self.debug):
-   print ("terminating queue runner")
-  self.queue.close()
+    def run(self):
+        if (self.debug):
+            print ("buffering queue runner")
+        while True:
+            if (self.endless_loop == False and self.PROCESS_ROUND_DONE):
+                break
+            buf = self.queue.get()
+            self.proc.check_silence(buf)
+        if (self.debug):
+            print ("terminating queue runner")
+            self.queue.close()
 
- def stop(self):
-  if (self.debug):
-   print ("stop buffering")
-  self.PROCESS_ROUND_DONE = True
+    def stop(self):
+        if (self.debug):
+            print ("stop buffering")
+        self.PROCESS_ROUND_DONE = True
 
   
 
