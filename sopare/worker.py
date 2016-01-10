@@ -96,12 +96,12 @@ class worker(multiprocessing.Process):
                 self.analyze.do_analysis(self.character)
                 self.running = False
 
-        if (self.counter > 0 and meta != None):
-            for m in meta:
-                if (m['token'] == 'long silence'):
-                    if (self.dict == None):
-                        self.analyze.do_analysis(self.character)
-                        self.reset()
+            if (self.counter > 0 and meta != None):
+                for m in meta:
+                    if (m['token'] == 'long silence'):
+                        if (self.dict == None):
+                            self.analyze.do_analysis(self.character)
+                            self.reset()
 
         # end of while
 

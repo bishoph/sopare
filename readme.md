@@ -111,6 +111,7 @@ python sopare.py -r UUID
 Next steps/TODOs:
 
   * Think about optimization and pattern uniqueness for very similar sounds like light and night
+  * Prevent false positives
   * Optimization and testing
 
 

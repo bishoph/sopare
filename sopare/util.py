@@ -81,15 +81,15 @@ class util:
             if ('num' in t and t['num'] == num):
                 token = t
                 break
-            if (token == None):
-                if (self.debug):
-                    print ('Creating new zone model due to new num '+str(num))
-                zone_model = self.create_zone_model(num, characteristic)
-                dict_model['characteristic']['tokens'].append(zone_model)
-            else:
-                if (self.debug):
-                    print ('Enhancing existing zone model num = '+str(num))
-                self.modify_zone_model(characteristic, token)
+        if (token == None):
+            if (self.debug):
+                print ('Creating new zone model due to new num '+str(num))
+            zone_model = self.create_zone_model(num, characteristic)
+            dict_model['characteristic']['tokens'].append(zone_model)
+        else:
+            if (self.debug):
+                print ('Enhancing existing zone model num = '+str(num))
+            self.modify_zone_model(characteristic, token)
         return dict_model
 
     def modify_zone_model(self, characteristic, token):

@@ -125,7 +125,7 @@ class preparing():
                 if (self.entered_silence == False):
                     new_word = True
                     meta.append({ 'token': 'long silence', 'silence': self.silence, 'word_length': self.min_word_length, 'zoning': self.word_zoning, 'adapting': self.adaptive, 'volume': volume })
-            self.entered_silence = True
+                self.entered_silence = True
         else:
             self.entered_silence = False
   
