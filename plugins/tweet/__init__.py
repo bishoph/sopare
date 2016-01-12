@@ -32,85 +32,65 @@ under the License.
 
 import tweepy
 import imp
+import uuid
 
 api = None
 
 try:
- # The following file must contain consumer_key, consumer_secret, access_token, access_token_secret
- # to be able to authentication against Twitter with oAuth
- SOPARE_PLUGIN_SECRETS = imp.load_source('sopare_plugin_secrets', '/etc/sopare/secrets.py')
- auth = tweepy.OAuthHandler(SOPARE_PLUGIN_SECRETS.consumer_key, SOPARE_PLUGIN_SECRETS.consumer_secret)
- auth.set_access_token(SOPARE_PLUGIN_SECRETS.access_token, SOPARE_PLUGIN_SECRETS.access_token_secret)
- api = tweepy.API(auth)
+    # The following file must contain consumer_key, consumer_secret, access_token, access_token_secret
+    # to be able to authentication against Twitter with oAuth
+    SOPARE_PLUGIN_SECRETS = imp.load_source('sopare_plugin_secrets', '/etc/sopare/secrets.py')
+    auth = tweepy.OAuthHandler(SOPARE_PLUGIN_SECRETS.consumer_key, SOPARE_PLUGIN_SECRETS.consumer_secret)
+    auth.set_access_token(SOPARE_PLUGIN_SECRETS.access_token, SOPARE_PLUGIN_SECRETS.access_token_secret)
+    api = tweepy.API(auth)
 except:
- print ('An error occured while initializing the Twitter API. Continue anyway without tweeting!')
+    print ('An error occured while initializing the Twitter API. Continue anyway without tweeting!')
 
-def run(data):
- # extract best match from results 
- map = [ ]
- best_match = [ ]
- for d in data:
-  if (d[2] not in map):
-   map.append(d[2])
- for m in map:
-  pos = 0
-  best = 0
-  match = ''
-  length = 0
-  for d in data:
-   if (m == d[2] and best < d[1]):
-    pos = d[0]
-    best = d[1]
-    match = d[2]
-    length = d[3]
-  best_match.append([best, match, pos, length])
- best_match = sorted(best_match, key=lambda x: x[2])
+def run(analyzed_results, data):
+    # extract best match from results 
+    best_match = [ ]
+    best_match = sorted(analyzed_results, key=lambda x: -x[1])
 
- # eliminate double entries 
- matchpos = [ ]
- for match in best_match:
-  if (match[2] not in matchpos):
-   matchpos.append(match[2])
- if (len(matchpos) != len(best_match)):
-  clean_best_match = [ ]
-  for pos in matchpos:
-   for match in best_match:
-     if (pos == match[2]):
-      clean_best_match.append(match)
-      break
-  best_match = clean_best_match
+    # eliminate double entries 
+    matchpos = [ ]
+    for match in best_match:
+        if (match[0] not in matchpos):
+            matchpos.append(match[0])
+    if (len(matchpos) != len(best_match)):
+        clean_best_match = [ ]
+        for pos in matchpos:
+            for match in best_match:
+                if (pos == match[0]):
+                    clean_best_match.append(match)
+                    break
+        best_match = clean_best_match
 
- # This is my beta test match list and we generate an status update
- # that is useful for testing purpose and does not reveal any real info
- matches = [ 'computer', 'licht', 'dach' ]
- m = 0
- status = ''
- last = 0
- ll = 0
- rl = 0
- gl = 0
- aus = False
- for i, match in enumerate(matches):
-  for j, bm in enumerate(best_match):
-   if (match == bm[1] and bm[0] > 100 and i == j):
-    if (m == 0):
-     status = str(j)+':'+str(bm[0])+':'+str(bm[2])
-    else:
-     status = status + ","+str(j)+':'+str(bm[0])+':'+str(bm[2])
-     ll += bm[3]
-     rl += (bm[2]-last)
-    gl += bm[3]
-    m += 1
-    last = bm[2]
-   elif ('aus' == bm[1]):
-    aus = True
- status = status + ' / ' + str(ll) + '-' + str(rl) + '-' + str(gl)
- if (aus == True):
-  status = status + ' *1*'
+    mapper = [ ]
+    sorted_match = [ -1 ] * len(data)
+    for i, bm in enumerate(best_match):
+        if (bm[1] > 200):
+            for a in range(bm[0], bm[0]+bm[3]):
+                if (bm[2] not in mapper and a < len(sorted_match)):
+                    sorted_match[a] = i
+            mapper.append(bm[2])
 
- if (m == len(matches)):
-  tweet(status)
+    readable_results = ''
+    last_word = ''
+    for i in sorted_match:
+        if (i >=0):
+            text_result = best_match[i][2]
+            if (text_result != last_word):
+                readable_results += text_result
+            last_word = text_result
+
+    status = None
+    if (readable_results == 'computerlichtaus'):
+        status = '0:'+str(uuid.uuid4())
+    elif (readable_results == 'computerlichtdach'):
+        status = '1:'+str(uuid.uuid4())
+    if (status != None):
+        tweet(status)
 
 def tweet(status):
- if (api != None):
-  api.update_status(status)
+    if (api != None):
+        api.update_status(status)

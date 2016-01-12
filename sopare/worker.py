@@ -84,8 +84,8 @@ class worker(multiprocessing.Process):
                     if (self.debug):
                         print ('characteristic = ' + str(self.counter) + ' ' + str(characteristic))
                         print ('meta = '+str(meta))
-                if (self.wave):
-                    self.util.savefilteredwave('token'+str(self.counter)+self.uid, raw_token)
+                    if (self.wave):
+                        self.util.savefilteredwave('token'+str(self.counter)+self.uid, raw_token)
                 if (self.plot):
                     self.visual.create_sample(raw_tendency, 'token'+str(self.counter)+'.png')
                     self.visual.create_sample(fft, 'fft'+str(self.counter)+'.png')

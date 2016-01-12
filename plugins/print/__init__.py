@@ -19,5 +19,5 @@ under the License.
 
 # Default plugin for output of analysis
 
-def run(data):
-    print(data)
+def run(analyzed_results, data):
+    print(analyzed_results)
