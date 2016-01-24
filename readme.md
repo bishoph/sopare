@@ -10,7 +10,7 @@ Here is an example output when I said the word light (in German!):
 
 ```
 
-More background information: https://sway.com/BQ8uXDse9LLhL0Zf
+Find more detailed information on http://www.bishoph.org and https://sway.com/BQ8uXDse9LLhL0Zf
 
 
 Scope and goals:
@@ -96,25 +96,32 @@ You can delete all entries from the dictionary
 simple by running the command
 
 `
-python sopare.py -d computer
+python sopare.py -d "*"
 `
 
 Each entry in the dictionary has a uuid and you
-can remove single entries by using this command
+can remove single entries by using either 
 
 `
+python sopare.py -d computer
+or
 python sopare.py -r UUID
 `
 
 
-
 Next steps/TODOs:
 
-  * Think about optimization and pattern uniqueness for very similar sounds like light and night
-  * Prevent false positives
-  * Optimization and testing
+  * Optimization
+  * Testing and Bugfixing
 
 
 Project status:
 
-The project is able to learn sound patterns slowly and is able to identify the same sound pattern most of the time. False positives still occur.
+The project is able to learn sound patterns and to identify the same
+sound patterns even under different circumstances. 
+
+False positives still occur sometimes.
+
+Currently the project is tested in a real life environment with normal
+ambient sounds and the results are send to a Twitter account for later
+inspection.

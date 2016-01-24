@@ -70,7 +70,7 @@ class worker(multiprocessing.Process):
             obj = self.queue.get()
             if (obj['action'] == 'data'):
                 raw_token = obj['token']
-                if (self.wave):
+                if (self.wave or True): # TODO: "or True" is just temporary for testing. Should be removed later on!
                     self.rawbuf.extend(raw_token)
                 fft = obj['fft']
                 if (self.plot):
@@ -93,14 +93,14 @@ class worker(multiprocessing.Process):
             elif (obj['action'] == 'reset' and self.dict == None):
                 self.reset()
             elif (obj['action'] == 'stop'):
-                self.analyze.do_analysis(self.character)
+                self.analyze.do_analysis(self.character, None)
                 self.running = False
 
             if (self.counter > 0 and meta != None):
                 for m in meta:
                     if (m['token'] == 'long silence'):
                         if (self.dict == None):
-                            self.analyze.do_analysis(self.character)
+                            self.analyze.do_analysis(self.character, self.rawbuf)
                             self.reset()
 
         # end of while

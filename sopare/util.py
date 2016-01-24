@@ -101,9 +101,9 @@ class util:
         if (characteristic['fft_freq'] > token['fft_freq_max']):
             token['fft_freq_max'] = characteristic['fft_freq']
         if (characteristic['tendency']['peaks'] < token['tendency']['peaks_min']):
-            token['peaks_min'] = characteristic['tendency']['peaks']
+            token['tendency']['peaks_min'] = characteristic['tendency']['peaks']
         if (characteristic['tendency']['peaks']  > token['tendency']['peaks_max']):
-            token['peaks_max'] = characteristic['tendency']['peaks']
+            token['tendency']['peaks_max'] = characteristic['tendency']['peaks']
         if (characteristic['tendency']['len'] < token['tendency']['len_min']):
             token['tendency']['len_min'] = characteristic['tendency']['len']
         if (characteristic['tendency']['len'] > token['tendency']['len_max']):

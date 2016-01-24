@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
@@ -30,6 +29,9 @@ under the License.
 # sudo pip install pyopenssl ndg-httpsclient pyasn1
 
 
+from scipy.io.wavfile import write
+import numpy
+
 import tweepy
 import imp
 import uuid
@@ -46,51 +48,22 @@ try:
 except:
     print ('An error occured while initializing the Twitter API. Continue anyway without tweeting!')
 
-def run(analyzed_results, data):
-    # extract best match from results 
-    best_match = [ ]
-    best_match = sorted(analyzed_results, key=lambda x: -x[1])
-
-    # eliminate double entries 
-    matchpos = [ ]
-    for match in best_match:
-        if (match[0] not in matchpos):
-            matchpos.append(match[0])
-    if (len(matchpos) != len(best_match)):
-        clean_best_match = [ ]
-        for pos in matchpos:
-            for match in best_match:
-                if (pos == match[0]):
-                    clean_best_match.append(match)
-                    break
-        best_match = clean_best_match
-
-    mapper = [ ]
-    sorted_match = [ -1 ] * len(data)
-    for i, bm in enumerate(best_match):
-        if (bm[1] > 200):
-            for a in range(bm[0], bm[0]+bm[3]):
-                if (bm[2] not in mapper and a < len(sorted_match)):
-                    sorted_match[a] = i
-            mapper.append(bm[2])
-
-    readable_results = ''
-    last_word = ''
-    for i in sorted_match:
-        if (i >=0):
-            text_result = best_match[i][2]
-            if (text_result != last_word):
-                readable_results += text_result
-            last_word = text_result
-
+def run(readable_results, best_match, data, rawbuf):
     status = None
-    if (readable_results == 'computerlichtaus'):
-        status = '0:'+str(uuid.uuid4())
-    elif (readable_results == 'computerlichtdach'):
-        status = '1:'+str(uuid.uuid4())
+    if (len(readable_results) == 3):
+        if ('licht' in readable_results and 'dach' in readable_results and 'aus' in readable_results):
+            status = str(uuid.uuid4())
     if (status != None):
+        debug_output(status, readable_results, best_match, data, rawbuf)
         tweet(status)
 
 def tweet(status):
     if (api != None):
         api.update_status(status)
+
+def debug_output(status, readable_results, best_match, data, rawbuf):
+        scaled = numpy.int16(rawbuf/numpy.max(numpy.abs(rawbuf)) * 32767)
+        write('/home/pi/dev/sopare/tokens/'+status+'.wav', 44100, scaled)
+        text_file = open('/home/pi/dev/sopare/tokens/'+status+'.txt', 'w')
+        text_file.write(str(data)+'\n\n'+str(best_match)+'\n\n'+str(readable_results))
+        text_file.close()
