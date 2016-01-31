@@ -105,13 +105,14 @@ class worker(multiprocessing.Process):
 
         # end of while
 
-        for i, ch in enumerate(self.character):
+        for ch in self.character:
             c, meta = ch
             if (c != None):
                 if (self.debug):
                     print (c)
-                if (self.dict != None):  
-                    self.DICT = self.util.learndict(i, c, self.dict)
+
+        if (self.dict != None):
+            self.DICT = self.util.learndict(self.character, self.dict)
 
         if (self.wave):
             self.save_wave_buf()

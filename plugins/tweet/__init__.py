@@ -49,10 +49,15 @@ except:
     print ('An error occured while initializing the Twitter API. Continue anyway without tweeting!')
 
 def run(readable_results, best_match, data, rawbuf):
+    return
     status = None
     if (len(readable_results) == 3):
-        if ('licht' in readable_results and 'dach' in readable_results and 'aus' in readable_results):
+        if ('licht' in readable_results and 'dach' in readable_results):
             status = str(uuid.uuid4())
+            if ('an' in readable_results):
+                status = status + '-1'
+            if ('aus' in readable_results):
+                status = status + '-0'
     if (status != None):
         debug_output(status, readable_results, best_match, data, rawbuf)
         tweet(status)

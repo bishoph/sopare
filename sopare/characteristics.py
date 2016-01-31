@@ -48,7 +48,7 @@ class characteristic:
 
         tendency_characteristic = self.get_tendency(tendency)
 
-        # We return nothing if the avg is below 100 
+        # We return nothing if the avg is below 80
         # or we got just below 20 frequencies
         # as this seems to be garbage
         if (tendency_characteristic['avg'] < 80 or len(chunked_fft_freq) < 20):
