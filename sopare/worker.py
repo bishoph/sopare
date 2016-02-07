@@ -86,10 +86,10 @@ class worker(multiprocessing.Process):
                         print ('meta = '+str(meta))
                     if (self.wave):
                         self.util.savefilteredwave('token'+str(self.counter)+self.uid, raw_token)
-                if (self.plot):
-                    self.visual.create_sample(raw_tendency, 'token'+str(self.counter)+'.png')
-                    self.visual.create_sample(fft, 'fft'+str(self.counter)+'.png')
-                self.counter += 1
+                    if (self.plot):
+                        self.visual.create_sample(raw_tendency, 'token'+str(self.counter)+'.png')
+                        self.visual.create_sample(fft, 'fft'+str(self.counter)+'.png')
+                    self.counter += 1
             elif (obj['action'] == 'reset' and self.dict == None):
                 self.reset()
             elif (obj['action'] == 'stop'):

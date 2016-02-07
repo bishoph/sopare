@@ -25,8 +25,6 @@ import util
 class preparing():
  
     PITCH = 500
-    PITCH_START = 700
-    MIN_TOKEN_LENGTH = 10
 
     def __init__(self, debug, plot, wave, dict):
         self.debug = debug
@@ -37,12 +35,11 @@ class preparing():
         self.util = util.util(debug, wave)
         self.filter = filter.filtering(debug, plot, dict, wave)
         self.silence = 0
-        #self.file = open('/tmp/test.txt','a')
         self.reset()
         self.plot_buffer = [ ]
 
     def tokenize(self, meta):
-        if (len(self.buffer) > 0):
+        if (len(self.buffer) > 0 and (self.entered_silence == False or (self.new_word == True and self.entered_silence == True))):
             start = 0
             end = len(self.buffer)
             if (self.debug):
@@ -51,7 +48,7 @@ class preparing():
             self.buffer = [ ]
 
     def stop(self):
-        #self.file.close()
+        self.peaks = [ ]
         self.tokenize([{ 'token': 'stop' }])
         self.filter.stop()
         if (self.plot):
@@ -64,16 +61,17 @@ class preparing():
         self.silence_start = 0
         self.entered_silence = False
         self.token_start = False
-        self.min_token_length = 0
-        self.min_word_length = 0
         self.new_token = False
-        self.new_word = 3
+        self.new_word = False
         self.token_counter = 0
         self.last_dmax = 0
         self.last_adaptive = 0
-        self.adaptive = 0
         self.word_zoning = 0
         self.buffer = [ ]
+        self.peaks = [ ]   
+        self.low = 0
+        self.last_low_pos = 0
+        self.word_pos = [ ]
 
     def filter_reset(self):
         if (self.token_counter > 0):
@@ -87,51 +85,40 @@ class preparing():
         self.counter += 1
         abs_data = abs(data)
         dmax = max(abs_data)
-        cur_sum = sum(abs_data)
-        self.adaptive += cur_sum
-        self.adaptive = self.adaptive / self.counter
-        self.min_token_length += 1
-        self.min_word_length += 1
+        adaptive = sum(abs_data)
         meta = [ ]
-     
-        #self.file.write(str(self.adaptive) + ', ' +str(volume) + ', ' +str(dmax) + ', ' +str(self.silence) + '\n\r')
+
+        self.peaks.append(volume)
 
         # silence
         if (volume < preparing.PITCH):
             self.silence += 1
-            if (self.silence == 50):
-                self.new_word = 0
-                meta.append({ 'token': 'long silence', 'silence': self.silence, 'word_length': self.min_word_length, 'zoning': self.word_zoning, 'adapting': self.adaptive, 'volume': volume })
-            if (self.adaptive < preparing.PITCH and self.entered_silence == False):
-                self.new_word = 3
+            if (self.silence == 50 and self.entered_silence == False):
+                self.new_word = True
                 self.entered_silence = True
-                meta.append({ 'token': 'silence/token end', 'silence': self.silence, 'word_length': self.min_word_length, 'zoning': self.word_zoning, 'adapting': self.adaptive, 'volume': volume })
+                meta.append({ 'token': 'long silence', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'word_pos': self.word_pos })
+                self.peaks = [ ]
         else:
             self.silence = 0
             self.entered_silence = False
 
-        #if ((self.adaptive < preparing.PITCH or volume < preparing.PITCH) and volume < preparing.PITCH and self.min_word_length > 50):
-        #if (self.adaptive < preparing.PITCH and volume < preparing.PITCH):
-        #    self.silence += 1
-        #    if (self.silence == 10):
-        #        new_word = True
-        #        meta.append({ 'token': 'silence/token end', 'silence': self.silence, 'word_length': self.min_word_length, 'zoning': self.word_zoning, 'adapting': self.adaptive, 'volume': volume })
-        #else:
-            #self.silence = 0
-            # rise/decent
-            #if (dmax < self.last_dmax and dmax > preparing.PITCH and self.min_token_length >= 10):
-            #    self.new_token = True
-            #    meta.append({ 'token': 'rise/decent', 'silence': self.entered_silence, 'word_length': self.min_word_length, 'zoning': self.word_zoning, 'adapting': self.adaptive, 'volume': volume })
+        if (volume <= self.low):
+            self.low = volume
+            self.last_low_pos = self.counter + 1
+        if (volume > self.low):
+            self.low = volume
+            if (self.last_low_pos not in self.word_pos and (adaptive > 80000 or dmax > 200)):
+                self.word_pos.append(self.last_low_pos)
+                self.new_token = True
+                meta.append({ 'token': 'rise/decent', 'silence': self.entered_silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume })
 
-        if (self.new_token == True or self.new_word == 0):
+        if (self.new_token == True or self.new_word == True):
             self.new_token = False
             self.token_counter += 1
-            self.min_token_length = 0
-            self.adaptive = 0
             self.tokenize(meta)
-            if (self.new_word == 0):
-                self.min_word_length = 0
-                self.new_word = 3
-        if (self.new_word > 0 and self.entered_silence == True):
-            self.new_word = self.new_word - 1
+            if (self.new_word == True):
+                self.new_word = False
+                self.word_pos = [ ]
+                self.low = 0
         self.last_dmax = dmax
+        self.last_adaptive = adaptive
