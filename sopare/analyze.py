@@ -41,14 +41,14 @@ class analyze():
             print ('pre_results : '+str(pre_results))
         if (len(pre_results) < 2):
             return
-        first_guess = self.first_scan(pre_results)
+        first_guess = self.first_scan(pre_results, data)
         if (self.debug):
             print ('first_guess : ' + str(first_guess))
         deep_guess = self.deep_scan(first_guess, data)
-        if (self.debug):
-            print ('deep_guess : '+ str(deep_guess))
         if (deep_guess != None):
             best_match = sorted(deep_guess, key=lambda x: -x[1])
+            if (self.debug):
+                print ('best_match : '+ str(best_match))
             readable_resaults = self.get_readable_results(best_match, data)
             if (len(readable_resaults) > 0):
                 for p in self.plugins:
@@ -89,7 +89,7 @@ class analyze():
         sorted_match = [ -1 ] * len(data)
         for i, bm in enumerate(best_match):
             # the following value defined the precision!
-            if (bm[1] >= 0 and sorted_match[bm[0]] == -1):
+            if (bm[1] >= 1 and sorted_match[bm[0]] == -1):
                 wc = 0
                 for a in range(bm[0], bm[0]+bm[3]):
                     if (bm[2] not in mapper and a < len(sorted_match)):
@@ -98,7 +98,6 @@ class analyze():
                         wc += 1
                 mapper.append(bm[2])
         if (self.debug):
-            print best_match
             print sorted_match
 
         readable_results = []
@@ -124,36 +123,28 @@ class analyze():
                 deep_guess.append(value)
         return deep_guess
 
-    def first_scan(self, pre_results):
+    def first_scan(self, pre_results, data):
         first_guess = { }
-        l = len(pre_results)
+        pre_results_length = len(pre_results)
         for i, start in enumerate(pre_results):
-            if (i+1 < l):
-                # now comparing all dict entries from start to end
-                end = pre_results[i+1]
-                self.fast_compare(start, end, first_guess)
+            d = data[start]
+            characteristic, meta = d
+            tendency = characteristic['tendency']
+            self.fast_compare(start, pre_results_length, tendency, first_guess)
         return first_guess
                 
-    def fast_compare(self, start, end, first_guess):
+    def fast_compare(self, start, pre_results_length, tendency, first_guess):
         # we want to find potential matching words and positions 
         # based on a rough pre comparison
-        l = (end-start)
         for id in self.dict_analysis:
             analysis_object = self.dict_analysis[id]
-            potential_start_pos = [ ]
-            if (self.debug):
-                print ('checking for potential word ' + id + ' between ' + str(start) + ' and ' + str(end))
-            if (l > 0): # l >= analysis_object['min_tokens']):
-                c = 0
-                for a in range(start, end):
-                    if (c + l <= analysis_object['max_tokens']):
-                        potential_start_pos.append(a)
-                    c += 1
+            if (tendency['len'] >= analysis_object['min_length'] and tendency['len'] <= analysis_object['max_length']
+             and tendency['avg'] >= analysis_object['min_avg'] and tendency['avg'] <= analysis_object['max_avg']
+             and tendency['peaks'] >= analysis_object['min_peaks'] and tendency['peaks'] <= analysis_object['max_peaks']):
                 if (id not in first_guess):
-                    first_guess[id] = { 'results': potential_start_pos, 'l': l }
+                    first_guess[id] = { 'results': [ start ], 'l': analysis_object['max_tokens'] }
                 else:
-                    first_guess[id]['results'].extend( potential_start_pos )
-        print first_guess
+                    first_guess[id]['results'].append( start )
 
     def word_compare(self, id, start, l, data):
         match_array = [ ]
@@ -166,52 +157,72 @@ class analyze():
                 if (characteristic != None):
                     tendency = characteristic['tendency']
                     fft_approach = characteristic['fft_approach']
-                    points += self.token_compare(tendency, fft_approach, id, pos, match_array)
+                    fft_avg = characteristic['fft_avg']
+                    fft_freq = characteristic['fft_freq']
+                    points += self.token_compare(tendency, fft_approach, fft_avg, fft_freq, id, pos, match_array)
                     pos += 1
         points = self.calculate_points(id, start, points, match_array, l)
         value = [start, points, id, l, match_array]
         return value
 
     def calculate_points(self, id, start, points, match_array, l):
+        ll = len(match_array)
+        match_array_counter = 0
+        best_match = 0
+        best_match_h = 0
         perfect_matches = 0
         perfect_match_sum = 0
         fuzzy_matches = 0
         best_match = 0
-        points = points / l
+        points = points / ll
+        if (points > 100):
+            points = 100
         for arr in match_array:
-            perfect_matches = sum(arr[0])
+            best_match_h = sum(arr[0])
             # TODO: do something with fuzzy_matches
-            fuzzy_matches = sum(arr[1]) 
-            if (perfect_matches > best_match):
-                best_match = perfect_matches
-                perfect_match_sum = sum(globalvars.IMPORTANCE[0:len(arr[0])])
+            fuzzy_matches += sum(arr[1]) 
+            if (best_match_h > best_match):
+                best_match = best_match_h
+                perfect_matches += best_match
+                perfect_match_sum += sum(globalvars.IMPORTANCE[0:len(arr[0])])
+        print id, start, perfect_matches, perfect_match_sum, ll, l
         if (perfect_match_sum > 0):
-            best_match = best_match * 100 / perfect_match_sum
-            best_match = best_match * points / 40
+            perfect_matches = perfect_matches * 100 / perfect_match_sum 
+            best_match = perfect_matches * points / 100
+            if (self.debug):
+                print ('-------------------------------------')
+                print ('id/start/points/perfect_matches/best_match ' + id + '/' + str(start) + '/' + str(points) + '/' + str(perfect_matches) + '/' + str(best_match))
             return best_match
         return 0
 
     def pre_scan(self, data):
         startpos = [ ]
-        cc = 0
-        ws = True
+        word_pos = [ ]
         for d in data:
             characteristic, meta = d
             for m in meta:
                 token = m['token']
                 if (token != 'stop'):
-                    if (token == 'silence/token end'):
-                        ws = True
-            if (characteristic != None):
-                if (ws == True):
-                    startpos.append(cc)
-                    ws = False
-                cc += 1
-        if (len(startpos) == 1 and startpos[0] == 0):
-            startpos.append(cc)
+                    if (token == 'long silence'):
+                        word_pos = m['word_pos']
+        for i, d in enumerate(data):
+            characteristic, meta = d
+            for m in meta:
+                token = m['token']
+                if (token != 'stop'):
+                    if (token == 'rise/decent' and m['pos'] in word_pos and characteristic != None):
+                        startpos.append(i)
+        if (len(startpos) == 0):
+            for i, d in enumerate(data):
+                characteristic, meta = d
+                for m in meta:
+                    token = m['token']
+                    if (token != 'stop'):
+                        if (token == 'rise/decent' and characteristic != None):
+                            startpos.append(i)
         return startpos
 
-    def token_compare(self, tendency, fft_approach, id, pos, match_array):
+    def token_compare(self, tendency, fft_approach, fft_avg, fft_freq, id, pos, match_array):
         perfect_match_array = [0] * len(globalvars.IMPORTANCE)
         fuzzy_array = [0] * len(globalvars.IMPORTANCE)
         hct = 0
@@ -219,30 +230,33 @@ class analyze():
         for dict_entries in self.DICT['dict']:
             did = dict_entries['id']
             if (id == did):
+                analysis_object = self.dict_analysis[id]
                 for i, characteristic in enumerate(dict_entries['characteristic']):
                     if (pos == i):
                         dict_tendency = characteristic['tendency']
-                        hc = self.compare_tendency(tendency, dict_tendency)
+                        hc = self.compare_tendency(tendency, dict_tendency, fft_freq, characteristic['fft_freq'])
                         if (hc > hct):
                             hct = hc
                         dict_fft_approach = characteristic['fft_approach']
-                        perfect_match_array, fuzzy_array = self.compare_fft_token_approach(fft_approach, dict_fft_approach, perfect_match_array, fuzzy_array)               
+                        min_fft_avg = analysis_object['min_fft_avg'][pos]
+                        max_fft_avg = analysis_object['max_fft_avg'][pos]
+                        perfect_match_array, fuzzy_array = self.compare_fft_token_approach(fft_approach, dict_fft_approach, fft_avg, min_fft_avg, max_fft_avg, perfect_match_array, fuzzy_array)
                         counter += 1
         match_array.append([perfect_match_array, fuzzy_array])
         return hct
 
-    def compare_fft_token_approach(self, cfft, dfft, perfect_match_array, fuzzy_array):
-        zipped = zip(cfft, dfft)
+    def compare_fft_token_approach(self, cfft, dfft, fft_avg, min_fft_avg, max_fft_avg, perfect_match_array, fuzzy_array):
+        zipped = zip(cfft, dfft, fft_avg, min_fft_avg, max_fft_avg)
         cut = len(globalvars.IMPORTANCE)
         if (len(zipped) < cut):
             cut = len(zipped)
             perfect_match_array = perfect_match_array[0:cut]
             fuzzy_array = fuzzy_array[0:cut]
         for i, z in enumerate(zipped):
-            a, b = z
+            a, b, c, d, e = z
             if (a < cut):
                 factor = 1
-                if (a == b):
+                if (a == b and c >= d and c <= e):
                     if (a < len(globalvars.IMPORTANCE)):
                         factor = globalvars.IMPORTANCE[a]
                     if (a < len(perfect_match_array) and perfect_match_array[a] == 0):
@@ -263,7 +277,7 @@ class analyze():
                             fuzzy_array[b] += factor
         return perfect_match_array, fuzzy_array
 
-    def compare_tendency(self, c, d):
+    def compare_tendency(self, c, d, cfreq, dfreq):
         convergency = 0
         if (c['len'] == d['len']):
             convergency += 40
@@ -281,4 +295,8 @@ class analyze():
             convergency += 10
         else:
             convergency -= 5
+        if (cfreq == dfreq):
+            convergency = convergency * 2
+        else:
+            convergency = convergency / 4
         return convergency

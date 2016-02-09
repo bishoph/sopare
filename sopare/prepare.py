@@ -42,8 +42,8 @@ class preparing():
         if (len(self.buffer) > 0 and (self.entered_silence == False or (self.new_word == True and self.entered_silence == True))):
             start = 0
             end = len(self.buffer)
-            if (self.debug):
-                print ('token: ' +str(start)+ ':'+str(end))
+            #if (self.debug):
+            #    print ('token: ' +str(start)+ ':'+str(end))
             self.filter.filter(self.buffer[0:end], meta)
             self.buffer = [ ]
 

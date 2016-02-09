@@ -53,18 +53,23 @@ class util:
         json_data = self.getDICT()
         for dict_entries in json_data['dict']:
             if (dict_entries['id'] not in analysis):
-                analysis[dict_entries['id']] = { 'min_tokens': 0, 'max_tokens': 0, 'min_avg': 0, 'max_avg': 0, 'min_peaks': 0, 'max_peaks': 0, 'min_fft_len': 0, 'max_fft_len': 0, 'min_delta': 0, 'max_delta': 0, 'min_length': 0, 'max_length': 0 }
+                analysis[dict_entries['id']] = { 'min_tokens': 0, 'max_tokens': 0, 'min_avg': 0, 'max_avg': 0, 'min_peaks': 0, 'max_peaks': 0, 'min_fft_len': 0, 'max_fft_len': 0, 'min_delta': 0, 'max_delta': 0, 'min_length': 0, 'max_length': 0, 'min_fft_avg': [ ] , 'max_fft_avg': [ ] }
             l = len(dict_entries['characteristic'])
             if (l > analysis[dict_entries['id']]['max_tokens']):
                 analysis[dict_entries['id']]['max_tokens'] = l
             if (l < analysis[dict_entries['id']]['min_tokens'] or analysis[dict_entries['id']]['min_tokens'] == 0):
                 analysis[dict_entries['id']]['min_tokens'] = l
-            for characteristic in dict_entries['characteristic']:
+            for i, characteristic in enumerate(dict_entries['characteristic']):
+                fft_avg_min = [0] * len(globalvars.IMPORTANCE)
+                fft_avg_max = [0] * len(globalvars.IMPORTANCE)
+                analysis[dict_entries['id']]['min_fft_avg'].append(fft_avg_min)
+                analysis[dict_entries['id']]['max_fft_avg'].append(fft_avg_max)
                 avg = characteristic['tendency']['avg']
                 peaks = characteristic['tendency']['peaks']
                 fft_len = characteristic['fft_freq']
                 length = characteristic['tendency']['len']
                 delta = characteristic['tendency']['delta']
+                fft_avg = characteristic['fft_avg']
                 if (avg > analysis[dict_entries['id']]['max_avg']):
                     analysis[dict_entries['id']]['max_avg'] = avg
                 if (avg < analysis[dict_entries['id']]['min_avg'] or analysis[dict_entries['id']]['min_avg'] == 0):
@@ -83,10 +88,14 @@ class util:
                     analysis[dict_entries['id']]['min_delta'] = delta
                 if (length > analysis[dict_entries['id']]['max_length']):
                     analysis[dict_entries['id']]['max_length'] = length
-                if (length < analysis[dict_entries['id']]['min_delta'] or analysis[dict_entries['id']]['min_length'] == 0):
+                if (length < analysis[dict_entries['id']]['min_length'] or analysis[dict_entries['id']]['min_length'] == 0):
                     analysis[dict_entries['id']]['min_length'] = length
-
-        print analysis
+                for j, fft in enumerate(fft_avg):
+                    if (j < len(globalvars.IMPORTANCE)):
+                        if (fft > analysis[dict_entries['id']]['max_fft_avg'][i][j]):
+                             analysis[dict_entries['id']]['max_fft_avg'][i][j] = fft
+                        if (fft < analysis[dict_entries['id']]['min_fft_avg'][i][j] or  analysis[dict_entries['id']]['min_fft_avg'][i][j] == 0):
+                             analysis[dict_entries['id']]['min_fft_avg'][i][j] = fft
         return analysis
 
     def learndict(self, characteristics, id):
