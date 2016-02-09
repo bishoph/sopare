@@ -115,12 +115,14 @@ class analyze():
         deep_guess = [ ]
         for id in first_guess:
             results = first_guess[id]['results']
-            l = first_guess[id]['l']
+            lmax = first_guess[id]['lmax']
+            lmin = first_guess[id]['lmin']
             for pos in results:
                 if (self.debug):
-                    print ('searching for ' + id + ' between ' + str(pos) + ' and ' + str(pos+l))
-                value = self.word_compare(id, pos, l, data)
-                deep_guess.append(value)
+                    print ('searching for ' + id + ' between ' + str(pos) + ' and ' + str(pos+lmax))
+                value = self.word_compare(id, pos, lmin, lmax, data)
+                if (value != None):
+                    deep_guess.append(value)
         return deep_guess
 
     def first_scan(self, pre_results, data):
@@ -142,15 +144,15 @@ class analyze():
              and tendency['avg'] >= analysis_object['min_avg'] and tendency['avg'] <= analysis_object['max_avg']
              and tendency['peaks'] >= analysis_object['min_peaks'] and tendency['peaks'] <= analysis_object['max_peaks']):
                 if (id not in first_guess):
-                    first_guess[id] = { 'results': [ start ], 'l': analysis_object['max_tokens'] }
+                    first_guess[id] = { 'results': [ start ], 'lmin': analysis_object['min_tokens'], 'lmax': analysis_object['max_tokens'] }
                 else:
                     first_guess[id]['results'].append( start )
 
-    def word_compare(self, id, start, l, data):
+    def word_compare(self, id, start, lmin, lmax, data):
         match_array = [ ]
         pos = 0
         points = 0
-        for a in range(start, start+l):
+        for a in range(start, start+lmax):
             if (a < len(data)):                
                 d = data[a]
                 characteristic, meta = d
@@ -161,38 +163,45 @@ class analyze():
                     fft_freq = characteristic['fft_freq']
                     points += self.token_compare(tendency, fft_approach, fft_avg, fft_freq, id, pos, match_array)
                     pos += 1
-        points = self.calculate_points(id, start, points, match_array, l)
-        value = [start, points, id, l, match_array]
+        points = self.calculate_points(id, start, points, match_array, lmin, lmax)
+        if (points == 0):
+            return None
+        value = [start, points, id, lmax, match_array]
         return value
 
-    def calculate_points(self, id, start, points, match_array, l):
+    def calculate_points(self, id, start, points, match_array, lmin, lmax):
         ll = len(match_array)
         match_array_counter = 0
         best_match = 0
         best_match_h = 0
         perfect_matches = 0
         perfect_match_sum = 0
-        fuzzy_matches = 0
-        best_match = 0
         points = points / ll
         if (points > 100):
             points = 100
         for arr in match_array:
-            best_match_h = sum(arr[0])
-            # TODO: do something with fuzzy_matches
-            fuzzy_matches += sum(arr[1]) 
+            best_match_h = sum(arr[0]) + (sum(arr[1]) / 2) # fuzzy match only counts half
             if (best_match_h > best_match):
+                check = sum(globalvars.IMPORTANCE[0:len(arr[0])])
                 best_match = best_match_h
                 perfect_matches += best_match
-                perfect_match_sum += sum(globalvars.IMPORTANCE[0:len(arr[0])])
-        print id, start, perfect_matches, perfect_match_sum, ll, l
+                perfect_match_sum += check
         if (perfect_match_sum > 0):
             perfect_matches = perfect_matches * 100 / perfect_match_sum 
+            if (perfect_matches > 100):
+                perfect_matches = 100
             best_match = perfect_matches * points / 100
+            if (ll >= lmin and ll <= lmax):
+                if (self.debug):
+                    print ('-------------------------------------')
+                    print ('id/start/points/perfect_matches/best_match ' + id + '/' + str(start) + '/' + str(points) + '/' + str(perfect_matches) + '/' + str(best_match))
+                return best_match
+            else:
+                if (self.debug):
+                    print ('----------- !!! '+str(ll) +' >= '+str(lmin) + ' and ' +str(ll) + ' <= ' + str(lmax))
+        else:
             if (self.debug):
-                print ('-------------------------------------')
-                print ('id/start/points/perfect_matches/best_match ' + id + '/' + str(start) + '/' + str(points) + '/' + str(perfect_matches) + '/' + str(best_match))
-            return best_match
+    	        print ('----------- perfect_match_sum == 0')
         return 0
 
     def pre_scan(self, data):
@@ -264,39 +273,37 @@ class analyze():
                 elif (b in cfft):
                     r = 0
                     f = cfft.index(b)
-                    if (b < len(globalvars.IMPORTANCE)):
-                        factor = globalvars.IMPORTANCE[b]
-                    if (b < len(globalvars.WITHIN_RANGE)):
-                        r = globalvars.WITHIN_RANGE[b]
-                    if (i >= f - r and i <= f + r):
-                        if (b < len(fuzzy_array)):
-                            if (i > f):
-                                factor = i - f
-                            else:
-                                factor = f - i
-                            fuzzy_array[b] += factor
+                    c = fft_avg[f]
+                    factor = 1
+                    if (f < len(globalvars.IMPORTANCE)):
+                        factor = globalvars.IMPORTANCE[f]
+                    if (f < len(globalvars.WITHIN_RANGE)):
+                        r = globalvars.WITHIN_RANGE[f]
+                    if (i >= f - r and i <= f + r and c >= d and c <= e):
+                        if (b < len(fuzzy_array) and fuzzy_array[b] == 0):
+                            fuzzy_array[b] = factor
         return perfect_match_array, fuzzy_array
 
     def compare_tendency(self, c, d, cfreq, dfreq):
         convergency = 0
         if (c['len'] == d['len']):
-            convergency += 40
+            convergency += 30
         else:
-            convergency -= 30
+            convergency -= 15
         if (c['peaks'] >= d['peaks']):
             convergency += 10
         else:
             convergency -= 5
         if (c['avg'] >= d['avg']):
-            convergency += 40
+            convergency += 30
         else:
-            convergency -= 30
+            convergency -= 15
         if (c['delta'] >= d['delta']):
             convergency += 10
         else:
             convergency -= 5
         if (cfreq == dfreq):
-            convergency = convergency * 2
+            convergency = convergency + 20
         else:
-            convergency = convergency / 4
+            convergency = convergency - 10
         return convergency
