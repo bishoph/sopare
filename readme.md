@@ -3,10 +3,10 @@ In a nutshell the project listens to mic input and creates simple characteristic
 These characteristics are compared to characteristics stored in a dictionary.
 The output is an array of potential best guess matches.
 
-Here is an example output when I said the word light (in German!):
+Here is an example output when I different words (means 'light off' in German!):
 
 ```
- [[0, 506, u'licht'], [1, 115, u'licht'], [0, 4, u'dach'], [1, -39, u'dach']]
+ [u'licht', u'aus']
 
 ```
 
@@ -111,8 +111,10 @@ python sopare.py -r UUID
 
 Next steps/TODOs:
 
-  * Optimization
-  * Testing and Bugfixing
+  * Better end of word recognition
+  * Word length detection and usage
+  * Optimizations, testing and bugfixing
+  * Add configuration options
 
 
 Project status:

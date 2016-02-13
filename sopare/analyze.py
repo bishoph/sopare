@@ -179,13 +179,25 @@ class analyze():
         points = points / ll
         if (points > 100):
             points = 100
+        got_matches_for_all_tokens = 0
         for arr in match_array:
-            best_match_h = sum(arr[0]) + (sum(arr[1]) / 2) # fuzzy match only counts half
+            best_match_h = sum(arr[0])
+            if (best_match_h > 2): # avoid false positives, TODO: Make configurable
+                best_match_h += sum(arr[1])
+                got_matches_for_all_tokens += 1
             if (best_match_h > best_match):
                 check = sum(globalvars.IMPORTANCE[0:len(arr[0])])
                 best_match = best_match_h
                 perfect_matches += best_match
                 perfect_match_sum += check
+        if (got_matches_for_all_tokens < len(match_array)):
+            if (self.debug):
+                print ('dumping score because of token matches '+str(got_matches_for_all_tokens) + ' ! ' + str(len(match_array)))
+            perfect_matches = perfect_matches * got_matches_for_all_tokens / len(match_array)
+        if (len(match_array) < lmin or len(match_array) > lmax):
+            if (self.debug):
+                 print ('this seems to be a false positive as min/max token length does not match :'+str(lmin) + ' < ' + str(len(match_array))+ ' > ' + str(lmax))
+            perfect_matches = perfect_matches / 10
         if (perfect_match_sum > 0):
             perfect_matches = perfect_matches * 100 / perfect_match_sum 
             if (perfect_matches > 100):
@@ -247,39 +259,42 @@ class analyze():
                         if (hc > hct):
                             hct = hc
                         dict_fft_approach = characteristic['fft_approach']
+                        dict_fft_avg =  characteristic['fft_avg']
                         min_fft_avg = analysis_object['min_fft_avg'][pos]
                         max_fft_avg = analysis_object['max_fft_avg'][pos]
-                        perfect_match_array, fuzzy_array = self.compare_fft_token_approach(fft_approach, dict_fft_approach, fft_avg, min_fft_avg, max_fft_avg, perfect_match_array, fuzzy_array)
+                        perfect_match_array, fuzzy_array = self.compare_fft_token_approach(fft_approach, dict_fft_approach, fft_avg, dict_fft_avg, min_fft_avg, max_fft_avg, perfect_match_array, fuzzy_array)
                         counter += 1
         match_array.append([perfect_match_array, fuzzy_array])
         return hct
 
-    def compare_fft_token_approach(self, cfft, dfft, fft_avg, min_fft_avg, max_fft_avg, perfect_match_array, fuzzy_array):
-        zipped = zip(cfft, dfft, fft_avg, min_fft_avg, max_fft_avg)
+    def compare_fft_token_approach(self, cfft, dfft, fft_avg, dict_fft_avg, min_fft_avg, max_fft_avg, perfect_match_array, fuzzy_array):
+        zipped = zip(cfft, dfft, fft_avg, min_fft_avg, max_fft_avg, dict_fft_avg)
         cut = len(globalvars.IMPORTANCE)
         if (len(zipped) < cut):
             cut = len(zipped)
             perfect_match_array = perfect_match_array[0:cut]
             fuzzy_array = fuzzy_array[0:cut]
         for i, z in enumerate(zipped):
-            a, b, c, d, e = z
+            a, b, c, d, e, f = z
             if (a < cut):
                 factor = 1
                 if (a == b and c >= d and c <= e):
+                    c_range = c * 20 / 100 # 20%
                     if (a < len(globalvars.IMPORTANCE)):
                         factor = globalvars.IMPORTANCE[a]
-                    if (a < len(perfect_match_array) and perfect_match_array[a] == 0):
+                    if (a < len(perfect_match_array) and perfect_match_array[a] == 0 and c - c_range <= f and c + c_range >= f):
                         perfect_match_array[a] = factor
                 elif (b in cfft):
                     r = 0
-                    f = cfft.index(b)
-                    c = fft_avg[f]
+                    g = cfft.index(b)
+                    c = fft_avg[g]
+                    c_range = c * 20 / 100 # 20%
                     factor = 1
-                    if (f < len(globalvars.IMPORTANCE)):
-                        factor = globalvars.IMPORTANCE[f]
-                    if (f < len(globalvars.WITHIN_RANGE)):
-                        r = globalvars.WITHIN_RANGE[f]
-                    if (i >= f - r and i <= f + r and c >= d and c <= e):
+                    if (g < len(globalvars.IMPORTANCE)):
+                        factor = globalvars.IMPORTANCE[g]
+                    if (g < len(globalvars.WITHIN_RANGE)):
+                        r = globalvars.WITHIN_RANGE[g]
+                    if (i >= g - r and i <= g + r and c >= d and c <= e and c - c_range <= f and c + c_range >= f):
                         if (b < len(fuzzy_array) and fuzzy_array[b] == 0):
                             fuzzy_array[b] = factor
         return perfect_match_array, fuzzy_array
