@@ -17,80 +17,86 @@ License for the specific language governing permissions and limitations
 under the License.
 """
 
+import globalvars
+
 class characteristic:
 
- def __init__(self, debug):
-  self.debug = debug
+    def __init__(self, debug):
+        self.debug = debug
 
- def getcharacteristic(self, fft, tendency):
-  fft = [abs(i) for i in fft]
-  chunked_fft_freq = [ ]
-  chunked_fft_avg = [ ]
-  steps = 50
+    def getcharacteristic(self, fft, tendency):
+        fft = [abs(i) for i in fft]
+        fft_len = 0
+        chunked_fft_avg = [ ]
+        chunked_fft_max = [ ]
+        steps = 50
   
-  for i in range(0, len(fft), steps):
-   chunk_avg = sum(fft[i:i+steps])/steps
-   chunked_fft_freq.append(i)
-   chunked_fft_avg.append(int(abs(chunk_avg)))
+        for i in range(0, len(fft), steps):
+            chunk_avg = sum(fft[i:i+steps])/steps
+            chunked_fft_avg.append(int(abs(chunk_avg)))
+            chunked_fft_max.append(int(max(fft[i:i+steps])))
 
-  right_trim = len(chunked_fft_avg)
-  for i in range(len(chunked_fft_avg)-1,0,-1):
-   if (chunked_fft_avg[i] == 0 and right_trim == i + 1):
-    right_trim = i
+        fft_len = len(chunked_fft_avg)
+        right_trim = fft_len
+        for i in range(len(chunked_fft_avg)-1, 0, -1):
+            if (chunked_fft_avg[i] == 0 and right_trim == i + 1):
+                right_trim = i
 
-  if (right_trim < len(chunked_fft_avg)):
-   chunked_fft_freq = chunked_fft_freq[0:right_trim]
-   chunked_fft_avg = chunked_fft_avg[0:right_trim]
+        if (right_trim > len(globalvars.IMPORTANCE)):
+            right_trim = len(globalvars.IMPORTANCE)
 
-  # we return nothing if the fft_freq len is below 3 as it is useless  
-  if (len(chunked_fft_freq) <= 3):
-   return None
+        if (right_trim < len(chunked_fft_avg)):
+            chunked_fft_max = chunked_fft_max[0:right_trim]
+            chunked_fft_avg = chunked_fft_avg[0:right_trim]
 
-  tendency_characteristic = self.get_tendency(tendency)
+        # We return nothing if the fft_len is below 15 as it is useless  
+        if (fft_len <= 15):
+            return None
 
-  # we return nothing if the avg is below 100 
-  # or we got just below 20 frequencies
-  # as this seems to be garbage
-  if (tendency_characteristic['avg'] < 80 or len(chunked_fft_freq) < 20):
-   return None
+        tendency_characteristic = self.get_tendency(tendency)
 
-  fft_approach = self.get_approach(chunked_fft_avg)
-  model_characteristic = {'fft_freq': len(chunked_fft_freq) , 'fft_approach': fft_approach, 'fft_avg': chunked_fft_avg, 'tendency': tendency_characteristic }
+        # We return nothing if the avg is below XX
+        # or we got just below YY frequencies
+        # as this seems to be garbage
+        if (tendency_characteristic['avg'] < 130):
+           return None
 
-  return model_characteristic
+        fft_approach = self.get_approach(chunked_fft_max)
+        model_characteristic = {'fft_freq': fft_len , 'fft_approach': fft_approach, 'fft_avg': chunked_fft_avg, 'tendency': tendency_characteristic }
 
- def get_approach(self, data):
-  data = [abs(i) for i in data]
-  ld = len(data)
-  result = [ld] * ld
-  m = max(data)+1
-  l = 0
-  f = 0
-  pos = 0
-  for z in range(0, ld):
-   pos = z
-   for i,a in enumerate(data):
-    if (a < m and a > l):
-     l = a
-     pos = i
-   result[pos] = z
-   m = l
-   l = 0
-  return result
+        return model_characteristic
 
- def get_tendency(self, data):
-  peaks = 0
-  avg = (sum(data)/len(data))
-  delta = data[0]-data[len(data)-1]
-  lowercut = avg*1.1
-  high = 0
-  for n in data:
-   if (n > high):
-    high = n
-   elif (n < lowercut):
-    if (high > lowercut):
-     peaks += 1
-    high = 0
-  tendency = { 'len': len(data), 'peaks': peaks, 'avg': avg, 'delta': delta }
-  return tendency
+    def get_approach(self, data):
+        data = [abs(i) for i in data]
+        ld = len(data)
+        result = [ld] * ld
+        m = max(data)+1
+        l = 0
+        pos = 0
+        for z in range(0, ld):
+            pos = z
+            for i, a in enumerate(data):
+                if (a < m and a > l):
+                    l = a
+                    pos = i
+            result[pos] = z
+            m = l
+            l = 0
+        return result
+
+    def get_tendency(self, data):
+        peaks = 0
+        avg = (sum(data)/len(data))
+        delta = data[0]-data[len(data)-1]
+        lowercut = avg*1.1
+        high = 0
+        for n in data:
+            if (n > high):
+                high = n
+            elif (n < lowercut):
+                if (high > lowercut):
+                    peaks += 1
+                high = 0
+        tendency = { 'len': len(data), 'peaks': peaks, 'avg': avg, 'delta': delta }
+        return tendency
   

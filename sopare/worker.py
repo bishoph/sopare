@@ -17,9 +17,6 @@ License for the specific language governing permissions and limitations
 under the License.
 """
 
-import numpy
-from scipy.io.wavfile import write
-
 import multiprocessing 
 import condense
 import util
@@ -30,97 +27,98 @@ import uuid
 
 class worker(multiprocessing.Process):
 
- def __init__(self, queue, debug, plot, dict, wave):
-  multiprocessing.Process.__init__(self, name="worker for prepared queue")
-  self.queue = queue
-  self.debug = debug
-  self.plot = plot
-  self.dict = dict
-  self.wave = wave
-  self.visual = visual.visual()
-  self.condense = condense.packing()
-  self.util = util.util(debug, None)
-  self.analyze = analyze.analyze(debug)
-  self.characteristic = characteristics.characteristic(debug)
-  self.running = True
-  self.counter = 0
-  self.reset_counter = 0
-  self.rawbuf = [ ]
-  self.reset()
-  self.DICT = self.util.getDICT()
-  self.start()
+    def __init__(self, queue, debug, plot, dict, wave):
+        multiprocessing.Process.__init__(self, name="worker for prepared queue")
+        self.queue = queue
+        self.debug = debug
+        self.plot = plot
+        self.dict = dict
+        self.wave = wave
+        self.visual = visual.visual()
+        self.condense = condense.packing()
+        self.util = util.util(debug, None)
+        self.analyze = analyze.analyze(debug)
+        self.characteristic = characteristics.characteristic(debug)
+        self.running = True
+        self.counter = 0
+        self.reset_counter = 0
+        self.rawbuf = [ ]
+        self.reset()
+        self.DICT = self.util.getDICT()
+        self.start()
 
- def reset(self):
-  self.counter = 0
-  if (self.wave and len(self.rawbuf) > 0):
-   self.save_wave_buf()
-  self.rawbuf = [ ]
-  self.rawfft = [ ]
-  self.raw = [ ]
-  self.fft = [ ]
-  self.character = [ ]
-  self.uid = str(uuid.uuid4())
-  self.analyze.reset()
-  self.reset_counter += 1
+    def reset(self):
+        self.counter = 0
+        if (self.wave and len(self.rawbuf) > 0):
+            self.save_wave_buf()
+        self.rawbuf = [ ]
+        self.rawfft = [ ]
+        self.raw = [ ]
+        self.fft = [ ]
+        self.character = [ ]
+        self.uid = str(uuid.uuid4())
+        self.analyze.reset()
+        self.reset_counter += 1
 
- def save_wave_buf(self):
-  self.util.savefilteredwave('filtered_results'+str(self.reset_counter), self.rawbuf)
+    def save_wave_buf(self):
+        self.util.savefilteredwave('filtered_results'+str(self.reset_counter), self.rawbuf)
 
- def run(self):
-  if (self.debug):
-   print ("worker queue runner started")
-  while self.running:
-   obj = self.queue.get()
-   if (obj['action'] == 'data'):
-    raw_token = obj['token']
-    if (self.wave):
-     self.rawbuf.extend(raw_token)
-    fft = obj['fft']
-    if (self.plot):
-     self.rawfft.extend(fft)
-    meta = obj['meta']
-    raw_token_compressed = self.condense.compress(raw_token)
-    raw_tendency = self.condense.model_tendency(raw_token_compressed)
-    characteristic = self.characteristic.getcharacteristic(fft, raw_tendency)
-    self.character.append((characteristic, meta))
-    if (characteristic != None):
-     if (self.debug):
-      print ('characteristic = ' + str(self.counter) + ' ' + str(characteristic))
-      print ('meta = '+str(meta))
-     if (self.wave):
-      self.util.savefilteredwave('token'+str(self.counter)+self.uid, raw_token)
-    if (self.plot):
-     self.visual.create_sample(raw_tendency, 'token'+str(self.counter)+'.png')
-     self.visual.create_sample(fft, 'fft'+str(self.counter)+'.png')
-    self.counter += 1
-   elif (obj['action'] == 'reset' and self.dict == None):
-    self.reset()
-   elif (obj['action'] == 'stop'):
-    self.analyze.do_analysis(self.character)
-    self.running = False
+    def run(self):
+        if (self.debug):
+            print ("worker queue runner started")
+        while self.running:
+            obj = self.queue.get()
+            if (obj['action'] == 'data'):
+                raw_token = obj['token']
+                if (self.wave or True): # TODO: "or True" is just temporary for testing. Should be removed later on!
+                    self.rawbuf.extend(raw_token)
+                fft = obj['fft']
+                if (self.plot):
+                    self.rawfft.extend(fft)
+                meta = obj['meta']
+                raw_token_compressed = self.condense.compress(raw_token)
+                raw_tendency = self.condense.model_tendency(raw_token_compressed)
+                characteristic = self.characteristic.getcharacteristic(fft, raw_tendency)
+                self.character.append((characteristic, meta))
+                if (characteristic != None):
+                    if (self.debug):
+                        print ('characteristic = ' + str(self.counter) + ' ' + str(characteristic))
+                        print ('meta = '+str(meta))
+                    if (self.wave):
+                        self.util.savefilteredwave('token'+str(self.counter)+self.uid, raw_token)
+                    if (self.plot):
+                        self.visual.create_sample(raw_tendency, 'token'+str(self.counter)+'.png')
+                        self.visual.create_sample(fft, 'fft'+str(self.counter)+'.png')
+                    self.counter += 1
+            elif (obj['action'] == 'reset' and self.dict == None):
+                self.reset()
+            elif (obj['action'] == 'stop'):
+                self.analyze.do_analysis(self.character, None)
+                self.running = False
 
-   if (self.counter > 0 and meta != None):
-    for m in meta:
-     if (m['token'] == 'long silence'):
-      if (self.dict == None):
-       self.analyze.do_analysis(self.character)
-       self.reset()
+            if (self.counter > 0 and meta != None):
+                for m in meta:
+                    if (m['token'] == 'long silence'):
+                        if (self.dict == None):
+                            self.analyze.do_analysis(self.character, self.rawbuf)
+                            self.reset()
 
-  # end of while
+        # end of while
 
-  for i, ch in enumerate(self.character):
-   c, meta = ch
-   if (c != None):
-    if (self.debug):
-     print (c)
-    if (self.dict != None):  
-     self.DICT = self.util.learndict(i, c, self.dict)
+        for ch in self.character:
+            c, meta = ch
+            if (c != None):
+                if (self.debug):
+                    print (c)
 
-  if (self.wave):
-   self.save_wave_buf()
+        if (self.dict != None):
+            self.DICT = self.util.learndict(self.character, self.dict)
 
-  self.queue.close()
+        if (self.wave):
+            self.save_wave_buf()
 
-  if (self.plot):
-   self.visual.create_sample(self.rawfft, 'fft.png')
+        self.queue.close()
+
+        if (self.plot):
+            self.visual.create_sample(self.rawfft, 'fft.png')
 

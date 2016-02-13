@@ -19,68 +19,67 @@ under the License.
 
 class packing():
 
- def __init__(self):
-  self.SLICE = 16
+    def __init__(self):
+        self.SLICE = 16
 
- def compress(self, data):
-  compressed = [ ]
-  current_h = 0
-  current_l = 0
-  c_h = 1
-  c_l = 1
-  h_first = False
-  counter = 0
-  for a in data:
-   if (a > 0):
-    current_h += a
-    c_h += 1
-    if (counter == 0):
-     h_first = True
-   else:
-    current_l += a
-    c_l += 1
-   if (counter == self.SLICE):
-    peak_h = float(current_h / c_h)
-    peak_l = float(current_l / c_l)
-    if (h_first == True):
-     if (c_h > self.SLICE / 2):
-      compressed.append(peak_h)
-     if (c_l > self.SLICE / 2):
-      compressed.append(peak_l)
-    else:
-     if (c_l > self.SLICE / 2):
-      compressed.append(peak_l)
-     if (c_h > self.SLICE / 2):
-      compressed.append(peak_h)
-    c_h = 1
-    c_l = 1
-    counter = 1
-    current = 0
-    current_h = 0
-    current_l = 0
-   else:
-    counter += 1
-  return compressed
+    def compress(self, data):
+        compressed = [ ]
+        current_h = 0
+        current_l = 0
+        c_h = 1
+        c_l = 1
+        h_first = False
+        counter = 0
+        for a in data:
+            if (a > 0):
+                current_h += a
+                c_h += 1
+                if (counter == 0):
+                    h_first = True
+            else:
+                current_l += a
+                c_l += 1
+            if (counter == self.SLICE):
+                peak_h = float(current_h / c_h)
+                peak_l = float(current_l / c_l)
+                if (h_first == True):
+                    if (c_h > self.SLICE / 2):
+                        compressed.append(peak_h)
+                    if (c_l > self.SLICE / 2):
+                        compressed.append(peak_l)
+                else:
+                    if (c_l > self.SLICE / 2):
+                        compressed.append(peak_l)
+                    if (c_h > self.SLICE / 2):
+                        compressed.append(peak_h)
+                c_h = 1
+                c_l = 1
+                counter = 1
+                current_h = 0
+                current_l = 0
+            else:
+                counter += 1
+        return compressed
   
- def model_tendency(self, data):
-  last = 0
-  last_high = 0
-  tendency = [ ]
-  counter = 0
-  for n in data:
-   if (n < 0):
-    n = 0 - n
-   if (n >= 0 and n > last_high):
-     last_high = n
-   if (counter == 8):
-    if (last < last_high):
-     tendency.append(int(last))
-    elif (last > last_high):
-     tendency.append(int(last))
-    last = last_high
-    last_high = 0
-    counter = 0
-   else:
-    counter += 1
-  return tendency[1:]
+    def model_tendency(self, data):
+        last = 0
+        last_high = 0
+        tendency = [ ]
+        counter = 0
+        for n in data:
+            if (n < 0):
+                n = 0 - n
+            if (n >= 0 and n > last_high):
+                last_high = n
+            if (counter == 8):
+                if (last < last_high):
+                    tendency.append(int(last))
+                elif (last > last_high):
+                    tendency.append(int(last))
+                last = last_high
+                last_high = 0
+                counter = 0
+            else:
+                counter += 1
+        return tendency[1:]
 
