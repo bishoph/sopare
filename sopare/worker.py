@@ -55,6 +55,7 @@ class worker(multiprocessing.Process):
         self.rawfft = [ ]
         self.raw = [ ]
         self.fft = [ ]
+        self.word_tendency = None
         self.character = [ ]
         self.uid = str(uuid.uuid4())
         self.analyze.reset()
@@ -76,6 +77,13 @@ class worker(multiprocessing.Process):
                 if (self.plot):
                     self.rawfft.extend(fft)
                 meta = obj['meta']
+                for m in meta:
+                    if (m['token'] != 'stop'):
+                        if (m['token'] == 'word' or m['token'] == 'long silence'):
+                            word_tendency = self.characteristic.get_word_tendency(m['peaks'])
+                            m['word_tendency'] = word_tendency
+                            if (word_tendency != None):
+                                self.word_tendency = word_tendency
                 raw_token_compressed = self.condense.compress(raw_token)
                 raw_tendency = self.condense.model_tendency(raw_token_compressed)
                 characteristic = self.characteristic.getcharacteristic(fft, raw_tendency)
@@ -89,7 +97,7 @@ class worker(multiprocessing.Process):
                     if (self.plot):
                         self.visual.create_sample(raw_tendency, 'token'+str(self.counter)+'.png')
                         self.visual.create_sample(fft, 'fft'+str(self.counter)+'.png')
-                    self.counter += 1
+                self.counter += 1
             elif (obj['action'] == 'reset' and self.dict == None):
                 self.reset()
             elif (obj['action'] == 'stop'):
@@ -104,7 +112,6 @@ class worker(multiprocessing.Process):
                             self.reset()
 
         # end of while
-
         for ch in self.character:
             c, meta = ch
             if (c != None):
@@ -112,7 +119,7 @@ class worker(multiprocessing.Process):
                     print (c)
 
         if (self.dict != None):
-            self.DICT = self.util.learndict(self.character, self.dict)
+            self.DICT = self.util.learndict(self.character, self.word_tendency, self.dict)
 
         if (self.wave):
             self.save_wave_buf()

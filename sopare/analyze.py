@@ -36,12 +36,12 @@ class analyze():
         self.reset()
 
     def do_analysis(self, data, rawbuf):
-        pre_results = self.pre_scan(data)
+        pre_results, word_tendencies = self.pre_scan(data)
         if (self.debug):
             print ('pre_results : '+str(pre_results))
-        if (len(pre_results) < 2):
+        if (pre_results == None):
             return
-        first_guess = self.first_scan(pre_results, data)
+        first_guess = self.first_scan(pre_results, word_tendencies, data)
         if (self.debug):
             print ('first_guess : ' + str(first_guess))
         deep_guess = self.deep_scan(first_guess, data)
@@ -125,24 +125,30 @@ class analyze():
                     deep_guess.append(value)
         return deep_guess
 
-    def first_scan(self, pre_results, data):
+    def first_scan(self, pre_results, word_tendencies, data):
         first_guess = { }
-        pre_results_length = len(pre_results)
-        for i, start in enumerate(pre_results):
-            d = data[start]
-            characteristic, meta = d
-            tendency = characteristic['tendency']
-            self.fast_compare(start, pre_results_length, tendency, first_guess)
+        word_tendency = None
+        for a, words in enumerate(pre_results):
+            if (len(pre_results) == len(word_tendencies)):
+                word_tendency = word_tendencies[a]
+            else:
+                word_tendency = None
+            for i, start in enumerate(words):
+                d = data[start]
+                characteristic, meta = d
+                tendency = characteristic['tendency']
+                self.fast_compare(i, start, len(words), word_tendency, first_guess)
+        if not first_guess:
+            print ('TODO: WE NEED A MORE LIBERAL LETHOD TO FILL first_guess ...')
         return first_guess
                 
-    def fast_compare(self, start, pre_results_length, tendency, first_guess):
+    def fast_compare(self, i, start, word_len, word_tendency, first_guess):
         # we want to find potential matching words and positions 
         # based on a rough pre comparison
         for id in self.dict_analysis:
             analysis_object = self.dict_analysis[id]
-            if (tendency['len'] >= analysis_object['min_length'] and tendency['len'] <= analysis_object['max_length']
-             and tendency['avg'] >= analysis_object['min_avg'] and tendency['avg'] <= analysis_object['max_avg']
-             and tendency['peaks'] >= analysis_object['min_peaks'] and tendency['peaks'] <= analysis_object['max_peaks']):
+            if (word_tendency != None and word_tendency['peaks'] >= analysis_object['min_peaks'] and word_tendency['peaks'] <= analysis_object['max_peaks']
+             and (i == 0 or (start + analysis_object['min_tokens']) <= word_len)):
                 if (id not in first_guess):
                     first_guess[id] = { 'results': [ start ], 'lmin': analysis_object['min_tokens'], 'lmax': analysis_object['max_tokens'] }
                 else:
@@ -218,30 +224,36 @@ class analyze():
 
     def pre_scan(self, data):
         startpos = [ ]
-        word_pos = [ ]
-        for d in data:
+        endpos = [ ]
+        word_tendencies = [ ]
+        for i, d in enumerate(data):
             characteristic, meta = d
-            for m in meta:
-                token = m['token']
-                if (token != 'stop'):
-                    if (token == 'long silence'):
-                        word_pos = m['word_pos']
+            if (characteristic != None):
+                startpos.append(i)
         for i, d in enumerate(data):
             characteristic, meta = d
             for m in meta:
                 token = m['token']
                 if (token != 'stop'):
-                    if (token == 'rise/decent' and m['pos'] in word_pos and characteristic != None):
-                        startpos.append(i)
-        if (len(startpos) == 0):
-            for i, d in enumerate(data):
-                characteristic, meta = d
-                for m in meta:
-                    token = m['token']
-                    if (token != 'stop'):
-                        if (token == 'rise/decent' and characteristic != None):
-                            startpos.append(i)
-        return startpos
+                    if (token == 'word'):
+                        endpos.append(i)
+                    if ('word_tendency' in m):
+                        word_tendencies.append(m['word_tendency'])
+        if (len(endpos) > 0 and len(startpos) > 0):
+            new_startpos = [ ]
+            last = 0
+            for end in endpos:
+                word_pos = [ ]
+                for start in startpos:
+                    if (start <= end and start > last):
+                        word_pos.append(start)
+                last = end
+                if (len(word_pos) != 0):
+                    new_startpos.append(word_pos)
+            startpos = new_startpos
+        else:
+            startpos = [ ].append(startpos)
+        return startpos, word_tendencies
 
     def token_compare(self, tendency, fft_approach, fft_avg, fft_freq, id, pos, match_array):
         perfect_match_array = [0] * len(globalvars.IMPORTANCE)

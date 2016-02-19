@@ -43,6 +43,7 @@ class util:
         for dict_entries in json_data['dict']:
            if dict_entries['id'] == id:
                print (dict_entries['uuid'])
+               print (dict_entries['word_tendency'])
                for characteristic in dict_entries['characteristic']:
                    print (characteristic['tendency'])
                for characteristic in dict_entries['characteristic']:
@@ -53,31 +54,30 @@ class util:
         json_data = self.getDICT()
         for dict_entries in json_data['dict']:
             if (dict_entries['id'] not in analysis):
-                analysis[dict_entries['id']] = { 'min_tokens': 0, 'max_tokens': 0, 'min_avg': 0, 'max_avg': 0, 'min_peaks': 0, 'max_peaks': 0, 'min_fft_len': 0, 'max_fft_len': 0, 'min_delta': 0, 'max_delta': 0, 'min_length': 0, 'max_length': 0, 'min_fft_avg': [ ] , 'max_fft_avg': [ ] }
+                analysis[dict_entries['id']] = { 'min_tokens': 0, 'max_tokens': 0, 'min_max': 0, 'max_max': 0, 'min_peaks': 0, 'max_peaks': 0, 'min_fft_len': 0, 'max_fft_len': 0, 'min_delta': 0, 'max_delta': 0, 'min_length': 0, 'max_length': 0, 'min_fft_avg': [ ] , 'max_fft_avg': [ ] }
             l = len(dict_entries['characteristic'])
             if (l > analysis[dict_entries['id']]['max_tokens']):
                 analysis[dict_entries['id']]['max_tokens'] = l
             if (l < analysis[dict_entries['id']]['min_tokens'] or analysis[dict_entries['id']]['min_tokens'] == 0):
                 analysis[dict_entries['id']]['min_tokens'] = l
+            if (dict_entries['word_tendency']['max'] < analysis[dict_entries['id']]['min_max'] or analysis[dict_entries['id']]['min_max'] == 0):
+                analysis[dict_entries['id']]['min_max'] = dict_entries['word_tendency']['max']
+            if (dict_entries['word_tendency']['max'] > analysis[dict_entries['id']]['max_max']):
+                 analysis[dict_entries['id']]['max_max'] = dict_entries['word_tendency']['max']
+            if (dict_entries['word_tendency']['peaks'] < analysis[dict_entries['id']]['min_peaks'] or analysis[dict_entries['id']]['min_peaks'] == 0):
+                analysis[dict_entries['id']]['min_peaks'] = dict_entries['word_tendency']['peaks']
+            if (dict_entries['word_tendency']['peaks'] > analysis[dict_entries['id']]['max_peaks']):
+                 analysis[dict_entries['id']]['max_peaks'] = dict_entries['word_tendency']['peaks']
             for i, characteristic in enumerate(dict_entries['characteristic']):
-                fft_avg_min = [0] * len(globalvars.IMPORTANCE)
-                fft_avg_max = [0] * len(globalvars.IMPORTANCE)
-                analysis[dict_entries['id']]['min_fft_avg'].append(fft_avg_min)
-                analysis[dict_entries['id']]['max_fft_avg'].append(fft_avg_max)
-                avg = characteristic['tendency']['avg']
-                peaks = characteristic['tendency']['peaks']
+                if (len(analysis[dict_entries['id']]['min_fft_avg']) <= i):
+                 fft_avg_min = [0] * len(globalvars.IMPORTANCE)
+                 fft_avg_max = [0] * len(globalvars.IMPORTANCE)
+                 analysis[dict_entries['id']]['min_fft_avg'].append(fft_avg_min)
+                 analysis[dict_entries['id']]['max_fft_avg'].append(fft_avg_max)
                 fft_len = characteristic['fft_freq']
                 length = characteristic['tendency']['len']
                 delta = characteristic['tendency']['delta']
                 fft_avg = characteristic['fft_avg']
-                if (avg > analysis[dict_entries['id']]['max_avg']):
-                    analysis[dict_entries['id']]['max_avg'] = avg
-                if (avg < analysis[dict_entries['id']]['min_avg'] or analysis[dict_entries['id']]['min_avg'] == 0):
-                    analysis[dict_entries['id']]['min_avg'] = avg
-                if (peaks > analysis[dict_entries['id']]['max_peaks']):
-                    analysis[dict_entries['id']]['max_peaks'] = peaks
-                if (peaks < analysis[dict_entries['id']]['min_peaks'] or analysis[dict_entries['id']]['min_peaks'] == 0):
-                    analysis[dict_entries['id']]['min_peaks'] = peaks
                 if (fft_len > analysis[dict_entries['id']]['max_fft_len']):
                     analysis[dict_entries['id']]['max_fft_len'] = fft_len
                 if (fft_len < analysis[dict_entries['id']]['min_fft_len'] or analysis[dict_entries['id']]['min_fft_len'] == 0):
@@ -98,10 +98,10 @@ class util:
                              analysis[dict_entries['id']]['min_fft_avg'][i][j] = fft
         return analysis
 
-    def learndict(self, characteristics, id):
+    def learndict(self, characteristics, word_tendency, id):
         json_data =  self.getDICT()
         dict_model = self.prepare_dict_model(characteristics)
-        self.add2dict(dict_model, id)
+        self.add2dict(dict_model, word_tendency, id)
 
     def prepare_dict_model(self, characteristics):
         tokens = [ ]
@@ -111,9 +111,9 @@ class util:
                 tokens.append(characteristic)
         return tokens
 
-    def add2dict(self, obj, id):
+    def add2dict(self, obj, word_tendency, id):
         json_obj = self.getDICT()
-        json_obj['dict'].append({'id': id, 'characteristic': obj, 'uuid': str(uuid.uuid4())})
+        json_obj['dict'].append({'id': id, 'characteristic': obj, 'word_tendency': word_tendency, 'uuid': str(uuid.uuid4())})
         self.writeDICT(json_obj)
         return json_obj
 

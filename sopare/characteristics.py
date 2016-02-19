@@ -100,3 +100,20 @@ class characteristic:
         tendency = { 'len': len(data), 'peaks': peaks, 'avg': avg, 'delta': delta }
         return tendency
   
+    def get_word_tendency(self, data):
+        peaks = 0
+        maxi = max(data)
+        if (maxi < 100000):
+            return None
+        high = int(maxi * .6)
+        low = high / 2
+        fly_high = True
+        for n in data:
+            if (n > high and fly_high):
+                peaks += 1
+                fly_high = False
+            if (n < low):
+                fly_high = True
+        word_tendency = { 'peaks': peaks, 'max': maxi }
+        return word_tendency
+            
