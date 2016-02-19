@@ -147,7 +147,7 @@ class analyze():
         # based on a rough pre comparison
         for id in self.dict_analysis:
             analysis_object = self.dict_analysis[id]
-            if (word_tendency != None and word_tendency['peaks'] >= analysis_object['min_peaks'] and word_tendency['peaks'] <= analysis_object['max_peaks']
+            if ((word_tendency == None or (word_tendency['peaks'] >= analysis_object['min_peaks'] and word_tendency['peaks'] <= analysis_object['max_peaks']))
              and (i == 0 or (start + analysis_object['min_tokens']) <= word_len)):
                 if (id not in first_guess):
                     first_guess[id] = { 'results': [ start ], 'lmin': analysis_object['min_tokens'], 'lmax': analysis_object['max_tokens'] }
