@@ -25,8 +25,9 @@ import util
 class preparing():
  
     PITCH = 500
-    ADAPTIVE_LOW = 80000
-    ADAPTIVE_WORD_END = 100000
+    ADAPTIVE_LOW = 120000
+    ADAPTIVE_HIGH = 200000
+    WORD_GAP = 5000
 
     def __init__(self, debug, plot, wave, dict):
         self.debug = debug
@@ -66,9 +67,7 @@ class preparing():
         self.new_token = False
         self.new_word = False
         self.token_counter = 0
-        self.last_dmax = 0
         self.adaptive_low_counter = 0
-        self.word_zoning = 0
         self.buffer = [ ]
         self.peaks = [ ]   
         self.low = 0
@@ -95,6 +94,7 @@ class preparing():
         if (volume < preparing.PITCH):
             self.silence += 1
             if (self.silence == 50 and self.entered_silence == False):
+                self.word_pos.append(self.last_low_pos)
                 self.new_word = True
                 self.entered_silence = True
                 meta.append({ 'token': 'long silence', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'peaks': self.peaks, 'word_pos': self.word_pos })
@@ -103,26 +103,30 @@ class preparing():
             self.silence = 0
             self.entered_silence = False
 
-        if (volume <= self.low):
-            self.low = volume
-            self.last_low_pos = self.counter + 1
-        if (volume > self.low):
-            self.low = volume
-            # token start
-            if (self.last_low_pos not in self.word_pos and (adaptive > preparing.ADAPTIVE_LOW or dmax > 200)):
+        # tokenizer/word detection
+        if (adaptive < preparing.ADAPTIVE_LOW):
+            if (self.low > 0):
                 self.word_pos.append(self.last_low_pos)
                 self.new_token = True
                 meta.append({ 'token': 'token', 'silence': self.entered_silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume })
-
-        # end of word
-        if (adaptive < preparing.ADAPTIVE_WORD_END):
-            if (self.adaptive_low_counter == 5):
-                 self.new_word = True
-                 meta.append({ 'token': 'word', 'silence': self.entered_silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'peaks': self.peaks }) 
-                 self.peaks = [ ]
-            self.adaptive_low_counter += 1
+                self.low = 0
+            if (self.adaptive_low_counter != preparing.WORD_GAP):
+                for n in abs_data:
+                    if (n < preparing.PITCH):
+                        self.adaptive_low_counter += 1
+                        if (self.adaptive_low_counter == preparing.WORD_GAP):
+                            self.new_word = True
+                            meta.append({ 'token': 'word', 'silence': self.entered_silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'peaks': self.peaks })
+                            self.peaks = [ ]
+                            break
         else:
             self.adaptive_low_counter = 0
+        if (adaptive > preparing.ADAPTIVE_HIGH):
+            if (self.low == 0):
+                self.word_pos.append(self.last_low_pos)
+                self.new_token = True
+                meta.append({ 'token': 'token', 'silence': self.entered_silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume })
+            self.low += 1
 
         if (self.new_token == True or self.new_word == True):
             self.new_token = False
@@ -132,4 +136,4 @@ class preparing():
                 self.new_word = False
                 self.word_pos = [ ]
                 self.low = 0
-        self.last_dmax = dmax
+

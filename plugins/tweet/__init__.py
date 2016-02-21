@@ -49,7 +49,6 @@ except:
     print ('An error occured while initializing the Twitter API. Continue anyway without tweeting!')
 
 def run(readable_results, best_match, data, rawbuf):
-    return
     status = None
     if (len(readable_results) == 3):
         if ('licht' in readable_results and 'dach' in readable_results):

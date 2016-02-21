@@ -55,12 +55,6 @@ class characteristic:
 
         tendency_characteristic = self.get_tendency(tendency)
 
-        # We return nothing if the avg is below XX
-        # or we got just below YY frequencies
-        # as this seems to be garbage
-        if (tendency_characteristic['avg'] < 130):
-           return None
-
         fft_approach = self.get_approach(chunked_fft_max)
         model_characteristic = {'fft_freq': fft_len , 'fft_approach': fft_approach, 'fft_avg': chunked_fft_avg, 'tendency': tendency_characteristic }
 
@@ -101,6 +95,8 @@ class characteristic:
         return tendency
   
     def get_word_tendency(self, data):
+        if (len(data) == 0):
+            return None
         peaks = 0
         maxi = max(data)
         if (maxi < 100000):

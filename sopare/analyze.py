@@ -49,7 +49,7 @@ class analyze():
             best_match = sorted(deep_guess, key=lambda x: -x[1])
             if (self.debug):
                 print ('best_match : '+ str(best_match))
-            readable_resaults = self.get_readable_results(best_match, data)
+            readable_resaults = self.get_readable_results(best_match, pre_results, first_guess, data)
             if (len(readable_resaults) > 0):
                 for p in self.plugins:
                     p.run(readable_resaults, best_match, data, rawbuf)
@@ -71,7 +71,7 @@ class analyze():
             except ImportError, err:
                 print 'ImportError:', err
 
-    def get_readable_results(self, best_match, data):
+    def get_readable_results(self, best_match, pre_results, first_guess, data):
         # eliminate double entries
         matchpos = [ ]
         for match in best_match:
@@ -86,28 +86,28 @@ class analyze():
         best_match = clean_best_match
 
         mapper = [ ]
-        sorted_match = [ -1 ] * len(data)
-        for i, bm in enumerate(best_match):
-            # the following value defined the precision!
-            if (bm[1] >= 1 and sorted_match[bm[0]] == -1):
-                wc = 0
-                for a in range(bm[0], bm[0]+bm[3]):
-                    if (bm[2] not in mapper and a < len(sorted_match)):
-                        if (wc < 3):
-                            sorted_match[a] = i
-                        wc += 1
-                mapper.append(bm[2])
-        if (self.debug):
-            print sorted_match
+        readable_results = [ ]
+        for word in pre_results:
+            mapper.append( [] )
 
-        readable_results = []
-        last_word = ''
-        for i in sorted_match:
-            if (i >= 0):
-                text_result = best_match[i][2]
-                if (text_result != last_word):
-                    readable_results.append(text_result)
-                last_word = text_result
+        for i, bm in enumerate(best_match):
+            # searching for bm[0] (pos) in pre_results
+            for j, word in enumerate(pre_results):
+                if bm[0] in word:
+                    # now compare if this really fits into this position!
+                    min_max = first_guess[bm[2]]
+                    if (bm[1] >= 1 and len(bm[4]) >= min_max['lmin'] and len(bm[4]) <= min_max['lmax']):
+                        if (bm[2] not in mapper[j]):
+                            mapper[j].append(bm[2])
+
+        if (self.debug):
+            print mapper
+
+        for word in mapper:
+                if (len(word) > 0):
+                    readable_results.append(word[0])
+                else:
+                    readable_results.append('')
 
         return readable_results
 
@@ -123,6 +123,9 @@ class analyze():
                 value = self.word_compare(id, pos, lmin, lmax, data)
                 if (value != None):
                     deep_guess.append(value)
+                else:
+                    if (self.debug):
+                        print (id + ' at ' + str(pos) + ' did not pass word_compare')
         return deep_guess
 
     def first_scan(self, pre_results, word_tendencies, data):
@@ -139,7 +142,7 @@ class analyze():
                 tendency = characteristic['tendency']
                 self.fast_compare(i, start, len(words), word_tendency, first_guess)
         if not first_guess:
-            print ('TODO: WE NEED A MORE LIBERAL LETHOD TO FILL first_guess ...')
+            print ('TODO: WE NEED A MORE LIBERAL METHOD TO FILL first_guess ...')
         return first_guess
                 
     def fast_compare(self, i, start, word_len, word_tendency, first_guess):
@@ -147,19 +150,23 @@ class analyze():
         # based on a rough pre comparison
         for id in self.dict_analysis:
             analysis_object = self.dict_analysis[id]
-            if ((word_tendency == None or (word_tendency['peaks'] >= analysis_object['min_peaks'] and word_tendency['peaks'] <= analysis_object['max_peaks']))
+            if ((word_tendency == None or (word_tendency['peaks'] >= analysis_object['min_peaks'] and word_tendency['peaks'] <= analysis_object['max_peaks']
+             and word_tendency['max'] >= analysis_object['min_max'] and word_tendency['max'] <= analysis_object['max_max']))
              and (i == 0 or (start + analysis_object['min_tokens']) <= word_len)):
                 if (id not in first_guess):
                     first_guess[id] = { 'results': [ start ], 'lmin': analysis_object['min_tokens'], 'lmax': analysis_object['max_tokens'] }
                 else:
                     first_guess[id]['results'].append( start )
+            else:
+                if (self.debug):
+                    print (id + ' at ' + str(start) + ' did not pass fast_compare')
 
     def word_compare(self, id, start, lmin, lmax, data):
         match_array = [ ]
         pos = 0
         points = 0
         for a in range(start, start+lmax):
-            if (a < len(data)):                
+            if (a < len(data)):
                 d = data[a]
                 characteristic, meta = d
                 if (characteristic != None):
@@ -176,6 +183,10 @@ class analyze():
         return value
 
     def calculate_points(self, id, start, points, match_array, lmin, lmax):
+        if (self.debug):
+            print ('################################################')
+            print ('id = ' + str(id) + ' / ' + str(start))
+            print (match_array)
         ll = len(match_array)
         match_array_counter = 0
         best_match = 0
@@ -189,7 +200,7 @@ class analyze():
         for arr in match_array:
             best_match_h = sum(arr[0])
             if (best_match_h > 2): # avoid false positives, TODO: Make configurable
-                best_match_h += sum(arr[1])
+                #best_match_h += sum(arr[1])
                 got_matches_for_all_tokens += 1
             if (best_match_h > best_match):
                 check = sum(globalvars.IMPORTANCE[0:len(arr[0])])
@@ -237,23 +248,26 @@ class analyze():
                 if (token != 'stop'):
                     if (token == 'word'):
                         endpos.append(i)
-                    if ('word_tendency' in m):
+                    if ('word_tendency' in m and m['word_tendency'] != None):
                         word_tendencies.append(m['word_tendency'])
+        right_border = 0
+        wordpos = [ ]
+        last = -1
         if (len(endpos) > 0 and len(startpos) > 0):
-            new_startpos = [ ]
-            last = 0
             for end in endpos:
-                word_pos = [ ]
+                word = [ ]
                 for start in startpos:
                     if (start <= end and start > last):
-                        word_pos.append(start)
+                        word.append(start)
+                if (len(word) > 0):
+                    wordpos.append(word)
                 last = end
-                if (len(word_pos) != 0):
-                    new_startpos.append(word_pos)
-            startpos = new_startpos
         else:
-            startpos = [ ].append(startpos)
-        return startpos, word_tendencies
+            wordpos.append(startpos)
+        if (len(wordpos) == 0):
+            wordpos.append(startpos)
+        print startpos, endpos, wordpos
+        return wordpos, word_tendencies
 
     def token_compare(self, tendency, fft_approach, fft_avg, fft_freq, id, pos, match_array):
         perfect_match_array = [0] * len(globalvars.IMPORTANCE)

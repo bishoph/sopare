@@ -121,7 +121,7 @@ class worker(multiprocessing.Process):
         if (self.dict != None):
             self.DICT = self.util.learndict(self.character, self.word_tendency, self.dict)
 
-        if (self.wave):
+        if (self.wave and len(self.rawbuf) > 0):
             self.save_wave_buf()
 
         self.queue.close()
