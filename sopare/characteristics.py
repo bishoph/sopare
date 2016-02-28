@@ -17,7 +17,7 @@ License for the specific language governing permissions and limitations
 under the License.
 """
 
-import globalvars
+import config
 
 class characteristic:
 
@@ -29,12 +29,11 @@ class characteristic:
         fft_len = 0
         chunked_fft_avg = [ ]
         chunked_fft_max = [ ]
-        steps = 50
-  
-        for i in range(0, len(fft), steps):
-            chunk_avg = sum(fft[i:i+steps])/steps
+
+        for i in range(0, len(fft), config.STEPS):
+            chunk_avg = sum(fft[i:i+config.STEPS])/config.STEPS
             chunked_fft_avg.append(int(abs(chunk_avg)))
-            chunked_fft_max.append(int(max(fft[i:i+steps])))
+            chunked_fft_max.append(int(max(fft[i:i+config.STEPS])))
 
         fft_len = len(chunked_fft_avg)
         right_trim = fft_len
@@ -42,8 +41,8 @@ class characteristic:
             if (chunked_fft_avg[i] == 0 and right_trim == i + 1):
                 right_trim = i
 
-        if (right_trim > len(globalvars.IMPORTANCE)):
-            right_trim = len(globalvars.IMPORTANCE)
+        if (right_trim > len(config.IMPORTANCE)):
+            right_trim = len(config.IMPORTANCE)
 
         if (right_trim < len(chunked_fft_avg)):
             chunked_fft_max = chunked_fft_max[0:right_trim]
@@ -56,7 +55,7 @@ class characteristic:
         tendency_characteristic = self.get_tendency(tendency)
 
         fft_approach = self.get_approach(chunked_fft_max)
-        model_characteristic = {'fft_freq': fft_len , 'fft_approach': fft_approach, 'fft_avg': chunked_fft_avg, 'tendency': tendency_characteristic }
+        model_characteristic = {'fft_freq': fft_len , 'fft_max': chunked_fft_max, 'fft_approach': fft_approach, 'fft_avg': chunked_fft_avg, 'tendency': tendency_characteristic }
 
         return model_characteristic
 

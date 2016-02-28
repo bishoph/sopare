@@ -22,7 +22,7 @@ import json
 import wave
 import uuid
 import numpy
-import globalvars
+import config
 from scipy.io.wavfile import write
 from path import __wavedestination__
 
@@ -48,6 +48,9 @@ class util:
                    print (characteristic['tendency'])
                for characteristic in dict_entries['characteristic']:
                    print (characteristic['fft_approach'])
+               for characteristic in dict_entries['characteristic']:
+                   print (characteristic['fft_max'])
+
 
     def compile_analysis(self):
         analysis = { }
@@ -70,8 +73,8 @@ class util:
                  analysis[dict_entries['id']]['max_peaks'] = dict_entries['word_tendency']['peaks']
             for i, characteristic in enumerate(dict_entries['characteristic']):
                 if (len(analysis[dict_entries['id']]['min_fft_avg']) <= i):
-                 fft_avg_min = [0] * len(globalvars.IMPORTANCE)
-                 fft_avg_max = [0] * len(globalvars.IMPORTANCE)
+                 fft_avg_min = [0] * len(config.IMPORTANCE)
+                 fft_avg_max = [0] * len(config.IMPORTANCE)
                  analysis[dict_entries['id']]['min_fft_avg'].append(fft_avg_min)
                  analysis[dict_entries['id']]['max_fft_avg'].append(fft_avg_max)
                 fft_len = characteristic['fft_freq']
@@ -91,7 +94,7 @@ class util:
                 if (length < analysis[dict_entries['id']]['min_length'] or analysis[dict_entries['id']]['min_length'] == 0):
                     analysis[dict_entries['id']]['min_length'] = length
                 for j, fft in enumerate(fft_avg):
-                    if (j < len(globalvars.IMPORTANCE)):
+                    if (j < len(config.IMPORTANCE)):
                         if (fft > analysis[dict_entries['id']]['max_fft_avg'][i][j]):
                              analysis[dict_entries['id']]['max_fft_avg'][i][j] = fft
                         if (fft < analysis[dict_entries['id']]['min_fft_avg'][i][j] or  analysis[dict_entries['id']]['min_fft_avg'][i][j] == 0):
@@ -107,8 +110,13 @@ class util:
         tokens = [ ]
         for o in characteristics:
             characteristic, meta = o
-            if (characteristic != None):
-                tokens.append(characteristic)
+            for m in meta:
+                token = m['token']            
+                if (token != 'stop'):
+                    if (characteristic != None):
+                        tokens.append(characteristic)
+                    if (token == 'word' or token == 'long silence'):
+                        break
         return tokens
 
     def add2dict(self, obj, word_tendency, id):

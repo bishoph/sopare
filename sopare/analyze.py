@@ -17,8 +17,9 @@ License for the specific language governing permissions and limitations
 under the License.
 """
 
+import heapq
 import util
-import globalvars
+import config
 import path
 import imp
 import os
@@ -72,6 +73,12 @@ class analyze():
                 print 'ImportError:', err
 
     def get_readable_results(self, best_match, pre_results, first_guess, data):
+        print pre_results
+        print first_guess
+        print best_match
+        readable_results = [ ] 
+        return readable_results
+
         # eliminate double entries
         matchpos = [ ]
         for match in best_match:
@@ -96,7 +103,7 @@ class analyze():
                 if bm[0] in word:
                     # now compare if this really fits into this position!
                     min_max = first_guess[bm[2]]
-                    if (bm[1] >= 1 and len(bm[4]) >= min_max['lmin'] and len(bm[4]) <= min_max['lmax']):
+                    if (bm[1] >= config.MARGINAL_VALUE and len(bm[4]) >= min_max['lmin'] and len(bm[4]) <= min_max['lmax']):
                         if (bm[2] not in mapper[j]):
                             mapper[j].append(bm[2])
 
@@ -130,36 +137,54 @@ class analyze():
 
     def first_scan(self, pre_results, word_tendencies, data):
         first_guess = { }
-        word_tendency = None
         for a, words in enumerate(pre_results):
-            if (len(pre_results) == len(word_tendencies)):
-                word_tendency = word_tendencies[a]
-            else:
-                word_tendency = None
             for i, start in enumerate(words):
                 d = data[start]
                 characteristic, meta = d
-                tendency = characteristic['tendency']
-                self.fast_compare(i, start, len(words), word_tendency, first_guess)
+                fft_max = characteristic['fft_max']
+                hi, h = self.get_highest(fft_max)
+                self.fast_compare(i, start, hi, h, first_guess)
         if not first_guess:
-            print ('TODO: WE NEED A MORE LIBERAL METHOD TO FILL first_guess ...')
+             if (self.debug):
+                 print ('TODO: WE NEED A MORE LIBERAL METHOD TO FILL first_guess ...')
         return first_guess
                 
-    def fast_compare(self, i, start, word_len, word_tendency, first_guess):
+    def fast_compare(self, i, start, hi, h, first_guess):
         # we want to find potential matching words and positions 
         # based on a rough pre comparison
         for id in self.dict_analysis:
             analysis_object = self.dict_analysis[id]
-            if ((word_tendency == None or (word_tendency['peaks'] >= analysis_object['min_peaks'] and word_tendency['peaks'] <= analysis_object['max_peaks']
-             and word_tendency['max'] >= analysis_object['min_max'] and word_tendency['max'] <= analysis_object['max_max']))
-             and (i == 0 or (start + analysis_object['min_tokens']) <= word_len)):
-                if (id not in first_guess):
-                    first_guess[id] = { 'results': [ start ], 'lmin': analysis_object['min_tokens'], 'lmax': analysis_object['max_tokens'] }
-                else:
-                    first_guess[id]['results'].append( start )
-            else:
-                if (self.debug):
-                    print (id + ' at ' + str(start) + ' did not pass fast_compare')
+            for dict_entries in self.DICT['dict']:
+                did = dict_entries['id']
+                if (id == did):
+                    analysis_object = self.dict_analysis[id]
+                    for j, characteristic in enumerate(dict_entries['characteristic']):
+                        d_fft_max =  characteristic['fft_max']
+                        dhi, dh = self.get_highest(d_fft_max)
+                        match = self.fast_high_compare(hi, h, dhi, dh)                        
+                        if (match > 0):
+                            if (id not in first_guess):
+                                first_guess[id] = { 'results': [ start ], 'lmin': analysis_object['min_tokens'], 'lmax': analysis_object['max_tokens'], 'match': { start: match } }
+                            else:
+                                if (start in first_guess[id]['match']):
+                                    first_guess[id]['match'][start] += match
+                                else:
+                                    first_guess[id]['match'][start] = match
+                                if (start not in first_guess[id]['results']):
+                                    first_guess[id]['results'].append( start )
+
+    def fast_high_compare(self, hi, h, dhi, dh):
+        match = 0
+        for i, n in enumerate(hi):
+            hn = h[i]
+            if (len(dhi) > i):
+                dn = dhi[i]
+                dhn = dh[i]
+                if (n == dn):
+                    h_range = hn * 20 / 100 # TODO: make configurable
+                    if (hn - h_range <= dhn and hn + h_range >= dhn):
+                        match += 1
+        return match
 
     def word_compare(self, id, start, lmin, lmax, data):
         match_array = [ ]
@@ -173,8 +198,9 @@ class analyze():
                     tendency = characteristic['tendency']
                     fft_approach = characteristic['fft_approach']
                     fft_avg = characteristic['fft_avg']
+                    fft_max = characteristic['fft_max']
                     fft_freq = characteristic['fft_freq']
-                    points += self.token_compare(tendency, fft_approach, fft_avg, fft_freq, id, pos, match_array)
+                    points += self.token_compare(tendency, fft_approach, fft_avg, fft_max, fft_freq, id, pos, match_array)
                     pos += 1
         points = self.calculate_points(id, start, points, match_array, lmin, lmax)
         if (points == 0):
@@ -199,11 +225,13 @@ class analyze():
         got_matches_for_all_tokens = 0
         for arr in match_array:
             best_match_h = sum(arr[0])
-            if (best_match_h > 2): # avoid false positives, TODO: Make configurable
-                #best_match_h += sum(arr[1])
+            # avoid false positives, TODO: Make configurable
+            best_match_h += sum(arr[1])
+            if (best_match_h > 2): 
+                # avoid false positives, TODO: Make configurable
                 got_matches_for_all_tokens += 1
             if (best_match_h > best_match):
-                check = sum(globalvars.IMPORTANCE[0:len(arr[0])])
+                check = sum(config.IMPORTANCE[0:len(arr[0])])
                 best_match = best_match_h
                 perfect_matches += best_match
                 perfect_match_sum += check
@@ -248,6 +276,9 @@ class analyze():
                 if (token != 'stop'):
                     if (token == 'word'):
                         endpos.append(i)
+                    elif (token == 'token'):
+                        if (m['silence'] >= 2):
+                            endpos.append(i)
                     if ('word_tendency' in m and m['word_tendency'] != None):
                         word_tendencies.append(m['word_tendency'])
         right_border = 0
@@ -257,21 +288,20 @@ class analyze():
             for end in endpos:
                 word = [ ]
                 for start in startpos:
-                    if (start <= end and start > last):
+                    if (start > last):
                         word.append(start)
-                if (len(word) > 0):
+                if (len(word) > 0 and word not in wordpos):
                     wordpos.append(word)
                 last = end
         else:
             wordpos.append(startpos)
         if (len(wordpos) == 0):
             wordpos.append(startpos)
-        print startpos, endpos, wordpos
         return wordpos, word_tendencies
 
-    def token_compare(self, tendency, fft_approach, fft_avg, fft_freq, id, pos, match_array):
-        perfect_match_array = [0] * len(globalvars.IMPORTANCE)
-        fuzzy_array = [0] * len(globalvars.IMPORTANCE)
+    def token_compare(self, tendency, fft_approach, fft_avg, fft_max, fft_freq, id, pos, match_array):
+        perfect_match_array = [0] * len(config.IMPORTANCE)
+        fuzzy_array = [0] * len(config.IMPORTANCE)
         hct = 0
         counter = 0
         for dict_entries in self.DICT['dict']:
@@ -286,16 +316,15 @@ class analyze():
                             hct = hc
                         dict_fft_approach = characteristic['fft_approach']
                         dict_fft_avg =  characteristic['fft_avg']
-                        min_fft_avg = analysis_object['min_fft_avg'][pos]
-                        max_fft_avg = analysis_object['max_fft_avg'][pos]
-                        perfect_match_array, fuzzy_array = self.compare_fft_token_approach(fft_approach, dict_fft_approach, fft_avg, dict_fft_avg, min_fft_avg, max_fft_avg, perfect_match_array, fuzzy_array)
+                        dict_fft_max = characteristic['fft_max']
+                        perfect_match_array, fuzzy_array = self.compare_fft_token_approach(fft_approach, dict_fft_approach, fft_avg, dict_fft_avg, fft_max, dict_fft_max, perfect_match_array, fuzzy_array)
                         counter += 1
         match_array.append([perfect_match_array, fuzzy_array])
         return hct
 
-    def compare_fft_token_approach(self, cfft, dfft, fft_avg, dict_fft_avg, min_fft_avg, max_fft_avg, perfect_match_array, fuzzy_array):
-        zipped = zip(cfft, dfft, fft_avg, min_fft_avg, max_fft_avg, dict_fft_avg)
-        cut = len(globalvars.IMPORTANCE)
+    def compare_fft_token_approach(self, cfft, dfft, fft_avg, dict_fft_avg, fft_max, dict_fft_max, perfect_match_array, fuzzy_array):
+        zipped = zip(cfft, dfft, fft_avg, dict_fft_avg, fft_max, dict_fft_max)
+        cut = len(config.IMPORTANCE)
         if (len(zipped) < cut):
             cut = len(zipped)
             perfect_match_array = perfect_match_array[0:cut]
@@ -304,23 +333,23 @@ class analyze():
             a, b, c, d, e, f = z
             if (a < cut):
                 factor = 1
-                if (a == b and c >= d and c <= e):
-                    c_range = c * 20 / 100 # 20%
-                    if (a < len(globalvars.IMPORTANCE)):
-                        factor = globalvars.IMPORTANCE[a]
-                    if (a < len(perfect_match_array) and perfect_match_array[a] == 0 and c - c_range <= f and c + c_range >= f):
+                e_range = e * 20 / 100 # TODO: make configurable
+                if (a == b and e - e_range <= f and e + e_range >= f):
+                    if (a < len(config.IMPORTANCE)):
+                        factor = config.IMPORTANCE[a]
+                    if (a < len(perfect_match_array) and perfect_match_array[a] == 0):
                         perfect_match_array[a] = factor
                 elif (b in cfft):
                     r = 0
                     g = cfft.index(b)
                     c = fft_avg[g]
-                    c_range = c * 20 / 100 # 20%
+                    e_range = e * 20 / 100 # TODO: make configurable
                     factor = 1
-                    if (g < len(globalvars.IMPORTANCE)):
-                        factor = globalvars.IMPORTANCE[g]
-                    if (g < len(globalvars.WITHIN_RANGE)):
-                        r = globalvars.WITHIN_RANGE[g]
-                    if (i >= g - r and i <= g + r and c >= d and c <= e and c - c_range <= f and c + c_range >= f):
+                    if (g < len(config.IMPORTANCE)):
+                        factor = config.IMPORTANCE[g]
+                    if (g < len(config.WITHIN_RANGE)):
+                        r = config.WITHIN_RANGE[g]
+                    if (i >= g - r and i <= g + r and e - e_range <= f and e + e_range >= f):
                         if (b < len(fuzzy_array) and fuzzy_array[b] == 0):
                             fuzzy_array[b] = factor
         return perfect_match_array, fuzzy_array
@@ -348,3 +377,15 @@ class analyze():
         else:
             convergency = convergency - 10
         return convergency
+
+    def get_highest(self, arr):
+        high5 = heapq.nlargest(5, arr) # TODO: make configurable
+        high5i = [ ]
+        highv = 50000
+        if (len(high5) > 0):
+            highv = high5[0] / 3 # TODO: make configurable
+        for h in high5:
+            if (h > highv):
+                i = arr.index(h)
+                high5i.append(i)
+        return high5i, high5

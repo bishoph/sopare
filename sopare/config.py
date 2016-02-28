@@ -1,3 +1,14 @@
+# This value defines the marginal value that is needed
+# for consideration if the analyzed result becomes a
+# "readable value"
+MARGINAL_VALUE = 1
+
+# If you have bigger tokens youn should have bigger steps
+# as bigger tokens contain more diversification
+# Rule of thump:
+# smaller steps == more precision
+STEPS = 100
+
 # Used to learn, analyze and compare sounds.
 # Position starts at 0 from the fft approach which means 
 # that the first positions in the array are the most important ones.
