@@ -37,7 +37,7 @@ class analyze():
         self.reset()
 
     def do_analysis(self, data, rawbuf):
-        pre_results, word_tendencies = self.pre_scan(data)
+        pre_results, word_tendencies, startpos = self.pre_scan(data)
         if (self.debug):
             print ('pre_results : '+str(pre_results))
         if (pre_results == None):
@@ -50,7 +50,7 @@ class analyze():
             best_match = sorted(deep_guess, key=lambda x: -x[1])
             if (self.debug):
                 print ('best_match : '+ str(best_match))
-            readable_resaults = self.get_readable_results(best_match, pre_results, first_guess, data)
+            readable_resaults = self.get_readable_results(best_match, pre_results, first_guess, startpos, data)
             if (len(readable_resaults) > 0):
                 for p in self.plugins:
                     p.run(readable_resaults, best_match, data, rawbuf)
@@ -72,52 +72,25 @@ class analyze():
             except ImportError, err:
                 print 'ImportError:', err
 
-    def get_readable_results(self, best_match, pre_results, first_guess, data):
+    def get_readable_results(self, best_match, pre_results, first_guess, startpos, data):
+        print startpos
         print pre_results
         print first_guess
         print best_match
-        readable_results = [ ] 
-        return readable_results
-
-        # eliminate double entries
-        matchpos = [ ]
-        for match in best_match:
-            if (match[0] not in matchpos):
-                matchpos.append(match[0])
-        clean_best_match = [ ]
-        for pos in matchpos:
-            for match in best_match:
-                if (pos == match[0]):
-                    clean_best_match.append(match)
-                    break
-        best_match = clean_best_match
-
-        mapper = [ ]
         readable_results = [ ]
-        for word in pre_results:
-            mapper.append( [] )
+        mapper = [ '' ] * len(startpos)
+        for match in best_match:
+            self.mapword(match, mapper, startpos)
 
-        for i, bm in enumerate(best_match):
-            # searching for bm[0] (pos) in pre_results
-            for j, word in enumerate(pre_results):
-                if bm[0] in word:
-                    # now compare if this really fits into this position!
-                    min_max = first_guess[bm[2]]
-                    if (bm[1] >= config.MARGINAL_VALUE and len(bm[4]) >= min_max['lmin'] and len(bm[4]) <= min_max['lmax']):
-                        if (bm[2] not in mapper[j]):
-                            mapper[j].append(bm[2])
-
-        if (self.debug):
-            print mapper
-
-        for word in mapper:
-                if (len(word) > 0):
-                    readable_results.append(word[0])
-                else:
-                    readable_results.append('')
-
+        print mapper
         return readable_results
 
+    def mapword(self, match, mapper, startpos):
+        startpos = startpos.index(match[0])
+        for a in range(startpos, startpos + match[5]):
+            if (mapper[a] == ''):
+                mapper[a] = match[2]
+ 
     def deep_scan(self, first_guess, data):
         deep_guess = [ ]
         for id in first_guess:
@@ -181,7 +154,7 @@ class analyze():
                 dn = dhi[i]
                 dhn = dh[i]
                 if (n == dn):
-                    h_range = hn * 20 / 100 # TODO: make configurable
+                    h_range = hn * config.INACCURACY_FAST_HIGH_COMPARE / 100 
                     if (hn - h_range <= dhn and hn + h_range >= dhn):
                         match += 1
         return match
@@ -202,10 +175,10 @@ class analyze():
                     fft_freq = characteristic['fft_freq']
                     points += self.token_compare(tendency, fft_approach, fft_avg, fft_max, fft_freq, id, pos, match_array)
                     pos += 1
-        points = self.calculate_points(id, start, points, match_array, lmin, lmax)
+        points, got_matches_for_all_tokens = self.calculate_points(id, start, points, match_array, lmin, lmax)
         if (points == 0):
             return None
-        value = [start, points, id, lmax, match_array]
+        value = [start, points, id, lmax, match_array, got_matches_for_all_tokens]
         return value
 
     def calculate_points(self, id, start, points, match_array, lmin, lmax):
@@ -225,10 +198,9 @@ class analyze():
         got_matches_for_all_tokens = 0
         for arr in match_array:
             best_match_h = sum(arr[0])
-            # avoid false positives, TODO: Make configurable
-            best_match_h += sum(arr[1])
-            if (best_match_h > 2): 
-                # avoid false positives, TODO: Make configurable
+            if (config.USE_FUZZY):
+                best_match_h += sum(arr[1])
+            if (best_match_h > config.MIN_PERFECT_MATCHES_FOR_CONSIDERATION): 
                 got_matches_for_all_tokens += 1
             if (best_match_h > best_match):
                 check = sum(config.IMPORTANCE[0:len(arr[0])])
@@ -252,14 +224,14 @@ class analyze():
                 if (self.debug):
                     print ('-------------------------------------')
                     print ('id/start/points/perfect_matches/best_match ' + id + '/' + str(start) + '/' + str(points) + '/' + str(perfect_matches) + '/' + str(best_match))
-                return best_match
+                return best_match, got_matches_for_all_tokens
             else:
                 if (self.debug):
                     print ('----------- !!! '+str(ll) +' >= '+str(lmin) + ' and ' +str(ll) + ' <= ' + str(lmax))
         else:
             if (self.debug):
     	        print ('----------- perfect_match_sum == 0')
-        return 0
+        return 0, 0
 
     def pre_scan(self, data):
         startpos = [ ]
@@ -297,7 +269,7 @@ class analyze():
             wordpos.append(startpos)
         if (len(wordpos) == 0):
             wordpos.append(startpos)
-        return wordpos, word_tendencies
+        return wordpos, word_tendencies, startpos
 
     def token_compare(self, tendency, fft_approach, fft_avg, fft_max, fft_freq, id, pos, match_array):
         perfect_match_array = [0] * len(config.IMPORTANCE)
@@ -333,7 +305,7 @@ class analyze():
             a, b, c, d, e, f = z
             if (a < cut):
                 factor = 1
-                e_range = e * 20 / 100 # TODO: make configurable
+                e_range = e * config.INACCURACY / 100
                 if (a == b and e - e_range <= f and e + e_range >= f):
                     if (a < len(config.IMPORTANCE)):
                         factor = config.IMPORTANCE[a]
@@ -343,7 +315,7 @@ class analyze():
                     r = 0
                     g = cfft.index(b)
                     c = fft_avg[g]
-                    e_range = e * 20 / 100 # TODO: make configurable
+                    e_range = e * config.INACCURACY / 100
                     factor = 1
                     if (g < len(config.IMPORTANCE)):
                         factor = config.IMPORTANCE[g]

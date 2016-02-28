@@ -53,7 +53,6 @@ class characteristic:
             return None
 
         tendency_characteristic = self.get_tendency(tendency)
-
         fft_approach = self.get_approach(chunked_fft_max)
         model_characteristic = {'fft_freq': fft_len , 'fft_max': chunked_fft_max, 'fft_approach': fft_approach, 'fft_avg': chunked_fft_avg, 'tendency': tendency_characteristic }
 

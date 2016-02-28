@@ -3,7 +3,25 @@
 # "readable value"
 MARGINAL_VALUE = 1
 
-# If you have bigger tokens youn should have bigger steps
+# Percentage of inaccuracy for fast high comparison 
+# in first scan.
+INACCURACY_FAST_HIGH_COMPARE = 20
+
+# Percentage of inaccuracy for word comparison
+INACCURACY = 20
+
+# Boolean 
+# If true the fuzzy matches are used to calculate points
+# and to consider result. Based on learned data this
+# can easily result in false positives.
+USE_FUZZY = False
+
+# This value defines the min value for a perfect
+# token match consideration.
+# Depends on learned data.
+MIN_PERFECT_MATCHES_FOR_CONSIDERATION = 2
+
+# If you have bigger tokens you should have bigger steps
 # as bigger tokens contain more diversification
 # Rule of thump:
 # smaller steps == more precision
@@ -26,3 +44,4 @@ WITHIN_RANGE = [ 1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1 ]
 # If the comparator array is longer the value 0.1
 # is used in the appropriate functions.
 ACCURACY = [ 1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1 ]
+
