@@ -73,22 +73,37 @@ class analyze():
                 print 'ImportError:', err
 
     def get_readable_results(self, best_match, pre_results, first_guess, startpos, data):
-        print startpos
-        print pre_results
-        print first_guess
-        print best_match
+        #print startpos
+        #print pre_results
+        #print first_guess
+        #print best_match
         readable_results = [ ]
         mapper = [ '' ] * len(startpos)
         for match in best_match:
             self.mapword(match, mapper, startpos)
 
-        print mapper
+        #print mapper
+        for match in mapper:
+            if (self.verify_matches(first_guess, match)):
+                if (match not in readable_results):
+                    readable_results.append(match)
         return readable_results
+
+    def verify_matches(self, first_guess, match):
+        for guess in first_guess:
+            if (guess == match):
+                if ('tokencount' not in first_guess[guess]):
+                    first_guess[guess]['tokencount'] = 1
+                else:
+                    first_guess[guess]['tokencount'] += 1
+                if (first_guess[guess]['tokencount'] <= first_guess[guess]['lmin']):
+                    return True
+        return False
 
     def mapword(self, match, mapper, startpos):
         startpos = startpos.index(match[0])
         for a in range(startpos, startpos + match[5]):
-            if (mapper[a] == ''):
+            if (mapper[a] == '' and match[1] >= config.MARGINAL_VALUE):
                 mapper[a] = match[2]
  
     def deep_scan(self, first_guess, data):
@@ -119,7 +134,7 @@ class analyze():
                 self.fast_compare(i, start, hi, h, first_guess)
         if not first_guess:
              if (self.debug):
-                 print ('TODO: WE NEED A MORE LIBERAL METHOD TO FILL first_guess ...')
+                 print ('TODO: WE MAY NEED A MORE LIBERAL METHOD TO FILL first_guess ...')
         return first_guess
                 
     def fast_compare(self, i, start, hi, h, first_guess):
@@ -200,20 +215,20 @@ class analyze():
             best_match_h = sum(arr[0])
             if (config.USE_FUZZY):
                 best_match_h += sum(arr[1])
-            if (best_match_h > config.MIN_PERFECT_MATCHES_FOR_CONSIDERATION): 
+            if (best_match_h >= config.MIN_PERFECT_MATCHES_FOR_CONSIDERATION): 
                 got_matches_for_all_tokens += 1
             if (best_match_h > best_match):
                 check = sum(config.IMPORTANCE[0:len(arr[0])])
                 best_match = best_match_h
                 perfect_matches += best_match
                 perfect_match_sum += check
-        if (got_matches_for_all_tokens < len(match_array)):
+        if (got_matches_for_all_tokens < ll):
             if (self.debug):
-                print ('dumping score because of token matches '+str(got_matches_for_all_tokens) + ' ! ' + str(len(match_array)))
-            perfect_matches = perfect_matches * got_matches_for_all_tokens / len(match_array)
+                print ('dumping score because of token matches '+str(got_matches_for_all_tokens) + ' ! ' + str(ll))
+            perfect_matches = perfect_matches * got_matches_for_all_tokens / ll
         if (len(match_array) < lmin or len(match_array) > lmax):
             if (self.debug):
-                 print ('this seems to be a false positive as min/max token length does not match :'+str(lmin) + ' < ' + str(len(match_array))+ ' > ' + str(lmax))
+                 print ('this seems to be a false positive as min/max token length does not match :'+str(lmin) + ' < ' + str(ll)+ ' > ' + str(lmax))
             perfect_matches = perfect_matches / 10
         if (perfect_match_sum > 0):
             perfect_matches = perfect_matches * 100 / perfect_match_sum 
@@ -253,6 +268,8 @@ class analyze():
                             endpos.append(i)
                     if ('word_tendency' in m and m['word_tendency'] != None):
                         word_tendencies.append(m['word_tendency'])
+                        if (i not in endpos):
+                            endpos.append(i)
         right_border = 0
         wordpos = [ ]
         last = -1
@@ -351,11 +368,11 @@ class analyze():
         return convergency
 
     def get_highest(self, arr):
-        high5 = heapq.nlargest(5, arr) # TODO: make configurable
+        high5 = heapq.nlargest(config.FAST_HIGH_COMPARISON, arr)
         high5i = [ ]
         highv = 50000
         if (len(high5) > 0):
-            highv = high5[0] / 3 # TODO: make configurable
+            highv = high5[0] / config.GET_HIGH_THRESHOLD
         for h in high5:
             if (h > highv):
                 i = arr.index(h)

@@ -37,12 +37,20 @@ class characteristic:
 
         fft_len = len(chunked_fft_avg)
         right_trim = fft_len
-        for i in range(len(chunked_fft_avg)-1, 0, -1):
-            if (chunked_fft_avg[i] == 0 and right_trim == i + 1):
-                right_trim = i
+        for i, n in enumerate(chunked_fft_max):
+            if (n > 0 and i > 0):
+                chunked_fft_max = chunked_fft_max[i:]
+                chunked_fft_avg = chunked_fft_avg[i:]
+                break
 
-        if (right_trim > len(config.IMPORTANCE)):
-            right_trim = len(config.IMPORTANCE)
+        for i in range(len(chunked_fft_avg)-1, 0, -1):
+            if (chunked_fft_avg[i] == 0):
+                right_trim = i
+            else:
+                break
+
+        if (right_trim > config.CUT_RESULT_LENGTH):
+            right_trim = config.CUT_RESULT_LENGTH
 
         if (right_trim < len(chunked_fft_avg)):
             chunked_fft_max = chunked_fft_max[0:right_trim]

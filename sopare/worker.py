@@ -111,13 +111,6 @@ class worker(multiprocessing.Process):
                             self.analyze.do_analysis(self.character, self.rawbuf)
                             self.reset()
 
-        # end of while
-        for ch in self.character:
-            c, meta = ch
-            if (c != None):
-                if (self.debug):
-                    print (c)
-
         if (self.dict != None):
             self.DICT = self.util.learndict(self.character, self.word_tendency, self.dict)
 
