@@ -111,11 +111,10 @@ python sopare.py -r UUID
 
 Next steps/TODOs:
 
-  * Better end of word recognition
-  * Word length detection and usage
+  * Performance optimization
+  * Meta information usage
+  * Enhanced configuration options
   * Optimizations, testing and bugfixing
-  * Add configuration options
-
 
 Project status:
 

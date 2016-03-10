@@ -37,8 +37,8 @@ class filtering():
 
     def filter(self, data, meta):
         fft = numpy.fft.rfft(data)
-        fft[9000:] = 0
-        fft[:20] = 0
+        fft[9000:] = 0 # TODO: Make configurable
+        fft[:20] = 0 # TODO: Make configurable
         data = numpy.fft.irfft(fft)
         obj = { 'action': 'data', 'token': data, 'fft': fft, 'meta': meta }
         self.queue.put(obj)

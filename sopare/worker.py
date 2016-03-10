@@ -28,7 +28,7 @@ import uuid
 class worker(multiprocessing.Process):
 
     def __init__(self, queue, debug, plot, dict, wave):
-        multiprocessing.Process.__init__(self, name="worker for prepared queue")
+        multiprocessing.Process.__init__(self, name="worker for filtered data")
         self.queue = queue
         self.debug = debug
         self.plot = plot
@@ -71,7 +71,7 @@ class worker(multiprocessing.Process):
             obj = self.queue.get()
             if (obj['action'] == 'data'):
                 raw_token = obj['token']
-                if (self.wave or True): # TODO: "or True" is just temporary for testing. Should be removed later on!
+                if (self.wave or True): # TODO: "or True" is just temporary for testing. Must be removed later on!
                     self.rawbuf.extend(raw_token)
                 fft = obj['fft']
                 if (self.plot):

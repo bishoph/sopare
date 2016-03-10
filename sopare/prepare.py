@@ -23,7 +23,8 @@ import visual
 import util
 
 class preparing():
- 
+
+    # TODO: Make configurable 
     PITCH = 500
     TOKEN_LOW = 200
     TOKEN_HIGH = 400

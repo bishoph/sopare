@@ -18,6 +18,7 @@ under the License.
 """
 
 import config
+import math
 
 class characteristic:
 
@@ -27,24 +28,20 @@ class characteristic:
     def getcharacteristic(self, fft, tendency):
         fft = [abs(i) for i in fft]
         fft_len = 0
-        chunked_fft_avg = [ ]
         chunked_fft_max = [ ]
 
         for i in range(0, len(fft), config.STEPS):
-            chunk_avg = sum(fft[i:i+config.STEPS])/config.STEPS
-            chunked_fft_avg.append(int(abs(chunk_avg)))
             chunked_fft_max.append(int(max(fft[i:i+config.STEPS])))
 
-        fft_len = len(chunked_fft_avg)
+        fft_len = len(chunked_fft_max)
         right_trim = fft_len
         for i, n in enumerate(chunked_fft_max):
             if (n > 0 and i > 0):
                 chunked_fft_max = chunked_fft_max[i:]
-                chunked_fft_avg = chunked_fft_avg[i:]
                 break
 
-        for i in range(len(chunked_fft_avg)-1, 0, -1):
-            if (chunked_fft_avg[i] == 0):
+        for i in range(len(chunked_fft_max)-1, 0, -1):
+            if (chunked_fft_max[i] == 0):
                 right_trim = i
             else:
                 break
@@ -52,17 +49,21 @@ class characteristic:
         if (right_trim > config.CUT_RESULT_LENGTH):
             right_trim = config.CUT_RESULT_LENGTH
 
-        if (right_trim < len(chunked_fft_avg)):
+        if (right_trim < len(chunked_fft_max)):
             chunked_fft_max = chunked_fft_max[0:right_trim]
-            chunked_fft_avg = chunked_fft_avg[0:right_trim]
 
         # We return nothing if the fft_len is below 15 as it is useless  
-        if (fft_len <= 15):
+        if (fft_len <= 15): # TODO: Make configurable
             return None
 
+        # We return nothing if the length of the token is > 300 as this
+        # is normally garbage
         tendency_characteristic = self.get_tendency(tendency)
+        if (tendency_characteristic == None):
+            return None
+
         fft_approach = self.get_approach(chunked_fft_max)
-        model_characteristic = {'fft_freq': fft_len , 'fft_max': chunked_fft_max, 'fft_approach': fft_approach, 'fft_avg': chunked_fft_avg, 'tendency': tendency_characteristic }
+        model_characteristic = {'fft_freq': fft_len , 'fft_max': chunked_fft_max, 'fft_approach': fft_approach, 'tendency': tendency_characteristic }
 
         return model_characteristic
 
@@ -85,19 +86,31 @@ class characteristic:
         return result
 
     def get_tendency(self, data):
+        ll = len(data)
+        if (ll > 300): # TODO: Make configurable
+            return None
         peaks = 0
-        avg = (sum(data)/len(data))
-        delta = data[0]-data[len(data)-1]
+        avg = (sum(data)/ll)
+        delta = data[0]-data[ll-1]
         lowercut = avg*1.1
         high = 0
+        highest = 0
+        pos = 0
+        hpos = 0
         for n in data:
             if (n > high):
                 high = n
+                highest = high
+                hpos = pos
             elif (n < lowercut):
                 if (high > lowercut):
                     peaks += 1
                 high = 0
-        tendency = { 'len': len(data), 'peaks': peaks, 'avg': avg, 'delta': delta }
+            pos += 1
+        e = highest/(hpos*1.0)
+        alpha = math.degrees(math.atan(e))
+        #tendency = { 'len': ll, 'peaks': peaks, 'avg': avg, 'delta': delta }
+        tendency = { 'len': ll, 'peak': alpha, 'avg': avg, 'delta': delta }
         return tendency
   
     def get_word_tendency(self, data):
@@ -105,7 +118,7 @@ class characteristic:
             return None
         peaks = 0
         maxi = max(data)
-        if (maxi < 100000):
+        if (maxi < 100000): # TODO: Make configurable
             return None
         high = int(maxi * .6)
         low = high / 2

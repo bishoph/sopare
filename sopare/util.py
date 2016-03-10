@@ -23,6 +23,7 @@ import wave
 import uuid
 import numpy
 import config
+import heapq
 from scipy.io.wavfile import write
 from path import __wavedestination__
 
@@ -51,13 +52,12 @@ class util:
                for characteristic in dict_entries['characteristic']:
                    print (characteristic['fft_max'])
 
-
     def compile_analysis(self):
         analysis = { }
         json_data = self.getDICT()
         for dict_entries in json_data['dict']:
             if (dict_entries['id'] not in analysis):
-                analysis[dict_entries['id']] = { 'min_tokens': 0, 'max_tokens': 0, 'min_max': 0, 'max_max': 0, 'min_peaks': 0, 'max_peaks': 0, 'min_fft_len': 0, 'max_fft_len': 0, 'min_delta': 0, 'max_delta': 0, 'min_length': 0, 'max_length': 0, 'min_fft_avg': [ ] , 'max_fft_avg': [ ] }
+                analysis[dict_entries['id']] = { 'min_tokens': 0, 'max_tokens': 0, 'min_max': 0, 'max_max': 0, 'min_peaks': 0, 'max_peaks': 0, 'min_fft_len': 0, 'max_fft_len': 0, 'min_delta': 0, 'max_delta': 0, 'min_length': 0, 'max_length': 0, 'high5': [ ] }
             l = len(dict_entries['characteristic'])
             if (l > analysis[dict_entries['id']]['max_tokens']):
                 analysis[dict_entries['id']]['max_tokens'] = l
@@ -72,15 +72,9 @@ class util:
             if (dict_entries['word_tendency']['peaks'] > analysis[dict_entries['id']]['max_peaks']):
                  analysis[dict_entries['id']]['max_peaks'] = dict_entries['word_tendency']['peaks']
             for i, characteristic in enumerate(dict_entries['characteristic']):
-                if (len(analysis[dict_entries['id']]['min_fft_avg']) <= i):
-                 fft_avg_min = [0] * len(config.IMPORTANCE)
-                 fft_avg_max = [0] * len(config.IMPORTANCE)
-                 analysis[dict_entries['id']]['min_fft_avg'].append(fft_avg_min)
-                 analysis[dict_entries['id']]['max_fft_avg'].append(fft_avg_max)
                 fft_len = characteristic['fft_freq']
                 length = characteristic['tendency']['len']
                 delta = characteristic['tendency']['delta']
-                fft_avg = characteristic['fft_avg']
                 if (fft_len > analysis[dict_entries['id']]['max_fft_len']):
                     analysis[dict_entries['id']]['max_fft_len'] = fft_len
                 if (fft_len < analysis[dict_entries['id']]['min_fft_len'] or analysis[dict_entries['id']]['min_fft_len'] == 0):
@@ -93,12 +87,9 @@ class util:
                     analysis[dict_entries['id']]['max_length'] = length
                 if (length < analysis[dict_entries['id']]['min_length'] or analysis[dict_entries['id']]['min_length'] == 0):
                     analysis[dict_entries['id']]['min_length'] = length
-                for j, fft in enumerate(fft_avg):
-                    if (j < len(config.IMPORTANCE)):
-                        if (fft > analysis[dict_entries['id']]['max_fft_avg'][i][j]):
-                             analysis[dict_entries['id']]['max_fft_avg'][i][j] = fft
-                        if (fft < analysis[dict_entries['id']]['min_fft_avg'][i][j] or  analysis[dict_entries['id']]['min_fft_avg'][i][j] == 0):
-                             analysis[dict_entries['id']]['min_fft_avg'][i][j] = fft
+                fft_max = characteristic['fft_max']
+                dhi, dh = self.get_highest(fft_max)
+                analysis[dict_entries['id']]['high5'].append((dhi, dh))
         return analysis
 
     def learndict(self, characteristics, word_tendency, id):
@@ -170,3 +161,16 @@ class util:
     def normalize(self, data, normalization):
         newdata = [int(float(i)/sum(data)*normalization) for i in data]
         return newdata
+
+    def get_highest(self, arr):
+        high5 = heapq.nlargest(config.FAST_HIGH_COMPARISON, arr)
+        high5i = [ ]
+        highv = 50000
+        if (len(high5) > 0):
+            highv = high5[0] / config.GET_HIGH_THRESHOLD
+        for h in high5:
+            if (h > highv):
+                i = arr.index(h)
+                high5i.append(i)
+        return high5i, high5
+

@@ -10,7 +10,11 @@ INACCURACY_FAST_HIGH_COMPARE = 20
 
 # Percentage of inaccuracy for word comparison
 # Default: 20
-INACCURACY = 20
+INACCURACY = 30
+
+# Percentage of inaccuracy for tendency (peak degree)
+# Default: .2
+TENDENCY_INACCURACY = .2
 
 # Boolean 
 # If true the fuzzy matches are used to calculate points
@@ -37,22 +41,19 @@ MIN_PERFECT_MATCHES_FOR_CONSIDERATION = 1
 # Steps boil down the data into smaller junks of data.
 # Smaller steps means more precision but require
 # normally more learned entries in the dictionary 
-STEPS = 20
-
+STEPS = 50
 
 # If result are > CUT_RESULT_LENGTH results are cut
 # to the CUT_RESULT_LENGTH length
-CUT_RESULT_LENGTH = 100
+CUT_RESULT_LENGTH = 80
 
-# Used to learn, analyze and compare sounds.
+# Used to analyze and compare sounds.
 # Position starts at 0 from the fft approach which means 
-# that the first positions in the array are the most important ones.
+# that the importance goes from left to right.
 IMPORTANCE = [ 1,1,1,1,1, 1,1,1,1,1, 1,1,1,1,1 ]
 
 # Tolerance table to find matches.
 # Higher values mean more tolerance and therefor potential false positives!
 # Position is taken from the fft approach which means that
 # the first positions are the most important ones.
-WITHIN_RANGE = [ 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 ]
-
-
+WITHIN_RANGE = [ 0,1,1,1,1,2,2,2,2,2,2,3,3,3,3,3,3,3,3,3 ]
