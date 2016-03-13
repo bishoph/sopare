@@ -106,7 +106,7 @@ class util:
                 if (token != 'stop'):
                     if (characteristic != None):
                         tokens.append(characteristic)
-                    if (token == 'word' or token == 'long silence'):
+                    if (token == 'start analysis'):
                         break
         return tokens
 

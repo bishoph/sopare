@@ -77,13 +77,6 @@ class worker(multiprocessing.Process):
                 if (self.plot):
                     self.rawfft.extend(fft)
                 meta = obj['meta']
-                for m in meta:
-                    if (m['token'] != 'stop'):
-                        if (m['token'] == 'word' or m['token'] == 'long silence'):
-                            word_tendency = self.characteristic.get_word_tendency(m['peaks'])
-                            m['word_tendency'] = word_tendency
-                            if (word_tendency != None):
-                                self.word_tendency = word_tendency
                 raw_token_compressed = self.condense.compress(raw_token)
                 raw_tendency = self.condense.model_tendency(raw_token_compressed)
                 characteristic = self.characteristic.getcharacteristic(fft, raw_tendency)
@@ -106,10 +99,12 @@ class worker(multiprocessing.Process):
 
             if (self.counter > 0 and meta != None):
                 for m in meta:
-                    if (m['token'] == 'long silence'):
+                    if (m['token'] == 'start analysis'):
                         if (self.dict == None):
                             self.analyze.do_analysis(self.character, self.rawbuf)
                             self.reset()
+                        else:
+                            self.word_tendency = self.characteristic.get_word_tendency(m['peaks'])
 
         if (self.dict != None):
             self.DICT = self.util.learndict(self.character, self.word_tendency, self.dict)

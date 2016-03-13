@@ -34,6 +34,11 @@ class characteristic:
             chunked_fft_max.append(int(max(fft[i:i+config.STEPS])))
 
         fft_len = len(chunked_fft_max)
+
+        # We return nothing if the fft_len is below 15 as it is useless  
+        if (fft_len <= 15): # TODO: Make configurable
+            return None
+
         right_trim = fft_len
         for i, n in enumerate(chunked_fft_max):
             if (n > 0 and i > 0):
@@ -52,12 +57,7 @@ class characteristic:
         if (right_trim < len(chunked_fft_max)):
             chunked_fft_max = chunked_fft_max[0:right_trim]
 
-        # We return nothing if the fft_len is below 15 as it is useless  
-        if (fft_len <= 15): # TODO: Make configurable
-            return None
 
-        # We return nothing if the length of the token is > 300 as this
-        # is normally garbage
         tendency_characteristic = self.get_tendency(tendency)
         if (tendency_characteristic == None):
             return None
@@ -87,8 +87,6 @@ class characteristic:
 
     def get_tendency(self, data):
         ll = len(data)
-        if (ll > 300): # TODO: Make configurable
-            return None
         peaks = 0
         avg = (sum(data)/ll)
         delta = data[0]-data[ll-1]
@@ -107,28 +105,41 @@ class characteristic:
                     peaks += 1
                 high = 0
             pos += 1
+        if (hpos == 0):
+            return None
         e = highest/(hpos*1.0)
         alpha = math.degrees(math.atan(e))
-        #tendency = { 'len': ll, 'peaks': peaks, 'avg': avg, 'delta': delta }
-        tendency = { 'len': ll, 'peak': alpha, 'avg': avg, 'delta': delta }
+        tendency = { 'len': ll, 'deg': alpha, 'avg': avg, 'delta': delta }
         return tendency
   
     def get_word_tendency(self, data):
-        if (len(data) == 0):
+        ll = len(data)
+        if (ll == 0):
             return None
         peaks = 0
+        deg = [ ]
         maxi = max(data)
-        if (maxi < 100000): # TODO: Make configurable
-            return None
         high = int(maxi * .6)
         low = high / 2
         fly_high = True
-        for n in data:
+        firsthighpos = 0
+        firsthigh = 0
+        lastlowpos = 0
+        for i, n in enumerate(data):
             if (n > high and fly_high):
                 peaks += 1
+                if (firsthigh == 0):
+                    firsthigh = n
+                    firsthighpos = i
                 fly_high = False
             if (n < low):
                 fly_high = True
-        word_tendency = { 'peaks': peaks, 'max': maxi }
+                lastlowpos = i
+        if (firsthigh == 0 or lastlowpos == 0):
+            return None
+        deg.append(math.degrees(math.atan((firsthigh-n)/((i-firsthighpos)*44100.0))))
+        if (lastlowpos == 0):
+            lastlowpos = ll
+        word_tendency = { 'peaks': peaks, 'max': maxi, 'deg': deg, 'peaklen': lastlowpos - firsthighpos }
         return word_tendency
             

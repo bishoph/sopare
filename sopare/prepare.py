@@ -25,11 +25,9 @@ import util
 class preparing():
 
     # TODO: Make configurable 
-    PITCH = 500
-    TOKEN_LOW = 200
     TOKEN_HIGH = 400
-    WORD_GAP = 5
-    LONG_SILENCE = 30
+    SILENCE = 5
+    LONG_SILENCE = 20
 
     def __init__(self, debug, plot, wave, dict):
         self.debug = debug
@@ -48,8 +46,7 @@ class preparing():
         if (len(self.buffer) > 0):
             start = 0
             end = len(self.buffer)
-            #if (self.debug):
-            #    print ('token: ' +str(start)+ ':'+str(end))
+            #print ('token: ' +str(start)+ ':'+str(end) + ' / ' + str(self.counter))
             self.filter.filter(self.buffer[0:end], meta)
             self.buffer = [ ]
 
@@ -92,17 +89,16 @@ class preparing():
         # tokenizer/word detection
         if (volume < preparing.TOKEN_HIGH):
             self.silence += 1
-            if (volume < preparing.TOKEN_LOW):
-                self.silence2 += 1
-                if (self.silence2 == preparing.WORD_GAP):
-                    self.new_word = True
-                    meta.append({ 'token': 'word', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'peaks': self.peaks })
-                    self.peaks = [ ]
-            if (self.silence == preparing.LONG_SILENCE):
+            if (self.silence == preparing.SILENCE):
+                self.word_pos.append(self.last_low_pos)
+                self.new_token = True
+                meta.append({ 'token': 'token', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume })
+                self.low = 0
+            elif (self.silence == preparing.LONG_SILENCE):
                     self.word_pos.append(self.last_low_pos)
                     self.new_word = True
                     self.entered_silence = True
-                    meta.append({ 'token': 'long silence', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'peaks': self.peaks, 'word_pos': self.word_pos })
+                    meta.append({ 'token': 'start analysis', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'peaks': self.peaks, 'word_pos': self.word_pos })
                     self.peaks = [ ]
             elif (self.low > 0):
                 self.word_pos.append(self.last_low_pos)
@@ -125,4 +121,3 @@ class preparing():
                 self.new_word = False
                 self.word_pos = [ ]
                 self.low = 0
-

@@ -36,12 +36,12 @@ class analyze():
         self.reset()
 
     def do_analysis(self, data, rawbuf):
-        pre_results, word_tendencies, startpos = self.pre_scan(data)
+        pre_results, startpos = self.pre_scan(data)
         if (self.debug):
             print ('pre_results : '+str(pre_results))
         if (pre_results == None):
             return
-        first_guess = self.first_scan(pre_results, word_tendencies, data)
+        first_guess = self.first_scan(pre_results, data)
         if (self.debug):
             print ('first_guess : ' + str(first_guess))
         deep_guess = self.deep_scan(first_guess, data)
@@ -118,7 +118,7 @@ class analyze():
                         print (id + ' at ' + str(pos) + ' did not pass word_compare')
         return deep_guess
 
-    def first_scan(self, pre_results, word_tendencies, data):
+    def first_scan(self, pre_results, data):
         first_guess = { }
         for a, words in enumerate(pre_results):
             for i, start in enumerate(words):
@@ -244,28 +244,24 @@ class analyze():
         return 0, 0
 
     def pre_scan(self, data):
+        posmapper = [ ]
         startpos = [ ]
         endpos = [ ]
-        word_tendencies = [ ]
+        peaks = [ ]
         for i, d in enumerate(data):
             characteristic, meta = d
             if (characteristic != None):
                 startpos.append(i)
-        for i, d in enumerate(data):
-            characteristic, meta = d
             for m in meta:
                 token = m['token']
                 if (token != 'stop'):
-                    if (token == 'word'):
+                    if (token == 'token'):
+                        posmapper.append(m['pos'])
                         endpos.append(i)
-                    elif (token == 'token'):
-                        if (m['silence'] >= 2):
-                            endpos.append(i)
-                    if ('word_tendency' in m and m['word_tendency'] != None):
-                        word_tendencies.append(m['word_tendency'])
-                        if (i not in endpos):
-                            endpos.append(i)
-        right_border = 0
+                    elif (token == 'start analysis'):
+                        peaks = m['peaks']
+                        posmapper.append(m['pos'])
+                        self.word_boxing(peaks, startpos, posmapper)
         wordpos = [ ]
         last = -1
         if (len(endpos) > 0 and len(startpos) > 0):
@@ -281,7 +277,7 @@ class analyze():
             wordpos.append(startpos)
         if (len(wordpos) == 0):
             wordpos.append(startpos)
-        return wordpos, word_tendencies, startpos
+        return wordpos, startpos
 
     def token_compare(self, tendency, fft_approach, fft_max, fft_freq, id, pos, match_array):
         perfect_match_array = [0] * len(config.IMPORTANCE)
@@ -312,7 +308,7 @@ class analyze():
             fuzzy_array = fuzzy_array[0:cut]
         for i, z in enumerate(zipped):
             a, b, e, f = z
-            if (a < cut or b < cut):
+            if (a < cut):
                 factor = 1
                 e_range = e * config.INACCURACY / 100
                 if (a == b and e - e_range <= f and e + e_range >= f):
@@ -340,11 +336,19 @@ class analyze():
             convergency += 40
         else:
             convergency += 2
-        range = c['peak'] * config.TENDENCY_INACCURACY / 100
-        if (c['peak'] - range <= d['peak'] and c['peak']+range >= d['peak']):
+        range = c['deg'] * config.TENDENCY_INACCURACY / 100
+        if (c['deg'] - range <= d['deg'] and c['deg']+range >= d['deg']):
             convergency += 60
         else:
             convergency -= 5
         # TODO: cfreq, dfreq
         return convergency
+
+    def word_boxing(self, peaks, startpos, posmapper):
+        # word_boxing finds words in the data stream based on adaptive peaks
+        # startpos  : [  1, 2,  3]
+        # posmapper : [1, 18, 22, 37]
+        print startpos
+        print posmapper
+        print peaks
 
