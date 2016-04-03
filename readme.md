@@ -26,10 +26,10 @@ Examples of use:
   * (Smart) home control
   * Voice controlled robots
   * Can be used in combination with any available cloud API or service like
-     http://stevenhickson.blogspot.de/2013/06/voice-command-v30-for-raspberry-pi.html
-     http://www.vocapia.com/speech-to-text-api.html
+     Alexa: https://github.com/amzn/alexa-avs-raspberry-pi
+     Google: https://cloud.google.com/speech/
      (and many more)
-     e.g. to rate input upfront
+     e.g. to listen to a special pattern upfront
   
 
 Dependencies:

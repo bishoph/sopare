@@ -57,20 +57,26 @@ class util:
         json_data = self.getDICT()
         for dict_entries in json_data['dict']:
             if (dict_entries['id'] not in analysis):
-                analysis[dict_entries['id']] = { 'min_tokens': 0, 'max_tokens': 0, 'min_max': 0, 'max_max': 0, 'min_peaks': 0, 'max_peaks': 0, 'min_fft_len': 0, 'max_fft_len': 0, 'min_delta': 0, 'max_delta': 0, 'min_length': 0, 'max_length': 0, 'high5': [ ] }
+                analysis[dict_entries['id']] = { 'min_tokens': 0, 'max_tokens': 0, 'min_peaks': 0, 'max_peaks': 0, 'min_peak_length': [ ], 'max_peak_length': [ ], 'min_fft_len': 0, 'max_fft_len': 0, 'min_delta': 0, 'max_delta': 0, 'min_length': 0, 'max_length': 0, 'high5': [ ] }
             l = len(dict_entries['characteristic'])
             if (l > analysis[dict_entries['id']]['max_tokens']):
                 analysis[dict_entries['id']]['max_tokens'] = l
             if (l < analysis[dict_entries['id']]['min_tokens'] or analysis[dict_entries['id']]['min_tokens'] == 0):
                 analysis[dict_entries['id']]['min_tokens'] = l
-            if (dict_entries['word_tendency']['max'] < analysis[dict_entries['id']]['min_max'] or analysis[dict_entries['id']]['min_max'] == 0):
-                analysis[dict_entries['id']]['min_max'] = dict_entries['word_tendency']['max']
-            if (dict_entries['word_tendency']['max'] > analysis[dict_entries['id']]['max_max']):
-                 analysis[dict_entries['id']]['max_max'] = dict_entries['word_tendency']['max']
             if (dict_entries['word_tendency']['peaks'] < analysis[dict_entries['id']]['min_peaks'] or analysis[dict_entries['id']]['min_peaks'] == 0):
                 analysis[dict_entries['id']]['min_peaks'] = dict_entries['word_tendency']['peaks']
             if (dict_entries['word_tendency']['peaks'] > analysis[dict_entries['id']]['max_peaks']):
                  analysis[dict_entries['id']]['max_peaks'] = dict_entries['word_tendency']['peaks']
+            for i, pl in enumerate(dict_entries['word_tendency']['peak_length']):
+                if (len(analysis[dict_entries['id']]['min_peak_length'])-1 <= i):
+                    analysis[dict_entries['id']]['min_peak_length'].append(0)
+                if (len(analysis[dict_entries['id']]['max_peak_length'])-1 <= i):
+                    analysis[dict_entries['id']]['max_peak_length'].append(0)
+                if (pl < analysis[dict_entries['id']]['min_peak_length'][i] or analysis[dict_entries['id']]['min_peak_length'][i] == 0):
+                    analysis[dict_entries['id']]['min_peak_length'][i] = pl
+                if (pl > analysis[dict_entries['id']]['max_peak_length'][i]):
+                    analysis[dict_entries['id']]['max_peak_length'][i] = pl
+
             for i, characteristic in enumerate(dict_entries['characteristic']):
                 fft_len = characteristic['fft_freq']
                 length = characteristic['tendency']['len']
@@ -173,4 +179,3 @@ class util:
                 i = arr.index(h)
                 high5i.append(i)
         return high5i, high5
-

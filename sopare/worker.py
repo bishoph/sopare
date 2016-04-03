@@ -94,17 +94,15 @@ class worker(multiprocessing.Process):
             elif (obj['action'] == 'reset' and self.dict == None):
                 self.reset()
             elif (obj['action'] == 'stop'):
-                self.analyze.do_analysis(self.character, None)
                 self.running = False
 
             if (self.counter > 0 and meta != None):
                 for m in meta:
                     if (m['token'] == 'start analysis'):
+                        self.word_tendency = self.characteristic.get_word_tendency(m['peaks'])
                         if (self.dict == None):
-                            self.analyze.do_analysis(self.character, self.rawbuf)
+                            self.analyze.do_analysis(self.character, self.word_tendency, self.rawbuf)
                             self.reset()
-                        else:
-                            self.word_tendency = self.characteristic.get_word_tendency(m['peaks'])
 
         if (self.dict != None):
             self.DICT = self.util.learndict(self.character, self.word_tendency, self.dict)

@@ -1,3 +1,6 @@
+# Sample rate
+SAMPLE_RATE = 44100
+
 # This value defines the marginal value that is needed
 # for consideration if the analyzed result becomes a
 # "readable value"
@@ -41,7 +44,9 @@ MIN_PERFECT_MATCHES_FOR_CONSIDERATION = 1
 # Steps boil down the data into smaller junks of data.
 # Smaller steps means more precision but require
 # normally more learned entries in the dictionary 
-STEPS = 50
+# We use a progressive value to get smaller steps in the
+# low frequencies
+PROGRESSIVE_FACTOR = 0.15
 
 # If result are > CUT_RESULT_LENGTH results are cut
 # to the CUT_RESULT_LENGTH length
@@ -50,10 +55,14 @@ CUT_RESULT_LENGTH = 80
 # Used to analyze and compare sounds.
 # Position starts at 0 from the fft approach which means 
 # that the importance goes from left to right.
-IMPORTANCE = [ 1,1,1,1,1, 1,1,1,1,1, 1,1,1,1,1 ]
+IMPORTANCE = [ 1,1,1,1,1, 1,1,1,1,1, 1,1,1,1,1, 1,1,1,1,1 ]
 
 # Tolerance table to find matches.
 # Higher values mean more tolerance and therefor potential false positives!
 # Position is taken from the fft approach which means that
 # the first positions are the most important ones.
-WITHIN_RANGE = [ 0,1,1,1,1,2,2,2,2,2,2,3,3,3,3,3,3,3,3,3 ]
+WITHIN_RANGE = [ 1,1,1,1,1,2,2,2,2,2,2,3,3,3,3,3,3,3,3,3 ]
+
+# This removes n results from the left side of the 
+# fft results. Should be consistent with your filter
+REMOVE_LEFT_FFT_RESULTS = 20

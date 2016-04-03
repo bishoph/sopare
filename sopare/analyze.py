@@ -35,7 +35,7 @@ class analyze():
         self.first_approach = { }
         self.reset()
 
-    def do_analysis(self, data, rawbuf):
+    def do_analysis(self, data, word_tendency, rawbuf):
         pre_results, startpos = self.pre_scan(data)
         if (self.debug):
             print ('pre_results : '+str(pre_results))
@@ -259,9 +259,7 @@ class analyze():
                         posmapper.append(m['pos'])
                         endpos.append(i)
                     elif (token == 'start analysis'):
-                        peaks = m['peaks']
                         posmapper.append(m['pos'])
-                        self.word_boxing(peaks, startpos, posmapper)
         wordpos = [ ]
         last = -1
         if (len(endpos) > 0 and len(startpos) > 0):
@@ -295,7 +293,7 @@ class analyze():
                         tendency_array.append(hc)
                         dict_fft_approach = characteristic['fft_approach']
                         dict_fft_max = characteristic['fft_max']
-                        self.compare_fft_token_approach(fft_approach, dict_fft_approach, fft_max, dict_fft_max, perfect_match_array, fuzzy_array)
+                        perfect_match_array, fuzzy_array = self.compare_fft_token_approach(fft_approach, dict_fft_approach, fft_max, dict_fft_max, perfect_match_array, fuzzy_array)
                         counter += 1
         match_array.append([perfect_match_array, fuzzy_array, tendency_array])
 
@@ -328,7 +326,7 @@ class analyze():
                     if (i >= g - r and i <= g + r and e - e_range <= f and e + e_range >= f):
                         if (b < len(fuzzy_array) and fuzzy_array[b] == 0):
                             fuzzy_array[b] = factor
-        return 
+        return perfect_match_array, fuzzy_array
 
     def compare_tendency(self, c, d, cfreq, dfreq):
         convergency = 0
@@ -343,12 +341,3 @@ class analyze():
             convergency -= 5
         # TODO: cfreq, dfreq
         return convergency
-
-    def word_boxing(self, peaks, startpos, posmapper):
-        # word_boxing finds words in the data stream based on adaptive peaks
-        # startpos  : [  1, 2,  3]
-        # posmapper : [1, 18, 22, 37]
-        print startpos
-        print posmapper
-        print peaks
-

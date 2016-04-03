@@ -27,24 +27,26 @@ class characteristic:
 
     def getcharacteristic(self, fft, tendency):
         fft = [abs(i) for i in fft]
+        fft = fft[config.REMOVE_LEFT_FFT_RESULTS:]
         fft_len = 0
         chunked_fft_max = [ ]
 
-        for i in range(0, len(fft), config.STEPS):
-            chunked_fft_max.append(int(max(fft[i:i+config.STEPS])))
-
+        last = 0
+        progessive = 1
+        i = 0
+        while (i < len(fft)):
+            progessive += progessive*config.PROGRESSIVE_FACTOR
+            last = i
+            i += int(progessive)
+	    chunked_fft_max.append(int(max(fft[last:i])))
+            
         fft_len = len(chunked_fft_max)
 
-        # We return nothing if the fft_len is below 15 as it is useless  
+        # We return nothing if the fft_len is below 15 as it seems to be useless
         if (fft_len <= 15): # TODO: Make configurable
             return None
 
         right_trim = fft_len
-        for i, n in enumerate(chunked_fft_max):
-            if (n > 0 and i > 0):
-                chunked_fft_max = chunked_fft_max[i:]
-                break
-
         for i in range(len(chunked_fft_max)-1, 0, -1):
             if (chunked_fft_max[i] == 0):
                 right_trim = i
@@ -64,7 +66,6 @@ class characteristic:
 
         fft_approach = self.get_approach(chunked_fft_max)
         model_characteristic = {'fft_freq': fft_len , 'fft_max': chunked_fft_max, 'fft_approach': fft_approach, 'tendency': tendency_characteristic }
-
         return model_characteristic
 
     def get_approach(self, data):
@@ -112,7 +113,60 @@ class characteristic:
         tendency = { 'len': ll, 'deg': alpha, 'avg': avg, 'delta': delta }
         return tendency
   
-    def get_word_tendency(self, data):
+    def get_word_tendency(self, peaks):
+        ll = len(peaks)
+        peakavg = sum(peaks)/ll
+        highpeak = 0
+        peakpos = 0
+        lowpeak = 0
+        lowpos = 0
+        up = 0
+        gotcha = False
+        start_end_pos = [ ]
+        high_pos = [ ]
+        first = True
+        for i, peak in enumerate(peaks):
+            if (peak > highpeak):
+                highpeak = peak
+                if (peak > peakavg):
+                    peakpos = i
+                    if (first):
+                        first = False
+                        start_end_pos.append(i)
+                lowpeak = peak / 2
+                if (gotcha):
+                    up += 1
+                    if ((up > 2 and peak > peakavg) or i == len(peaks)-1):
+                        gotcha = False
+                        start_end_pos.append(lowpos)
+            else:
+                if (peak < lowpeak):
+                    if (peakpos not in high_pos):
+                        high_pos.append(peakpos)
+                        start_end_pos.append(i)
+                    lowpeak = peak
+                    lowpos = i
+                    highpeak = peak * 2
+                    up = 0
+                    gotcha = True
+        if (len(peaks) not in start_end_pos):
+            start_end_pos.append(len(peaks))
+
+        start_pos = [ ]
+        peak_length = [ ]
+        peak_pos = [ ]
+        for hpos in high_pos:
+            for a in range(0, len(start_end_pos)-1, 1):
+                if (hpos > start_end_pos[a] and hpos < start_end_pos[a+1]):
+                    start_pos.append(start_end_pos[a])
+                    peak_length.append(start_end_pos[a+1] - start_end_pos[a])
+                    # peak _pos =  hpos-start_end_pos[a]
+        word_tendency = { 'peaks': len(start_pos), 'start_pos': start_pos, 'peak_length': peak_length }
+        print word_tendency
+        return word_tendency
+        
+        
+    def weg():
         ll = len(data)
         if (ll == 0):
             return None
