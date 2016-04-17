@@ -57,6 +57,7 @@ class worker(multiprocessing.Process):
         self.fft = [ ]
         self.word_tendency = None
         self.character = [ ]
+        self.raw_character = [ ]
         self.uid = str(uuid.uuid4())
         self.analyze.reset()
         self.reset_counter += 1
@@ -81,6 +82,8 @@ class worker(multiprocessing.Process):
                 raw_tendency = self.condense.model_tendency(raw_token_compressed)
                 characteristic = self.characteristic.getcharacteristic(fft, raw_tendency)
                 self.character.append((characteristic, meta))
+                if (self.dict != None):
+                    self.raw_character.append({ 'fft': fft, 'meta': meta, 'raw_tendency': raw_tendency })
                 if (characteristic != None):
                     if (self.debug):
                         print ('characteristic = ' + str(self.counter) + ' ' + str(characteristic))
@@ -105,7 +108,8 @@ class worker(multiprocessing.Process):
                             self.reset()
 
         if (self.dict != None):
-            self.DICT = self.util.learndict(self.character, self.word_tendency, self.dict)
+            #self.DICT = self.util.learndict(self.character, self.word_tendency, self.dict)
+            self.util.store_raw_dict_entry(self.dict, self.raw_character, self.word_tendency)
 
         if (self.wave and len(self.rawbuf) > 0):
             self.save_wave_buf()

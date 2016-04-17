@@ -1,9 +1,11 @@
 This is the **SO**und **PA**ttern **RE**cognition project written in Python.
-In a nutshell the project listens to mic input and creates simple characteristics.
-These characteristics are compared to characteristics stored in a dictionary.
-The output is an array of potential best guess matches.
+In a nutshell the project is able to listen in real time to microphone input
+and detect patterns (like words) in the steam based on simple characteristics.
+The output is an array of potential best guess matches. SoPaRe works offline
+and was tested successfully on a Raspberry Pi 2 and on a Banana Pi. 
 
-Here is an example output when I different words (means 'light off' in German!):
+
+Here is an example output for the words 'light off' in German:
 
 ```
  [u'licht', u'aus']
@@ -24,9 +26,9 @@ Scope and goals:
 Examples of use:
 
   * (Smart) home control
-  * Voice controlled robots
+  * Voice controlled stuff like robots
   * Can be used in combination with any available cloud API or service like
-     Alexa: https://github.com/amzn/alexa-avs-raspberry-pi
+     Alexa: https://developer.amazon.com/public/solutions/alexa/alexa-voice-service
      Google: https://cloud.google.com/speech/
      (and many more)
      e.g. to listen to a special pattern upfront
@@ -57,64 +59,10 @@ Installation:
  samples
 `
 
-
-Usage:
-
-Show the available options
-
-`
-python sopare.py --help
-`
-
-
-The next command turns the verbose mode on, waits for a peak,
-records the input and saves it in raw form to the file 
-"samples/computer.raw", finds the characteristic and adds the
-word "computer" to the dictionary, plots the results and stops.
-Adding new words to the dictionary requires a silent environment. 
-Of course you can change and adopt the entries manually as the dictionary
-is stored in JSON format.
-
-`
-python sopare.py -p -v -o samples/computer.raw -l computer
-`
-
-
-This command listens endless and compares the input with 
-dictionary entries and prints out the results. The program
-tries to tokenize the input to detect single words. 
-Currently the "tokens" are converted into "tokenN.wav" files
-so that you can debug. There are some config options
-available when you look into the code ;)
-
-`
-python sopare.py -e
-`
-
-
-You can delete all entries from the dictionary
-simple by running the command
-
-`
-python sopare.py -d "*"
-`
-
-Each entry in the dictionary has a uuid and you
-can remove single entries by using either 
-
-`
-python sopare.py -d computer
-or
-python sopare.py -r UUID
-`
-
-
 Next steps/TODOs:
 
-  * Performance optimization
-  * Meta information usage
-  * Enhanced configuration options
   * Optimizations, testing and bugfixing
+
 
 Project status:
 
@@ -123,6 +71,43 @@ sound patterns even under different circumstances.
 
 False positives still occur sometimes.
 
-Currently the project is tested in a real life environment with normal
-ambient sounds and the results are send to a Twitter account for later
-inspection.
+Currently the project is in a test and optimization phase.
+
+
+Usage:
+
+`
+ -h --help            : this help
+
+ -e --endless         : loop forever
+
+ -p --plot            : plot results (only without loop option)
+
+ -v --verbose         : enable verbose mode
+
+ -w --wave            : creates wav files (token/tokenN.wav) for
+                         each detected word
+
+ -s --show            : shows detailed [dict] entry information
+                         '*' shows all entries!
+
+ -c --content         : list all dict entries
+
+ -o --out [samples/filename]  : write to [samples/filename]
+
+ -i --in [samples/filename]   : read [samples/filename]
+
+ -l --learn [word]    : adds raw data to raw dictionary file.
+                         (only without loop option)
+
+ -r --recreate_dict   : recreates dict from raw input files.
+                         should be used when changing
+                         config options.
+                         Please note that all raw files are
+                         considered and compiled into the dict!
+                         (only without loop option)
+
+ -d --delete [word]   : delete [word] from dictionary and exit.
+                         '*' deletes everyting!
+`
+

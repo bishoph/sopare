@@ -48,9 +48,9 @@ try:
 except:
     print ('An error occured while initializing the Twitter API. Continue anyway without tweeting!')
 
-def run(readable_results, best_match, data, rawbuf):
+def run(readable_results, best_match, data, word_tendency, rawbuf):
     status = None
-    if ('licht' in readable_results and 'dach' in readable_results):
+    if ('licht' in readable_results): # and 'dach' in readable_results):
         status = str(uuid.uuid4())
         an = False
         if ('an' in readable_results):
@@ -62,16 +62,16 @@ def run(readable_results, best_match, data, rawbuf):
                 # an and aus makes no sense so we just return
                 return
     if (status != None):
-        debug_output(status, readable_results, best_match, data, rawbuf)
+        debug_output(status, readable_results, best_match, data, word_tendency, rawbuf)
         tweet(status)
 
 def tweet(status):
     if (api != None):
         api.update_status(status)
 
-def debug_output(status, readable_results, best_match, data, rawbuf):
+def debug_output(status, readable_results, best_match, data, word_tendency, rawbuf):
         scaled = numpy.int16(rawbuf/numpy.max(numpy.abs(rawbuf)) * 32767)
         write('/home/pi/dev/sopare/tokens/'+status+'.wav', 44100, scaled)
         text_file = open('/home/pi/dev/sopare/tokens/'+status+'.txt', 'w')
-        text_file.write(str(data)+'\n\n'+str(best_match)+'\n\n'+str(readable_results))
+        text_file.write(str(data) + '\n\n' + str(best_match) +'\n\n' + str(word_tendency) + '\n\n' + str(readable_results))
         text_file.close()

@@ -30,20 +30,23 @@ class characteristic:
         fft = fft[config.REMOVE_LEFT_FFT_RESULTS:]
         fft_len = 0
         chunked_fft_max = [ ]
-
         last = 0
         progessive = 1
         i = 0
         while (i < len(fft)):
             progessive += progessive*config.PROGRESSIVE_FACTOR
+            if (progessive < config.MIN_PROGRESSIVE_STEP):
+                progessive = config.MIN_PROGRESSIVE_STEP
+            if (progessive > config.MAX_PROGRESSIVE_STEP):
+                progessive = config.MAX_PROGRESSIVE_STEP
             last = i
             i += int(progessive)
 	    chunked_fft_max.append(int(max(fft[last:i])))
             
         fft_len = len(chunked_fft_max)
 
-        # We return nothing if the fft_len is below 15 as it seems to be useless
-        if (fft_len <= 15): # TODO: Make configurable
+        # We return nothing if the fft_len is below 12 as it seems to be useless
+        if (fft_len <= 12): # TODO: Make configurable
             return None
 
         right_trim = fft_len
@@ -160,40 +163,5 @@ class characteristic:
                 if (hpos > start_end_pos[a] and hpos < start_end_pos[a+1]):
                     start_pos.append(start_end_pos[a])
                     peak_length.append(start_end_pos[a+1] - start_end_pos[a])
-                    # peak _pos =  hpos-start_end_pos[a]
         word_tendency = { 'peaks': len(start_pos), 'start_pos': start_pos, 'peak_length': peak_length }
-        print word_tendency
-        return word_tendency
-        
-        
-    def weg():
-        ll = len(data)
-        if (ll == 0):
-            return None
-        peaks = 0
-        deg = [ ]
-        maxi = max(data)
-        high = int(maxi * .6)
-        low = high / 2
-        fly_high = True
-        firsthighpos = 0
-        firsthigh = 0
-        lastlowpos = 0
-        for i, n in enumerate(data):
-            if (n > high and fly_high):
-                peaks += 1
-                if (firsthigh == 0):
-                    firsthigh = n
-                    firsthighpos = i
-                fly_high = False
-            if (n < low):
-                fly_high = True
-                lastlowpos = i
-        if (firsthigh == 0 or lastlowpos == 0):
-            return None
-        deg.append(math.degrees(math.atan((firsthigh-n)/((i-firsthighpos)*44100.0))))
-        if (lastlowpos == 0):
-            lastlowpos = ll
-        word_tendency = { 'peaks': peaks, 'max': maxi, 'deg': deg, 'peaklen': lastlowpos - firsthighpos }
-        return word_tendency
-            
+        return word_tendency            

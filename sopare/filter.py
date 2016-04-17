@@ -20,6 +20,7 @@ under the License.
 import numpy
 import multiprocessing
 import worker
+import base64
 
 class filtering():
 
@@ -39,6 +40,8 @@ class filtering():
         fft = numpy.fft.rfft(data)
         fft[9000:] = 0 # TODO: Make configurable
         fft[:20] = 0 # TODO: Make configurable
+        fft_64 = base64.b64encode(fft.data)
+         
         data = numpy.fft.irfft(fft)
         obj = { 'action': 'data', 'token': data, 'fft': fft, 'meta': meta }
         self.queue.put(obj)

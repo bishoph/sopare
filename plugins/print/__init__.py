@@ -19,5 +19,5 @@ under the License.
 
 # Default plugin for output of analysis
 
-def run(readable_resaults, best_match, data, rawbuf):
+def run(readable_resaults, best_match, data, word_tendency, rawbuf):
     print readable_resaults

@@ -69,7 +69,6 @@ class preparing():
         self.peaks = [ ]   
         self.low = 0
         self.last_low_pos = 0
-        self.word_pos = [ ]
 
     def filter_reset(self):
         if (self.token_counter > 0):
@@ -90,23 +89,19 @@ class preparing():
         if (volume < preparing.TOKEN_HIGH):
             self.silence += 1
             if (self.silence == preparing.SILENCE):
-                self.word_pos.append(self.last_low_pos)
                 self.new_token = True
                 meta.append({ 'token': 'token', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume })
                 self.low = 0
             elif (self.silence == preparing.LONG_SILENCE):
-                    self.word_pos.append(self.last_low_pos)
                     self.new_word = True
                     self.entered_silence = True
-                    meta.append({ 'token': 'start analysis', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'peaks': self.peaks, 'word_pos': self.word_pos })
+                    meta.append({ 'token': 'start analysis', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'peaks': self.peaks })
                     self.peaks = [ ]
             elif (self.low > 0):
-                self.word_pos.append(self.last_low_pos)
                 self.new_token = True
                 meta.append({ 'token': 'token', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume })
                 self.low = 0
         elif (self.low == 0):
-            self.word_pos.append(self.last_low_pos)
             self.new_token = True
             meta.append({ 'token': 'token', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume })
             self.low += 1
@@ -119,5 +114,4 @@ class preparing():
             self.tokenize(meta)
             if (self.new_word == True):
                 self.new_word = False
-                self.word_pos = [ ]
                 self.low = 0

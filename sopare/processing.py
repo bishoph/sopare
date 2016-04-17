@@ -21,14 +21,14 @@ import audioop
 import time
 import prepare
 import io
+import config
 
 class processor:
 
     MAX_SILENCE_AFTER_START = 3
-    MAX_TIME = 6
-    TOKEN_IDENTIFIER = 5
+    MAX_TIME = 4
 
-    def __init__(self, endless_loop, debug, plot, wave, outfile, dict, buffering, THRESHOLD = 500, live = True):
+    def __init__(self, endless_loop, debug, plot, wave, outfile, dict, buffering, live = True):
         self.append = False
         self.endless_loop = endless_loop
         self.debug = debug
@@ -39,7 +39,6 @@ class processor:
             self.out = io.open(outfile, 'wb')
         self.buffering = buffering
         self.dict = dict
-        self.THRESHOLD = THRESHOLD
         self.live = live
         self.timer = 0
         self.silence_timer = 0
@@ -64,7 +63,7 @@ class processor:
 
     def check_silence(self, buf):
         volume = audioop.rms(buf, 2)
-        if (volume >= self.THRESHOLD):
+        if (volume >= config.THRESHOLD):
             if (self.append == False):
                 if (self.debug):
                     print ('starting append mode')

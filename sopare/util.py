@@ -18,12 +18,15 @@ under the License.
 """
 
 import characteristics
+import config
+import numpyjsonencoder
 import json
 import wave
 import uuid
 import numpy
-import config
+import os
 import heapq
+import datetime
 from scipy.io.wavfile import write
 from path import __wavedestination__
 
@@ -42,7 +45,7 @@ class util:
     def showdictentry(self, id):
         json_data = self.getDICT()
         for dict_entries in json_data['dict']:
-           if dict_entries['id'] == id:
+           if dict_entries['id'] == id or id == "*":
                print (dict_entries['uuid'])
                print (dict_entries['word_tendency'])
                for characteristic in dict_entries['characteristic']:
@@ -98,6 +101,12 @@ class util:
                 analysis[dict_entries['id']]['high5'].append((dhi, dh))
         return analysis
 
+    def store_raw_dict_entry(self, dict_id, raw_characteristics, word_tendency):
+        json_obj = {'id': dict_id, 'characteristic': raw_characteristics, 'word_tendency': word_tendency, 'created': datetime.datetime.now().isoformat() }
+        with open("dict/"+str(uuid.uuid4())+".raw", 'w') as json_file:
+            json.dump(json_obj, json_file, cls=numpyjsonencoder.numpyjsonencoder)
+        json_file.close()
+
     def learndict(self, characteristics, word_tendency, id):
         json_data =  self.getDICT()
         dict_model = self.prepare_dict_model(characteristics)
@@ -124,7 +133,7 @@ class util:
 
     def writeDICT(self, json_data):
         with open("dict/dict.json", 'w') as json_file:
-            json.dump(json_data, json_file, indent=1, separators=(',', ': '))
+            json.dump(json_data, json_file)
         json_file.close()
 
     def getDICT(self):
@@ -132,6 +141,29 @@ class util:
             json_data = json.load(json_file)
         json_file.close()
         return json_data
+
+    def getCompiledDict(self):
+        compiled_dict = { 'dict': [ ] }
+        for filename in os.listdir("dict/"):
+            if (filename.endswith(".raw")):
+                fu = filename.split('.')
+                file_uuid = fu[0]
+                tokens = [ ]
+                with open("dict/"+filename) as raw_json_file:
+                    json_obj = json.load(raw_json_file, object_hook=numpyjsonencoder.numpyjsonhook)
+                    json_obj['id']
+                    for raw_obj in json_obj['characteristic']:
+                        meta = raw_obj['meta']
+                        fft = raw_obj['fft']
+                        raw_tendency = raw_obj['raw_tendency']
+                        characteristic = self.characteristic.getcharacteristic(fft, raw_tendency)
+                        if (characteristic != None):
+                            for m in meta:
+                                if (m['token'] != 'stop'):
+                                    tokens.append(characteristic)
+                    compiled_dict['dict'].append({'id': json_obj['id'], 'characteristic': tokens, 'word_tendency': json_obj['word_tendency'], 'uuid': file_uuid })
+                raw_json_file.close()
+        return compiled_dict
 
     def deletefromdict(self, id):
         json_obj = self.getDICT()
@@ -143,14 +175,8 @@ class util:
                      new_dict['dict'].append(do)
         self.writeDICT(new_dict)
 
-    def deleteuuidfromdict(self, uuid):
-        json_obj = self.getDICT()
-        new_dict = { 'dict': [ ] }
-        dict_objects = json_obj['dict']
-        for do in dict_objects:
-            if (do['uuid'] != uuid):
-                new_dict['dict'].append(do)
-        self.writeDICT(new_dict)
+    def recreate_dict_from_raw_files(self):
+        self.writeDICT(self.getCompiledDict())
 
     def saverawwave(self, filename, start, end, raw):
         wf = wave.open(__wavedestination__+filename+'.wav', 'wb')

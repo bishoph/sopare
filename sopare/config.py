@@ -1,10 +1,13 @@
 # Sample rate
 SAMPLE_RATE = 44100
 
+# Threshold
+THRESHOLD = 500
+
 # This value defines the marginal value that is needed
 # for consideration if the analyzed result becomes a
 # "readable value"
-MARGINAL_VALUE = 10
+MARGINAL_VALUE = 20
 
 # Percentage of inaccuracy for fast high comparison 
 # in first scan.
@@ -13,7 +16,7 @@ INACCURACY_FAST_HIGH_COMPARE = 20
 
 # Percentage of inaccuracy for word comparison
 # Default: 20
-INACCURACY = 30
+INACCURACY = 20
 
 # Percentage of inaccuracy for tendency (peak degree)
 # Default: .2
@@ -39,14 +42,16 @@ GET_HIGH_THRESHOLD = 3
 # This value defines the min value for a perfect
 # token match consideration.
 # Depends on learned data.
-MIN_PERFECT_MATCHES_FOR_CONSIDERATION = 1
+MIN_PERFECT_MATCHES_FOR_CONSIDERATION = 2
 
 # Steps boil down the data into smaller junks of data.
 # Smaller steps means more precision but require
 # normally more learned entries in the dictionary 
 # We use a progressive value to get smaller steps in the
 # low frequencies
-PROGRESSIVE_FACTOR = 0.15
+PROGRESSIVE_FACTOR = 0.08
+MIN_PROGRESSIVE_STEP = 10
+MAX_PROGRESSIVE_STEP = 2000
 
 # If result are > CUT_RESULT_LENGTH results are cut
 # to the CUT_RESULT_LENGTH length
@@ -61,7 +66,7 @@ IMPORTANCE = [ 1,1,1,1,1, 1,1,1,1,1, 1,1,1,1,1, 1,1,1,1,1 ]
 # Higher values mean more tolerance and therefor potential false positives!
 # Position is taken from the fft approach which means that
 # the first positions are the most important ones.
-WITHIN_RANGE = [ 1,1,1,1,1,2,2,2,2,2,2,3,3,3,3,3,3,3,3,3 ]
+WITHIN_RANGE = [ 1,2,2,2,2,3,3,3,3 ]
 
 # This removes n results from the left side of the 
 # fft results. Should be consistent with your filter

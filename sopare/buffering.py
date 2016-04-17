@@ -22,13 +22,13 @@ import processing
 
 class buffering(multiprocessing.Process):
 
-    def __init__(self, queue, endless_loop, debug, plot, wave, outfile, dict, THRESHOLD):
+    def __init__(self, queue, endless_loop, debug, plot, wave, outfile, dict):
         multiprocessing.Process.__init__(self, name="buffering queue")
         self.queue = queue
         self.endless_loop = endless_loop
         self.debug = debug
         self.plot = plot
-        self.proc = processing.processor(endless_loop, debug, plot, wave, outfile, dict, self, THRESHOLD)
+        self.proc = processing.processor(endless_loop, debug, plot, wave, outfile, dict, self)
         self.PROCESS_ROUND_DONE = False
         self.start()
   
