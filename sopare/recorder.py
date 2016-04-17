@@ -22,10 +22,11 @@ import multiprocessing
 import buffering
 import sys
 import io
+import config
 
 class recorder:
 
-    def __init__(self, endless_loop, debug, plot, wave, outfile, infile, dict, THRESHOLD = 500):
+    def __init__(self, endless_loop, debug, plot, wave, outfile, infile, dict):
         self.debug = debug
         self.plot = plot
         self.wave = wave
@@ -35,7 +36,6 @@ class recorder:
         self.FORMAT = pyaudio.paInt16
         # mono
         self.CHANNELS = 1
-        self.RATE = 44100
         self.pa = pyaudio.PyAudio()
         self.queue = multiprocessing.Queue()
   
@@ -45,21 +45,21 @@ class recorder:
 
         self.stream = self.pa.open(format=self.FORMAT,
                 channels=self.CHANNELS,
-                rate=self.RATE,
+                rate=config.SAMPLE_RATE,
                 input=True,
                 output=False,
                 frames_per_buffer=self.CHUNK)
 
         if (infile == None):
-            self.buffering = buffering.buffering(self.queue, endless_loop, self.debug, self.plot, self.wave, self.outfile, self.dict, THRESHOLD)
+            self.buffering = buffering.buffering(self.queue, endless_loop, self.debug, self.plot, self.wave, self.outfile, self.dict)
             self.recording(endless_loop)
         else:
-            self.readfromfile(infile, THRESHOLD)
+            self.readfromfile(infile)
 
-    def readfromfile(self, infile, THRESHOLD):
+    def readfromfile(self, infile):
         print("* reading file "+infile)
         import processing
-        proc = processing.processor(False, self.debug, self.plot, self.wave, None, self.dict, None, THRESHOLD)
+        proc = processing.processor(False, self.debug, self.plot, self.wave, None, self.dict, None)
         file = io.open(infile, 'rb', buffering=self.CHUNK*2)
         while True:
             buf = file.read(self.CHUNK*2)
@@ -99,8 +99,3 @@ class recorder:
         self.stream.stop_stream()
         self.stream.close()
         self.pa.terminate()
-
-
-
-
-

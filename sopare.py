@@ -36,9 +36,9 @@ def main(argv):
 
     if (len(argv) > 0):
         try:                                
-            opts, args = getopt.getopt(argv, "hepvwcs:o:i:l:d:r:", [
-"help", "endless", "plot", "verbose",   "wave", "content", "show=", "out=",
-"in=", "learn=", "delete=", "remove-uuid="])
+            opts, args = getopt.getopt(argv, "hepvwcnrs:o:i:l:d:", [
+"help", "endless", "plot", "verbose", "wave", "content", "recreate_dict", "show=", "out=",
+"in=", "learn=", "delete="])
         except getopt.GetoptError:
             usage()
             sys.exit(2)
@@ -69,8 +69,8 @@ def main(argv):
             if opt in ("-d", "--delete"):
                 delete_word(arg, debug)
                 sys.exit(0)
-            if opt in ("-r", "--remove-uuid"):
-                delete_uuid(arg, debug)
+            if opt in ("-r", "recreate_dict"):
+                recreate_dict(debug)
                 sys.exit(0)
             if opt in ("-s", "--show"):
                 show_word_entries(arg, debug)
@@ -81,12 +81,12 @@ def main(argv):
             if opt in ("-i", "--in"):
                 infile = arg
     recorder.recorder(endless_loop, debug, plot, wave, outfile, 
-                      infile, dict, 500)
+                      infile, dict)
 
-def delete_uuid(uuid, debug):
-    print ("removing uuid "+uuid+" from dictionary")
+def recreate_dict(debug):
+    print ("recreating dictionary from raw input files...")
     utilities = util.util(debug, False)
-    utilities.deleteuuidfromdict(uuid)
+    utilities.recreate_dict_from_raw_files()
 
 def delete_word(dict, debug):
     if (dict != "*"):
@@ -111,20 +111,25 @@ def usage():
     print ("usage:\n")
     print (" -h --help            : this help\n")
     print (" -e --endless         : loop forever\n")
-    print (" -p --plot            : plot results (only without loop option)")
+    print (" -p --plot            : plot results (only without loop option)\n")
     print (" -v --verbose         : enable verbose mode\n")
-    print (""" -w --wave            : creates wav files (token/tokenN.wav) for 
-                    each detected word""")
-    print (" -s --show            : show/print [dict] entry")
-    print (" -c --content         : list all dict entries")
-    print (" -o --out [samples/filename]  : write to [samples/filename]")
-    print (" -i --in [samples/filename]   : read [samples/filename]")
-    print (" -l --learn [word]    : add/modify [word] to/in dictionary")
-    print ("                         (only without loop option)")
-    print (" -r --remove-uuid : removes a single entry from dictionary")
-    print ("                         (only without loop option)")
-    print (" -d --delete [word] : delete [word] from dictionary and exit. '*' deletes everyting!")
-    print
+    print (" -w --wave            : creates wav files (token/tokenN.wav) for")
+    print ("                         each detected word\n")
+    print (" -s --show            : shows detailed [dict] entry information")
+    print ("                         '*' shows all entries!\n")
+    print (" -c --content         : list all dict entries\n")
+    print (" -o --out [samples/filename]  : write to [samples/filename]\n")
+    print (" -i --in [samples/filename]   : read [samples/filename]\n")
+    print (" -l --learn [word]    : adds raw data to raw dictionary file.")
+    print ("                         (only without loop option)\n")
+    print (" -r --recreate_dict   : recreates dict from raw input files.")
+    print ("                         should be used when changing")
+    print ("                         config options.")
+    print ("                         Please note that all raw files are")
+    print ("                         considered and compiled into the dict!")
+    print ("                         (only without loop option)\n")
+    print (" -d --delete [word]   : delete [word] from dictionary and exit.")
+    print ("                         '*' deletes everyting!\n")
 
 main(sys.argv[1:])
 

@@ -17,7 +17,8 @@ License for the specific language governing permissions and limitations
 under the License.
 """
 
-import globalvars
+import config
+import math
 
 class characteristic:
 
@@ -26,44 +27,48 @@ class characteristic:
 
     def getcharacteristic(self, fft, tendency):
         fft = [abs(i) for i in fft]
+        fft = fft[config.REMOVE_LEFT_FFT_RESULTS:]
         fft_len = 0
-        chunked_fft_avg = [ ]
         chunked_fft_max = [ ]
-        steps = 50
-  
-        for i in range(0, len(fft), steps):
-            chunk_avg = sum(fft[i:i+steps])/steps
-            chunked_fft_avg.append(int(abs(chunk_avg)))
-            chunked_fft_max.append(int(max(fft[i:i+steps])))
+        last = 0
+        progessive = 1
+        i = 0
+        while (i < len(fft)):
+            progessive += progessive*config.PROGRESSIVE_FACTOR
+            if (progessive < config.MIN_PROGRESSIVE_STEP):
+                progessive = config.MIN_PROGRESSIVE_STEP
+            if (progessive > config.MAX_PROGRESSIVE_STEP):
+                progessive = config.MAX_PROGRESSIVE_STEP
+            last = i
+            i += int(progessive)
+	    chunked_fft_max.append(int(max(fft[last:i])))
+            
+        fft_len = len(chunked_fft_max)
 
-        fft_len = len(chunked_fft_avg)
-        right_trim = fft_len
-        for i in range(len(chunked_fft_avg)-1, 0, -1):
-            if (chunked_fft_avg[i] == 0 and right_trim == i + 1):
-                right_trim = i
-
-        if (right_trim > len(globalvars.IMPORTANCE)):
-            right_trim = len(globalvars.IMPORTANCE)
-
-        if (right_trim < len(chunked_fft_avg)):
-            chunked_fft_max = chunked_fft_max[0:right_trim]
-            chunked_fft_avg = chunked_fft_avg[0:right_trim]
-
-        # We return nothing if the fft_len is below 15 as it is useless  
-        if (fft_len <= 15):
+        # We return nothing if the fft_len is below 12 as it seems to be useless
+        if (fft_len <= 12): # TODO: Make configurable
             return None
 
-        tendency_characteristic = self.get_tendency(tendency)
+        right_trim = fft_len
+        for i in range(len(chunked_fft_max)-1, 0, -1):
+            if (chunked_fft_max[i] == 0):
+                right_trim = i
+            else:
+                break
 
-        # We return nothing if the avg is below XX
-        # or we got just below YY frequencies
-        # as this seems to be garbage
-        if (tendency_characteristic['avg'] < 130):
-           return None
+        if (right_trim > config.CUT_RESULT_LENGTH):
+            right_trim = config.CUT_RESULT_LENGTH
+
+        if (right_trim < len(chunked_fft_max)):
+            chunked_fft_max = chunked_fft_max[0:right_trim]
+
+
+        tendency_characteristic = self.get_tendency(tendency)
+        if (tendency_characteristic == None):
+            return None
 
         fft_approach = self.get_approach(chunked_fft_max)
-        model_characteristic = {'fft_freq': fft_len , 'fft_approach': fft_approach, 'fft_avg': chunked_fft_avg, 'tendency': tendency_characteristic }
-
+        model_characteristic = {'fft_freq': fft_len , 'fft_max': chunked_fft_max, 'fft_approach': fft_approach, 'tendency': tendency_characteristic }
         return model_characteristic
 
     def get_approach(self, data):
@@ -85,18 +90,78 @@ class characteristic:
         return result
 
     def get_tendency(self, data):
+        ll = len(data)
         peaks = 0
-        avg = (sum(data)/len(data))
-        delta = data[0]-data[len(data)-1]
+        avg = (sum(data)/ll)
+        delta = data[0]-data[ll-1]
         lowercut = avg*1.1
         high = 0
+        highest = 0
+        pos = 0
+        hpos = 0
         for n in data:
             if (n > high):
                 high = n
+                highest = high
+                hpos = pos
             elif (n < lowercut):
                 if (high > lowercut):
                     peaks += 1
                 high = 0
-        tendency = { 'len': len(data), 'peaks': peaks, 'avg': avg, 'delta': delta }
+            pos += 1
+        if (hpos == 0):
+            return None
+        e = highest/(hpos*1.0)
+        alpha = math.degrees(math.atan(e))
+        tendency = { 'len': ll, 'deg': alpha, 'avg': avg, 'delta': delta }
         return tendency
   
+    def get_word_tendency(self, peaks):
+        ll = len(peaks)
+        peakavg = sum(peaks)/ll
+        highpeak = 0
+        peakpos = 0
+        lowpeak = 0
+        lowpos = 0
+        up = 0
+        gotcha = False
+        start_end_pos = [ ]
+        high_pos = [ ]
+        first = True
+        for i, peak in enumerate(peaks):
+            if (peak > highpeak):
+                highpeak = peak
+                if (peak > peakavg):
+                    peakpos = i
+                    if (first):
+                        first = False
+                        start_end_pos.append(i)
+                lowpeak = peak / 2
+                if (gotcha):
+                    up += 1
+                    if ((up > 2 and peak > peakavg) or i == len(peaks)-1):
+                        gotcha = False
+                        start_end_pos.append(lowpos)
+            else:
+                if (peak < lowpeak):
+                    if (peakpos not in high_pos):
+                        high_pos.append(peakpos)
+                        start_end_pos.append(i)
+                    lowpeak = peak
+                    lowpos = i
+                    highpeak = peak * 2
+                    up = 0
+                    gotcha = True
+        if (len(peaks) not in start_end_pos):
+            start_end_pos.append(len(peaks))
+
+        start_pos = [ ]
+        peak_length = [ ]
+        peak_pos = [ ]
+        for hpos in high_pos:
+            for a in range(0, len(start_end_pos)-1, 1):
+                if (hpos > start_end_pos[a] and hpos < start_end_pos[a+1]):
+                    start_pos.append(start_end_pos[a])
+                    peak_length.append(start_end_pos[a+1] - start_end_pos[a])
+        word_tendency = { 'peaks': len(start_pos), 'start_pos': start_pos, 'peak_length': peak_length }
+        return word_tendency            

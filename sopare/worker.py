@@ -28,7 +28,7 @@ import uuid
 class worker(multiprocessing.Process):
 
     def __init__(self, queue, debug, plot, dict, wave):
-        multiprocessing.Process.__init__(self, name="worker for prepared queue")
+        multiprocessing.Process.__init__(self, name="worker for filtered data")
         self.queue = queue
         self.debug = debug
         self.plot = plot
@@ -55,7 +55,9 @@ class worker(multiprocessing.Process):
         self.rawfft = [ ]
         self.raw = [ ]
         self.fft = [ ]
+        self.word_tendency = None
         self.character = [ ]
+        self.raw_character = [ ]
         self.uid = str(uuid.uuid4())
         self.analyze.reset()
         self.reset_counter += 1
@@ -70,7 +72,7 @@ class worker(multiprocessing.Process):
             obj = self.queue.get()
             if (obj['action'] == 'data'):
                 raw_token = obj['token']
-                if (self.wave or True): # TODO: "or True" is just temporary for testing. Should be removed later on!
+                if (self.wave or True): # TODO: "or True" is just temporary for testing. Must be removed later on!
                     self.rawbuf.extend(raw_token)
                 fft = obj['fft']
                 if (self.plot):
@@ -80,6 +82,8 @@ class worker(multiprocessing.Process):
                 raw_tendency = self.condense.model_tendency(raw_token_compressed)
                 characteristic = self.characteristic.getcharacteristic(fft, raw_tendency)
                 self.character.append((characteristic, meta))
+                if (self.dict != None):
+                    self.raw_character.append({ 'fft': fft, 'meta': meta, 'raw_tendency': raw_tendency })
                 if (characteristic != None):
                     if (self.debug):
                         print ('characteristic = ' + str(self.counter) + ' ' + str(characteristic))
@@ -89,32 +93,25 @@ class worker(multiprocessing.Process):
                     if (self.plot):
                         self.visual.create_sample(raw_tendency, 'token'+str(self.counter)+'.png')
                         self.visual.create_sample(fft, 'fft'+str(self.counter)+'.png')
-                    self.counter += 1
+                self.counter += 1
             elif (obj['action'] == 'reset' and self.dict == None):
                 self.reset()
             elif (obj['action'] == 'stop'):
-                self.analyze.do_analysis(self.character, None)
                 self.running = False
 
             if (self.counter > 0 and meta != None):
                 for m in meta:
-                    if (m['token'] == 'long silence'):
+                    if (m['token'] == 'start analysis'):
+                        self.word_tendency = self.characteristic.get_word_tendency(m['peaks'])
                         if (self.dict == None):
-                            self.analyze.do_analysis(self.character, self.rawbuf)
+                            self.analyze.do_analysis(self.character, self.word_tendency, self.rawbuf)
                             self.reset()
 
-        # end of while
-
-        for ch in self.character:
-            c, meta = ch
-            if (c != None):
-                if (self.debug):
-                    print (c)
-
         if (self.dict != None):
-            self.DICT = self.util.learndict(self.character, self.dict)
+            #self.DICT = self.util.learndict(self.character, self.word_tendency, self.dict)
+            self.util.store_raw_dict_entry(self.dict, self.raw_character, self.word_tendency)
 
-        if (self.wave):
+        if (self.wave and len(self.rawbuf) > 0):
             self.save_wave_buf()
 
         self.queue.close()
