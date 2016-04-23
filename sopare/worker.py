@@ -92,7 +92,7 @@ class worker(multiprocessing.Process):
                         self.util.savefilteredwave('token'+str(self.counter)+self.uid, raw_token)
                     if (self.plot):
                         self.visual.create_sample(raw_tendency, 'token'+str(self.counter)+'.png')
-                        self.visual.create_sample(fft, 'fft'+str(self.counter)+'.png')
+                        self.visual.create_sample(characteristic['fft_max'], 'fft'+str(self.counter)+'.png')
                 self.counter += 1
             elif (obj['action'] == 'reset' and self.dict == None):
                 self.reset()
@@ -103,12 +103,15 @@ class worker(multiprocessing.Process):
                 for m in meta:
                     if (m['token'] == 'start analysis'):
                         self.word_tendency = self.characteristic.get_word_tendency(m['peaks'])
-                        if (self.dict == None):
-                            self.analyze.do_analysis(self.character, self.word_tendency, self.rawbuf)
-                            self.reset()
+                        if (self.word_tendency != None):
+                            if (self.dict == None):
+                                self.analyze.do_analysis(self.character, self.word_tendency, self.rawbuf)
+                                self.reset()
+                            else:
+                                self.util.store_raw_dict_entry(self.dict, self.raw_character, self.word_tendency)
+                                self.reset()
 
         if (self.dict != None):
-            #self.DICT = self.util.learndict(self.character, self.word_tendency, self.dict)
             self.util.store_raw_dict_entry(self.dict, self.raw_character, self.word_tendency)
 
         if (self.wave and len(self.rawbuf) > 0):

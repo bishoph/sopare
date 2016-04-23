@@ -49,6 +49,9 @@ class preparing():
             #print ('token: ' +str(start)+ ':'+str(end) + ' / ' + str(self.counter))
             self.filter.filter(self.buffer[0:end], meta)
             self.buffer = [ ]
+            if (self.force):
+                self.reset()
+                self.filter_reset()
 
     def stop(self):
         self.peaks = [ ]
@@ -69,10 +72,14 @@ class preparing():
         self.peaks = [ ]   
         self.low = 0
         self.last_low_pos = 0
+        self.force = False
 
     def filter_reset(self):
         if (self.token_counter > 0):
             self.filter.reset()
+
+    def force_tokenizer(self):
+        self.force = True
   
     def prepare(self, buf, volume):
         data = numpy.fromstring(buf, dtype=numpy.int16)
@@ -107,6 +114,10 @@ class preparing():
             self.low += 1
             self.silence =  0
             self.silence2 = 0
+
+        if (self.force):
+            meta.append({ 'token': 'start analysis', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'peaks': self.peaks })
+            self.new_word = True
 
         if (self.new_token == True or self.new_word == True):
             self.new_token = False

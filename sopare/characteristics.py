@@ -44,9 +44,10 @@ class characteristic:
 	    chunked_fft_max.append(int(max(fft[last:i])))
             
         fft_len = len(chunked_fft_max)
+        max_max = max(chunked_fft_max)
 
-        # We return nothing if the fft_len is below 12 as it seems to be useless
-        if (fft_len <= 12): # TODO: Make configurable
+        # return None for useless stuff
+        if (fft_len <= config.MIN_FFT_LEN or max_max < config.MIN_FFT_MAX): 
             return None
 
         right_trim = fft_len
@@ -61,7 +62,6 @@ class characteristic:
 
         if (right_trim < len(chunked_fft_max)):
             chunked_fft_max = chunked_fft_max[0:right_trim]
-
 
         tendency_characteristic = self.get_tendency(tendency)
         if (tendency_characteristic == None):
@@ -91,6 +91,8 @@ class characteristic:
 
     def get_tendency(self, data):
         ll = len(data)
+        if (ll == 0):
+            return None
         peaks = 0
         avg = (sum(data)/ll)
         delta = data[0]-data[ll-1]
@@ -164,4 +166,8 @@ class characteristic:
                     start_pos.append(start_end_pos[a])
                     peak_length.append(start_end_pos[a+1] - start_end_pos[a])
         word_tendency = { 'peaks': len(start_pos), 'start_pos': start_pos, 'peak_length': peak_length }
+        if (len(start_pos) > 15): # make configurable
+            if (self.debug):
+                print ('ignoring as we got '+str(len(peaks)) + ' peaks from ' + str(len(start_pos)) + ' start positions ' )
+            return None
         return word_tendency            

@@ -7,7 +7,7 @@ THRESHOLD = 500
 # This value defines the marginal value that is needed
 # for consideration if the analyzed result becomes a
 # "readable value"
-MARGINAL_VALUE = 20
+MARGINAL_VALUE = 15
 
 # Percentage of inaccuracy for fast high comparison 
 # in first scan.
@@ -49,8 +49,8 @@ MIN_PERFECT_MATCHES_FOR_CONSIDERATION = 2
 # normally more learned entries in the dictionary 
 # We use a progressive value to get smaller steps in the
 # low frequencies
-PROGRESSIVE_FACTOR = 0.08
-MIN_PROGRESSIVE_STEP = 10
+PROGRESSIVE_FACTOR = 0.1
+MIN_PROGRESSIVE_STEP = 20
 MAX_PROGRESSIVE_STEP = 2000
 
 # If result are > CUT_RESULT_LENGTH results are cut
@@ -71,3 +71,16 @@ WITHIN_RANGE = [ 1,2,2,2,2,3,3,3,3 ]
 # This removes n results from the left side of the 
 # fft results. Should be consistent with your filter
 REMOVE_LEFT_FFT_RESULTS = 20
+
+# Specifies freq ranges that are kept for further
+# analysis. Freq outside of the ranges are set to zero
+LOW_FREQ = 20
+HIGH_FREQ = 5000
+
+# Minimal FFT len for considerartion
+# Default: 12
+MIN_FFT_LEN = 12
+
+# Minimal FFT max. value for consideration
+# Default: 5000
+MIN_FFT_MAX = 5000

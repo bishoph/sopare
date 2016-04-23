@@ -21,6 +21,7 @@ import numpy
 import multiprocessing
 import worker
 import base64
+import config
 
 class filtering():
 
@@ -38,8 +39,8 @@ class filtering():
 
     def filter(self, data, meta):
         fft = numpy.fft.rfft(data)
-        fft[9000:] = 0 # TODO: Make configurable
-        fft[:20] = 0 # TODO: Make configurable
+        fft[config.HIGH_FREQ:] = 0
+        fft[:config.LOW_FREQ] = 0
         fft_64 = base64.b64encode(fft.data)
          
         data = numpy.fft.irfft(fft)

@@ -28,9 +28,9 @@ Examples of use:
   * (Smart) home control
   * Voice controlled stuff like robots
   * Can be used in combination with any available cloud API or service like
-     Alexa: https://developer.amazon.com/public/solutions/alexa/alexa-voice-service
-     Google: https://cloud.google.com/speech/
-     (and many more)
+     Alexa: https://developer.amazon.com/public/solutions/alexa/alexa-voice-service  
+     Google: https://cloud.google.com/speech/  
+     (and many more)  
      e.g. to listen to a special pattern upfront
   
 
@@ -76,7 +76,7 @@ Currently the project is in a test and optimization phase.
 
 Usage:
 
-`
+```
  -h --help            : this help
 
  -e --endless         : loop forever
@@ -109,5 +109,5 @@ Usage:
 
  -d --delete [word]   : delete [word] from dictionary and exit.
                          '*' deletes everyting!
-`
+```
 

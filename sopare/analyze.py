@@ -122,51 +122,39 @@ class analyze():
         # we want to find potential matching words and positions 
         # based on a rough pre comparison
         first_guess = { }
-        for words in pre_results:
-            match = False
-            for id in self.dict_analysis:
-                if (word_tendency['peaks'] >= self.dict_analysis[id]['min_peaks'] and word_tendency['peaks'] <= self.dict_analysis[id]['max_peaks']):
-                    for a in range(0, len(self.dict_analysis[id]['min_peak_length']), 1):
-                        mipl = self.dict_analysis[id]['min_peak_length'][a]
-                        mapl = self.dict_analysis[id]['max_peak_length'][a]
-                        for peak in word_tendency['peak_length']:
-                            if (peak >= mipl and peak <= mapl):
-                                if (id not in first_guess):
-                                    first_guess[id] = { 'results': [ words[0] ], 'lmin': self.dict_analysis[id]['min_tokens'], 'lmax': self.dict_analysis[id]['max_tokens'], 'match': { words[0]: 1 } }
-                                elif (words[0] not in first_guess[id]['results']):
-                                    first_guess[id]['results'].append( words[0] )
-                                match = True
-            if (match == False):
-                for i, start in enumerate(words):
-                    d = data[start]
-                    characteristic, meta = d
-                    if (characteristic != None):
-                        fft_max = characteristic['fft_max']
-                        hi, h = self.util.get_highest(fft_max)
-                        self.fast_compare(i, start, hi, h, first_guess)
-        return first_guess
-                
-    def fast_compare(self, i, start, hi, h, first_guess):
+        word_possibilities = self.util.partition(word_tendency['peaks'])
         for id in self.dict_analysis:
+            for pos, pset in enumerate(word_possibilities):
+                for p in pset:
+                    if (id not in first_guess):
+                        if (p >= self.dict_analysis[id]['min_peaks'] and p <= self.dict_analysis[id]['max_peaks']):
+                            peak_length = sum(word_tendency['peak_length'][pos: p])
+                            for a in range(0, len(self.dict_analysis[id]['min_peak_length']), 1):
+                                mipl = self.dict_analysis[id]['min_peak_length'][a]
+                                mapl = self.dict_analysis[id]['max_peak_length'][a]
+                                if (peak_length >= mipl and peak_length <= mapl):
+                                    first_guess[id] = { 'results': [], 'lmin': self.dict_analysis[id]['min_tokens'], 'lmax': self.dict_analysis[id]['max_tokens'] }
+        for words in pre_results:
+            for c, startword in enumerate(words):
+                for id in first_guess:
+                    if (startword not in first_guess[id]['results']):
+                        if (self.check_high5(data, id, startword) > 0):
+                            first_guess[id]['results'].append( startword )
+        return first_guess
+
+    def check_high5(self, data, id, start):
+        d = data[start]
+        characteristic, meta = d
+        if (characteristic != None):
+            fft_max = characteristic['fft_max']
+            hi, h = self.util.get_highest(fft_max)
             analysis_object = self.dict_analysis[id]
             for o in analysis_object['high5']:
                 dhi, dh = o
                 match = self.fast_high_compare(hi, h, dhi, dh)
                 if (match > 0):
-                    if (id not in first_guess):
-                        first_guess[id] = { 'results': [ start ], 'lmin': analysis_object['min_tokens'], 'lmax': analysis_object['max_tokens'], 'match': { start: match } }
-                    else:
-                        if (start in first_guess[id]['match']):
-                            first_guess[id]['match'][start] += match                            
-                            # Potential point to skip inner loop for faster looping
-                            # but we may loose data for later stages...
-                            # As we dont use the data at the moment we go for
-                            # the possible performance boost.
-                            break
-                        else:
-                            first_guess[id]['match'][start] = match
-                        if (start not in first_guess[id]['results']):
-                            first_guess[id]['results'].append( start )
+                    return match
+        return 0
 
     def fast_high_compare(self, hi, h, dhi, dh):
         match = 0
@@ -196,68 +184,47 @@ class analyze():
                     self.token_compare(tendency, fft_approach, fft_max, fft_freq, id, pos, match_array)
                     pos += 1
         points, got_matches_for_all_tokens = self.calculate_points(id, start, match_array, lmin, lmax)
-        if (points == 0):
-            return None
-        value = [start, points, id, lmax, match_array, got_matches_for_all_tokens]
-        return value
+        if (points > 0):
+            return [start, points, id, lmax, match_array, got_matches_for_all_tokens]
+        return None
 
     def calculate_points(self, id, start, match_array, lmin, lmax):
-        if (self.debug):
-            print ('################################################')
-            print ('id = ' + str(id) + ' / ' + str(start))
-            print (match_array)
-        ll = len(match_array)
-        match_array_counter = 0
-        best_match = 0
-        best_match_h = 0
-        perfect_matches = 0
-        perfect_match_sum = 0
+        points = 0
         got_matches_for_all_tokens = 0
-        got_matches_for_all_tokens_points = 0
-        perfect_high_matches = 0
-        for arr in match_array:
-            best_match_h = sum(arr[0])
-            high_matches = self.get_high_matches(arr[0])
-            points = sum(arr[2])
-            if (points > 0):
-                got_matches_for_all_tokens_points += 1
+        ll = len(match_array)
+        tendency_match_sum = 0
+        perfect_match_sum = 0
+        check = 0
+        for i, arr in enumerate(match_array):
+            check += sum(config.IMPORTANCE[0:len(arr[0])])
+            h5 = self.get_high_matches(arr[0])
+            tpp = 0
+            tpn = 0
+            for tp in arr[2]:
+                if (tp > 0):
+                    tpp += tp
+                else:
+                    tpn += tp
             if (config.USE_FUZZY):
-                best_match_h += sum(arr[1])
-                high_matches += self.get_high_matches(arr[1])
-            if (high_matches >= config.MIN_PERFECT_MATCHES_FOR_CONSIDERATION): 
+                h5 += self.get_high_matches(arr[1])
+            if (h5 >= config.MIN_PERFECT_MATCHES_FOR_CONSIDERATION):
+                perfect_match_sum += sum(arr[0])
+                if (config.USE_FUZZY):
+                    perfect_match_sum += sum(arr[1])
                 got_matches_for_all_tokens += 1
-                perfect_high_matches += high_matches
-            if (best_match_h > best_match):
-                check = sum(config.IMPORTANCE[0:len(arr[0])])
-                best_match = best_match_h
-                perfect_matches += best_match
-                perfect_match_sum += check
-        points = 100 * got_matches_for_all_tokens_points / ll
-        if (got_matches_for_all_tokens < ll):
-            if (self.debug):
-                print ('dumping score because of token matches '+str(got_matches_for_all_tokens) + ' ! ' + str(ll))
-            perfect_matches = perfect_matches * got_matches_for_all_tokens / ll
-        if (len(match_array) < lmin or len(match_array) > lmax):
-            if (self.debug):
-                 print ('this seems to be a false positive as min/max token length does not match :'+str(lmin) + ' < ' + str(ll)+ ' > ' + str(lmax))
-            perfect_matches = perfect_matches / 10
+            tendency_match_sum += tpp+tpn
+        percentage_match = 0
         if (perfect_match_sum > 0):
-            perfect_matches = perfect_matches * 100 / perfect_match_sum 
-            if (perfect_matches > 100):
-                perfect_matches = 100
-            best_match = perfect_matches * points / 100
-            if (ll >= lmin and ll <= lmax):
-                if (self.debug):
-                    print ('-------------------------------------')
-                    print ('id/start/points/perfect_matches/best_match ' + id + '/' + str(start) + '/' + str(points) + '/' + str(perfect_matches) + '/' + str(best_match))
-                return best_match, got_matches_for_all_tokens
-            else:
-                if (self.debug):
-                    print ('----------- !!! '+str(ll) +' >= '+str(lmin) + ' and ' +str(ll) + ' <= ' + str(lmax))
-        else:
-            if (self.debug):
-    	        print ('----------- perfect_match_sum == 0')
-        return 0, 0
+            percentage_match = 100 * perfect_match_sum / check
+        percentage_tendency = 0
+        if (tendency_match_sum > 0):
+            percentage_tendency = 100 * percentage_tendency / ll
+        points = percentage_match + percentage_tendency
+        if (ll < lmin or ll > lmax):
+            points = points / 2
+        if (points > 100):
+            points = 100
+        return points, got_matches_for_all_tokens
 
     def get_high_matches(self, arr):
         high = 0
@@ -306,6 +273,7 @@ class analyze():
         fuzzy_array = [0] * len(config.IMPORTANCE)
         tendency_array = [ ]
         counter = 0
+        negative = 0
         for dict_entries in self.DICT['dict']:
             did = dict_entries['id']
             if (id == did):
@@ -314,11 +282,16 @@ class analyze():
                     if (pos == i):
                         dict_tendency = characteristic['tendency']
                         hc = self.compare_tendency(tendency, dict_tendency, fft_freq, characteristic['fft_freq'])
-                        tendency_array.append(hc)
+                        if (hc > 0 and hc not in tendency_array):
+                            tendency_array.append(hc)
+                        elif (hc < 0):
+                            negative += hc
                         dict_fft_approach = characteristic['fft_approach']
                         dict_fft_max = characteristic['fft_max']
                         perfect_match_array, fuzzy_array = self.compare_fft_token_approach(fft_approach, dict_fft_approach, fft_max, dict_fft_max, perfect_match_array, fuzzy_array)
                         counter += 1
+        if (sum(tendency_array) < 50):
+            tendency_array.append(negative)
         match_array.append([perfect_match_array, fuzzy_array, tendency_array])
 
     def compare_fft_token_approach(self, cfft, dfft, fft_max, dict_fft_max, perfect_match_array, fuzzy_array):
@@ -354,13 +327,19 @@ class analyze():
 
     def compare_tendency(self, c, d, cfreq, dfreq):
         convergency = 0
-        if (c['len'] == d['len']):
-            convergency += 40
+        range = c['len'] * config.INACCURACY / 100 # TODO: Check if we need a unique config option for this
+        if (c['len'] - range <= d['len'] and c['len'] + range >= d['len']):
+            convergency += 25
         else:
-            convergency += 2
+            convergency -= 2
+        range = c['avg'] * config.INACCURACY / 100 # TODO: Check if we need a unique config option for this
+        if (c['avg'] - range <= d['avg'] and c['avg'] + range >= d['avg']):
+            convergency += 25
+        else:
+            convergency -= 2
         range = c['deg'] * config.TENDENCY_INACCURACY / 100
-        if (c['deg'] - range <= d['deg'] and c['deg']+range >= d['deg']):
-            convergency += 60
+        if (c['deg'] - range <= d['deg'] and c['deg'] + range >= d['deg']):
+            convergency += 50
         else:
-            convergency -= 5
+            convergency -= 4
         return convergency

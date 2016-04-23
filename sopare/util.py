@@ -59,46 +59,48 @@ class util:
         analysis = { }
         json_data = self.getDICT()
         for dict_entries in json_data['dict']:
-            if (dict_entries['id'] not in analysis):
-                analysis[dict_entries['id']] = { 'min_tokens': 0, 'max_tokens': 0, 'min_peaks': 0, 'max_peaks': 0, 'min_peak_length': [ ], 'max_peak_length': [ ], 'min_fft_len': 0, 'max_fft_len': 0, 'min_delta': 0, 'max_delta': 0, 'min_length': 0, 'max_length': 0, 'high5': [ ] }
-            l = len(dict_entries['characteristic'])
-            if (l > analysis[dict_entries['id']]['max_tokens']):
-                analysis[dict_entries['id']]['max_tokens'] = l
-            if (l < analysis[dict_entries['id']]['min_tokens'] or analysis[dict_entries['id']]['min_tokens'] == 0):
-                analysis[dict_entries['id']]['min_tokens'] = l
-            if (dict_entries['word_tendency']['peaks'] < analysis[dict_entries['id']]['min_peaks'] or analysis[dict_entries['id']]['min_peaks'] == 0):
-                analysis[dict_entries['id']]['min_peaks'] = dict_entries['word_tendency']['peaks']
-            if (dict_entries['word_tendency']['peaks'] > analysis[dict_entries['id']]['max_peaks']):
-                 analysis[dict_entries['id']]['max_peaks'] = dict_entries['word_tendency']['peaks']
-            for i, pl in enumerate(dict_entries['word_tendency']['peak_length']):
-                if (len(analysis[dict_entries['id']]['min_peak_length'])-1 <= i):
-                    analysis[dict_entries['id']]['min_peak_length'].append(0)
-                if (len(analysis[dict_entries['id']]['max_peak_length'])-1 <= i):
-                    analysis[dict_entries['id']]['max_peak_length'].append(0)
-                if (pl < analysis[dict_entries['id']]['min_peak_length'][i] or analysis[dict_entries['id']]['min_peak_length'][i] == 0):
-                    analysis[dict_entries['id']]['min_peak_length'][i] = pl
-                if (pl > analysis[dict_entries['id']]['max_peak_length'][i]):
-                    analysis[dict_entries['id']]['max_peak_length'][i] = pl
+            if ('word_tendency' in dict_entries and dict_entries['word_tendency'] != None):
+                if (dict_entries['id'] not in analysis):
+                    analysis[dict_entries['id']] = { 'min_tokens': 0, 'max_tokens': 0, 'min_peaks': 0, 'max_peaks': 0, 'min_peak_length': [ ], 'max_peak_length': [ ], 'min_fft_len': 0, 'max_fft_len': 0, 'min_delta': 0, 'max_delta': 0, 'min_length': 0, 'max_length': 0, 'high5': [ ] }
+                l = len(dict_entries['characteristic'])
+                if (l > analysis[dict_entries['id']]['max_tokens']):
+                    analysis[dict_entries['id']]['max_tokens'] = l
+                l = l - 1 # this is necessary as words in a sentence lacks often the last token!
+                if (l < analysis[dict_entries['id']]['min_tokens'] or analysis[dict_entries['id']]['min_tokens'] == 0):
+                    analysis[dict_entries['id']]['min_tokens'] = l
+                if (dict_entries['word_tendency']['peaks'] < analysis[dict_entries['id']]['min_peaks'] or analysis[dict_entries['id']]['min_peaks'] == 0):
+                    analysis[dict_entries['id']]['min_peaks'] = dict_entries['word_tendency']['peaks']
+                if (dict_entries['word_tendency']['peaks'] > analysis[dict_entries['id']]['max_peaks']):
+                     analysis[dict_entries['id']]['max_peaks'] = dict_entries['word_tendency']['peaks']
+                for i, pl in enumerate(dict_entries['word_tendency']['peak_length']):
+                    if (len(analysis[dict_entries['id']]['min_peak_length'])-1 <= i):
+                        analysis[dict_entries['id']]['min_peak_length'].append(0)
+                    if (len(analysis[dict_entries['id']]['max_peak_length'])-1 <= i):
+                        analysis[dict_entries['id']]['max_peak_length'].append(0)
+                    if (pl < analysis[dict_entries['id']]['min_peak_length'][i] or analysis[dict_entries['id']]['min_peak_length'][i] == 0):
+                        analysis[dict_entries['id']]['min_peak_length'][i] = pl
+                    if (pl > analysis[dict_entries['id']]['max_peak_length'][i]):
+                       analysis[dict_entries['id']]['max_peak_length'][i] = pl
 
-            for i, characteristic in enumerate(dict_entries['characteristic']):
-                fft_len = characteristic['fft_freq']
-                length = characteristic['tendency']['len']
-                delta = characteristic['tendency']['delta']
-                if (fft_len > analysis[dict_entries['id']]['max_fft_len']):
-                    analysis[dict_entries['id']]['max_fft_len'] = fft_len
-                if (fft_len < analysis[dict_entries['id']]['min_fft_len'] or analysis[dict_entries['id']]['min_fft_len'] == 0):
-                    analysis[dict_entries['id']]['min_fft_len'] = fft_len
-                if (delta > analysis[dict_entries['id']]['max_delta']):
-                    analysis[dict_entries['id']]['max_delta'] = delta
-                if (delta < analysis[dict_entries['id']]['min_delta'] or analysis[dict_entries['id']]['min_delta'] == 0):
-                    analysis[dict_entries['id']]['min_delta'] = delta
-                if (length > analysis[dict_entries['id']]['max_length']):
-                    analysis[dict_entries['id']]['max_length'] = length
-                if (length < analysis[dict_entries['id']]['min_length'] or analysis[dict_entries['id']]['min_length'] == 0):
-                    analysis[dict_entries['id']]['min_length'] = length
-                fft_max = characteristic['fft_max']
-                dhi, dh = self.get_highest(fft_max)
-                analysis[dict_entries['id']]['high5'].append((dhi, dh))
+                for i, characteristic in enumerate(dict_entries['characteristic']):
+                    fft_len = characteristic['fft_freq']
+                    length = characteristic['tendency']['len']
+                    delta = characteristic['tendency']['delta']
+                    if (fft_len > analysis[dict_entries['id']]['max_fft_len']):
+                        analysis[dict_entries['id']]['max_fft_len'] = fft_len
+                    if (fft_len < analysis[dict_entries['id']]['min_fft_len'] or analysis[dict_entries['id']]['min_fft_len'] == 0):
+                        analysis[dict_entries['id']]['min_fft_len'] = fft_len
+                    if (delta > analysis[dict_entries['id']]['max_delta']):
+                        analysis[dict_entries['id']]['max_delta'] = delta
+                    if (delta < analysis[dict_entries['id']]['min_delta'] or analysis[dict_entries['id']]['min_delta'] == 0):
+                        analysis[dict_entries['id']]['min_delta'] = delta
+                    if (length > analysis[dict_entries['id']]['max_length']):
+                        analysis[dict_entries['id']]['max_length'] = length
+                    if (length < analysis[dict_entries['id']]['min_length'] or analysis[dict_entries['id']]['min_length'] == 0):
+                        analysis[dict_entries['id']]['min_length'] = length
+                    fft_max = characteristic['fft_max']
+                    dhi, dh = self.get_highest(fft_max)
+                    analysis[dict_entries['id']]['high5'].append((dhi, dh))
         return analysis
 
     def store_raw_dict_entry(self, dict_id, raw_characteristics, word_tendency):
@@ -161,7 +163,10 @@ class util:
                             for m in meta:
                                 if (m['token'] != 'stop'):
                                     tokens.append(characteristic)
-                    compiled_dict['dict'].append({'id': json_obj['id'], 'characteristic': tokens, 'word_tendency': json_obj['word_tendency'], 'uuid': file_uuid })
+                    if (len(tokens) > 0):
+                        compiled_dict['dict'].append({'id': json_obj['id'], 'characteristic': tokens, 'word_tendency': json_obj['word_tendency'], 'uuid': file_uuid })
+                    else:
+                        print (json_obj['id'] + ' ' + file_uuid+ ' got no tokens!')
                 raw_json_file.close()
         return compiled_dict
 
@@ -205,3 +210,11 @@ class util:
                 i = arr.index(h)
                 high5i.append(i)
         return high5i, high5
+
+    def partition(self, n):
+        p = set()
+        p.add((n, ))
+        for a in range(1, n):
+            for b in self.partition(n - a):
+                p.add((a, ) + b)
+        return p

@@ -61,11 +61,7 @@ def main(argv):
             if opt in ("-o", "--output"):
                 outfile = arg
             if opt in ("-l", "--learn"):
-                if (endless_loop == False):
-                    dict = arg
-                else:
-                    print ("Changing dictionary only works without loop option!")
-                    sys.exit(0)
+                dict = arg
             if opt in ("-d", "--delete"):
                 delete_word(arg, debug)
                 sys.exit(0)
