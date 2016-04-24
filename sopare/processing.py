@@ -56,8 +56,6 @@ class processor:
         if (self.endless_loop == False):
             self.prepare.stop()
         else:
-            #self.prepare.filter_reset()
-            #self.prepare.reset()
             self.prepare.force_tokenizer()
         if (self.buffering != None):
             self.buffering.stop()

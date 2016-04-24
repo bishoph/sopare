@@ -27,7 +27,7 @@ TENDENCY_INACCURACY = .2
 # and to consider result. Based on learned data this
 # can easily result in false positives.
 # Default: False
-USE_FUZZY = False
+USE_FUZZY = True
 
 # Number of matches that are taken into consideration
 # for the first comparison and to get first results.
@@ -36,7 +36,6 @@ FAST_HIGH_COMPARISON = 5
 
 # This number calculates the threshold for consideration
 # for the first comparison.
-# Default: 3
 GET_HIGH_THRESHOLD = 3
 
 # This value defines the min value for a perfect
@@ -50,8 +49,8 @@ MIN_PERFECT_MATCHES_FOR_CONSIDERATION = 2
 # We use a progressive value to get smaller steps in the
 # low frequencies
 PROGRESSIVE_FACTOR = 0.1
-MIN_PROGRESSIVE_STEP = 20
-MAX_PROGRESSIVE_STEP = 2000
+MIN_PROGRESSIVE_STEP = 50
+MAX_PROGRESSIVE_STEP = 500
 
 # If result are > CUT_RESULT_LENGTH results are cut
 # to the CUT_RESULT_LENGTH length
@@ -84,3 +83,8 @@ MIN_FFT_LEN = 12
 # Minimal FFT max. value for consideration
 # Default: 5000
 MIN_FFT_MAX = 5000
+
+# Set ALL_START_POS to True if all poitions should be checked
+# for a potential match. If set to False at least 1 high_pos
+# match must be found.
+ALL_START_POS = False

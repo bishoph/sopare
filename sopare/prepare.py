@@ -80,6 +80,7 @@ class preparing():
 
     def force_tokenizer(self):
         self.force = True
+        self.tokenize([ { 'token': 'start analysis', 'silence': self.silence, 'pos': self.counter, 'adapting': 0, 'volume': 0, 'peaks': self.peaks } ])
   
     def prepare(self, buf, volume):
         data = numpy.fromstring(buf, dtype=numpy.int16)
@@ -114,10 +115,6 @@ class preparing():
             self.low += 1
             self.silence =  0
             self.silence2 = 0
-
-        if (self.force):
-            meta.append({ 'token': 'start analysis', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'peaks': self.peaks })
-            self.new_word = True
 
         if (self.new_token == True or self.new_word == True):
             self.new_token = False

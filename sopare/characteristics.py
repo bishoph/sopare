@@ -19,6 +19,7 @@ under the License.
 
 import config
 import math
+import heapq
 
 class characteristic:
 
@@ -67,27 +68,19 @@ class characteristic:
         if (tendency_characteristic == None):
             return None
 
-        fft_approach = self.get_approach(chunked_fft_max)
-        model_characteristic = {'fft_freq': fft_len , 'fft_max': chunked_fft_max, 'fft_approach': fft_approach, 'tendency': tendency_characteristic }
+        fft_approach, fft_max = self.get_highest(chunked_fft_max, len(config.IMPORTANCE))
+        model_characteristic = {'fft_freq': fft_len , 'fft_max': fft_max, 'fft_approach': fft_approach, 'tendency': tendency_characteristic }
         return model_characteristic
 
-    def get_approach(self, data):
-        data = [abs(i) for i in data]
-        ld = len(data)
-        result = [ld] * ld
-        m = max(data)+1
-        l = 0
-        pos = 0
-        for z in range(0, ld):
-            pos = z
-            for i, a in enumerate(data):
-                if (a < m and a > l):
-                    l = a
-                    pos = i
-            result[pos] = z
-            m = l
-            l = 0
-        return result
+    def get_highest(self, arr, n):
+        high5 = heapq.nlargest(n, arr)
+        high5i = [ ]
+        highv = high5[0] / config.GET_HIGH_THRESHOLD
+        for h in high5:
+            if (high5[0] < 50000 or h >= highv):
+                i = arr.index(h)
+                high5i.append(i)
+        return high5i, arr
 
     def get_tendency(self, data):
         ll = len(data)

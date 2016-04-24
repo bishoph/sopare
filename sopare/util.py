@@ -99,7 +99,7 @@ class util:
                     if (length < analysis[dict_entries['id']]['min_length'] or analysis[dict_entries['id']]['min_length'] == 0):
                         analysis[dict_entries['id']]['min_length'] = length
                     fft_max = characteristic['fft_max']
-                    dhi, dh = self.get_highest(fft_max)
+                    dhi, dh = self.characteristic.get_highest(fft_max, len(config.IMPORTANCE))
                     analysis[dict_entries['id']]['high5'].append((dhi, dh))
         return analysis
 
@@ -198,18 +198,6 @@ class util:
     def normalize(self, data, normalization):
         newdata = [int(float(i)/sum(data)*normalization) for i in data]
         return newdata
-
-    def get_highest(self, arr):
-        high5 = heapq.nlargest(config.FAST_HIGH_COMPARISON, arr)
-        high5i = [ ]
-        highv = 50000
-        if (len(high5) > 0):
-            highv = high5[0] / config.GET_HIGH_THRESHOLD
-        for h in high5:
-            if (h > highv):
-                i = arr.index(h)
-                high5i.append(i)
-        return high5i, high5
 
     def partition(self, n):
         p = set()
