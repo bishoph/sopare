@@ -1,6 +1,6 @@
 This is the **SO**und **PA**ttern **RE**cognition project written in Python.
 In a nutshell the project is able to listen in real time to microphone input
-and detect patterns (like words) in the steam based on simple characteristics.
+and detect patterns (like words) in the stream based on simple characteristics.
 The output is an array of potential best guess matches. SoPaRe works offline
 and was tested successfully on a Raspberry Pi 2 and on a Banana Pi. 
 
@@ -62,16 +62,15 @@ Installation:
 Next steps/TODOs:
 
   * Optimizations, testing and bugfixing
-
+  * Speed up first_scan 
+  * Work on sanity checks, config options
+  * Stop/timeout in analysis combo needs overhaul
 
 Project status:
 
-The project is able to learn sound patterns and to identify the same
-sound patterns even under different circumstances. 
-
-False positives still occur sometimes.
-
-Currently the project is in a test and optimization phase.
+  * The project is able to learn sound patterns and to identify similar sounds even under different circumstances.
+  * False positives still occur sometimes.
+  * Currently the project is in a test and optimization phase.
 
 
 Usage:

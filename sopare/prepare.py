@@ -43,18 +43,17 @@ class preparing():
         self.plot_buffer = [ ]
 
     def tokenize(self, meta):
-        if (len(self.buffer) > 0):
-            start = 0
+        if (len(self.buffer) > 512):
             end = len(self.buffer)
-            #print ('token: ' +str(start)+ ':'+str(end) + ' / ' + str(self.counter))
             self.filter.filter(self.buffer[0:end], meta)
             self.buffer = [ ]
+            self.peaks.extend(self.token_peaks)
+            self.token_peaks = [ ]
             if (self.force):
                 self.reset()
                 self.filter_reset()
 
     def stop(self):
-        self.peaks = [ ]
         self.tokenize([{ 'token': 'stop' }])
         self.filter.stop()
         if (self.plot):
@@ -69,7 +68,8 @@ class preparing():
         self.new_word = False
         self.token_counter = 0
         self.buffer = [ ]
-        self.peaks = [ ]   
+        self.peaks = [ ]
+        self.token_peaks = [ ]
         self.low = 0
         self.last_low_pos = 0
         self.force = False
@@ -90,7 +90,7 @@ class preparing():
         self.counter += 1
         abs_data = abs(data)
         adaptive = sum(abs_data)
-        self.peaks.append(adaptive)
+        self.token_peaks.append(adaptive)
         meta = [ ]
 
         # tokenizer/word detection
@@ -98,20 +98,20 @@ class preparing():
             self.silence += 1
             if (self.silence == preparing.SILENCE):
                 self.new_token = True
-                meta.append({ 'token': 'token', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume })
+                meta.append({ 'token': 'token', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'token_peaks': self.token_peaks })
                 self.low = 0
             elif (self.silence == preparing.LONG_SILENCE):
                     self.new_word = True
                     self.entered_silence = True
-                    meta.append({ 'token': 'start analysis', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'peaks': self.peaks })
+                    meta.append({ 'token': 'start analysis', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'token_peaks': self.token_peaks, 'peaks': self.peaks })
                     self.peaks = [ ]
             elif (self.low > 0):
                 self.new_token = True
-                meta.append({ 'token': 'token', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume })
+                meta.append({ 'token': 'token', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'token_peaks': self.token_peaks })
                 self.low = 0
         elif (self.low == 0):
             self.new_token = True
-            meta.append({ 'token': 'token', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume })
+            meta.append({ 'token': 'token', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'token_peaks': self.token_peaks })
             self.low += 1
             self.silence =  0
             self.silence2 = 0

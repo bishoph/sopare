@@ -28,7 +28,7 @@ class characteristic:
 
     def getcharacteristic(self, fft, tendency):
         fft = [abs(i) for i in fft]
-        fft = fft[config.REMOVE_LEFT_FFT_RESULTS:]
+        fft = fft[config.LOW_FREQ:]
         fft_len = 0
         chunked_fft_max = [ ]
         last = 0
@@ -58,6 +58,8 @@ class characteristic:
             else:
                 break
 
+        fft_len = len(chunked_fft_max)
+
         if (right_trim > config.CUT_RESULT_LENGTH):
             right_trim = config.CUT_RESULT_LENGTH
 
@@ -68,19 +70,29 @@ class characteristic:
         if (tendency_characteristic == None):
             return None
 
-        fft_approach, fft_max = self.get_highest(chunked_fft_max, len(config.IMPORTANCE))
-        model_characteristic = {'fft_freq': fft_len , 'fft_max': fft_max, 'fft_approach': fft_approach, 'tendency': tendency_characteristic }
+        fft_approach, fft_max, fft_outline = self.get_approach(chunked_fft_max, len(config.IMPORTANCE))
+        model_characteristic = {'fft_freq': fft_len , 'fft_max': fft_max, 'fft_approach': fft_approach, 'fft_outline': fft_outline, 'tendency': tendency_characteristic }
         return model_characteristic
 
     def get_highest(self, arr, n):
-        high5 = heapq.nlargest(n, arr)
+        return heapq.nlargest(n, arr)
+
+    def get_approach(self, arr, n):
+        high5 = self.get_highest(arr, n)
         high5i = [ ]
+        highoutline = [ ]
         highv = high5[0] / config.GET_HIGH_THRESHOLD
         for h in high5:
-            if (high5[0] < 50000 or h >= highv):
+            if (h >= highv):
                 i = arr.index(h)
                 high5i.append(i)
-        return high5i, arr
+                alpha = math.degrees(math.atan( h / ((i+1.0) * (i+1)*512) ))
+                highoutline.append(alpha)
+            else:
+                i = arr.index(h)
+                high5i.append(i)
+                arr[i] = 0
+        return high5i, arr, highoutline
 
     def get_tendency(self, data):
         ll = len(data)
@@ -158,7 +170,7 @@ class characteristic:
                 if (hpos > start_end_pos[a] and hpos < start_end_pos[a+1]):
                     start_pos.append(start_end_pos[a])
                     peak_length.append(start_end_pos[a+1] - start_end_pos[a])
-        word_tendency = { 'peaks': len(start_pos), 'start_pos': start_pos, 'peak_length': peak_length }
+        word_tendency = { 'peaks': len(start_pos), 'start_pos': start_pos, 'peak_length': peak_length, 'shape': peaks }
         if (len(start_pos) > 15): # make configurable
             if (self.debug):
                 print ('ignoring as we got '+str(len(peaks)) + ' peaks from ' + str(len(start_pos)) + ' start positions ' )

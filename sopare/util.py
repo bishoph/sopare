@@ -55,13 +55,12 @@ class util:
                for characteristic in dict_entries['characteristic']:
                    print (characteristic['fft_max'])
 
-    def compile_analysis(self):
+    def compile_analysis(self, json_data):
         analysis = { }
-        json_data = self.getDICT()
         for dict_entries in json_data['dict']:
             if ('word_tendency' in dict_entries and dict_entries['word_tendency'] != None):
                 if (dict_entries['id'] not in analysis):
-                    analysis[dict_entries['id']] = { 'min_tokens': 0, 'max_tokens': 0, 'min_peaks': 0, 'max_peaks': 0, 'min_peak_length': [ ], 'max_peak_length': [ ], 'min_fft_len': 0, 'max_fft_len': 0, 'min_delta': 0, 'max_delta': 0, 'min_length': 0, 'max_length': 0, 'high5': [ ] }
+                    analysis[dict_entries['id']] = { 'min_tokens': 0, 'max_tokens': 0, 'min_peaks': 0, 'max_peaks': 0, 'min_peak_length': [ ], 'max_peak_length': [ ], 'min_fft_len': 0, 'max_fft_len': 0, 'min_delta': 0, 'max_delta': 0, 'min_length': 0, 'max_length': 0, 'high5': [ ], 'shape': [ ] }
                 l = len(dict_entries['characteristic'])
                 if (l > analysis[dict_entries['id']]['max_tokens']):
                     analysis[dict_entries['id']]['max_tokens'] = l
@@ -72,16 +71,16 @@ class util:
                     analysis[dict_entries['id']]['min_peaks'] = dict_entries['word_tendency']['peaks']
                 if (dict_entries['word_tendency']['peaks'] > analysis[dict_entries['id']]['max_peaks']):
                      analysis[dict_entries['id']]['max_peaks'] = dict_entries['word_tendency']['peaks']
+                analysis[dict_entries['id']]['shape'].append(dict_entries['word_tendency']['shape'])
                 for i, pl in enumerate(dict_entries['word_tendency']['peak_length']):
-                    if (len(analysis[dict_entries['id']]['min_peak_length'])-1 <= i):
+                    if (len(analysis[dict_entries['id']]['min_peak_length']) <= i):
                         analysis[dict_entries['id']]['min_peak_length'].append(0)
-                    if (len(analysis[dict_entries['id']]['max_peak_length'])-1 <= i):
+                    if (len(analysis[dict_entries['id']]['max_peak_length']) <= i):
                         analysis[dict_entries['id']]['max_peak_length'].append(0)
                     if (pl < analysis[dict_entries['id']]['min_peak_length'][i] or analysis[dict_entries['id']]['min_peak_length'][i] == 0):
                         analysis[dict_entries['id']]['min_peak_length'][i] = pl
                     if (pl > analysis[dict_entries['id']]['max_peak_length'][i]):
                        analysis[dict_entries['id']]['max_peak_length'][i] = pl
-
                 for i, characteristic in enumerate(dict_entries['characteristic']):
                     fft_len = characteristic['fft_freq']
                     length = characteristic['tendency']['len']
@@ -99,7 +98,7 @@ class util:
                     if (length < analysis[dict_entries['id']]['min_length'] or analysis[dict_entries['id']]['min_length'] == 0):
                         analysis[dict_entries['id']]['min_length'] = length
                     fft_max = characteristic['fft_max']
-                    dhi, dh = self.characteristic.get_highest(fft_max, len(config.IMPORTANCE))
+                    dhi, dh, do = self.characteristic.get_approach(fft_max, config.FAST_HIGH_COMPARISON)
                     analysis[dict_entries['id']]['high5'].append((dhi, dh))
         return analysis
 
@@ -169,6 +168,80 @@ class util:
                         print (json_obj['id'] + ' ' + file_uuid+ ' got no tokens!')
                 raw_json_file.close()
         return compiled_dict
+
+    def compress_dict(self, json_data):
+        compressed_dict =  { 'dict': [ ] }
+        ids = [ ]
+        counter = 0
+        for dict_entries in json_data['dict']:
+           if (dict_entries['id'] not in ids):
+               ids.append(dict_entries['id'])
+           counter += 1
+        print ('compressing ' + str(counter) +' entries into ' + str(len(ids)))
+        for id in ids:
+            counter = 0
+            compressed_tokens = [ ]
+            compressed_word_tendency = { 'counter': 0 }
+            for dict_entries in json_data['dict']:
+                if (id == dict_entries['id']):
+                    characteristic = dict_entries['characteristic']
+                    self.compress_characteristic(characteristic, compressed_tokens)
+            # avg
+            for token in compressed_tokens:
+                avg_c = token['tendency']['counter']
+                if (avg_c > 0):
+                    token['fft_freq'] = token['fft_freq'] / avg_c
+                    for key in token['tendency']:
+                        token['tendency'][key] = token['tendency'][key] / avg_c
+                    for i, fm in enumerate(token['fft_max']):
+                        if (token['fft_max_avg_c'][i] > 0):
+                            token['fft_max'][i] = fm  / token['fft_max_avg_c'][i]                
+                    for i, fa in enumerate(token['fft_approach']):
+                        token['fft_approach'][i] = fa  / avg_c
+                    for i, fo in enumerate(token['fft_outline']):
+                        token['fft_outline'][i] = fo  / avg_c
+                # remove temp stuff
+                del token['tendency']['counter']
+                del token['fft_max_avg_c']
+
+            compressed_dict['dict'].append({'id': id, 'characteristic': compressed_tokens, 'word_tendency': compressed_word_tendency, 'uuid': 'x'+id })
+        return compressed_dict
+
+    def compress_characteristic(self, characteristic, compressed_tokens):
+        for i, c in enumerate(characteristic):
+            if (i >= len(compressed_tokens)):
+                compressed_tokens.append({ 'tendency': { 'counter': 0 }, 'fft_max': [ ], 'fft_approach': [ ], 'fft_outline': [ ], 'fft_freq': 0, 'fft_max_avg_c': [ ] })
+            else:
+                compressed_tokens[i]['tendency']['counter'] += 1
+            compressed_tokens[i]['fft_freq'] += c['fft_freq']
+            tendency = c['tendency']
+
+            for key in tendency:
+                if (key not in compressed_tokens[i]['tendency']):
+                    compressed_tokens[i]['tendency'][key] = tendency[key]
+                else:
+                    compressed_tokens[i]['tendency'][key] += tendency[key]
+
+            for j, fm in enumerate(c['fft_max']):
+                if (j >= len(compressed_tokens[i]['fft_max'])):
+                    compressed_tokens[i]['fft_max'].append(fm)
+                    compressed_tokens[i]['fft_max_avg_c'].append(0)
+                else:
+                    compressed_tokens[i]['fft_max'][j] += fm
+                    if (fm > 0):
+                        compressed_tokens[i]['fft_max_avg_c'][j] += 1
+
+            for j, fa in enumerate(c['fft_approach']):
+                if (j >= len(compressed_tokens[i]['fft_approach'])):
+                    compressed_tokens[i]['fft_approach'].append(fa)
+                else:
+                    compressed_tokens[i]['fft_approach'][j] += fa
+
+            for j, fa in enumerate(c['fft_outline']):
+                if (j >= len(compressed_tokens[i]['fft_outline'])):
+                    compressed_tokens[i]['fft_outline'].append(fa)
+                else:
+                    compressed_tokens[i]['fft_outline'][j] += fa
 
     def deletefromdict(self, id):
         json_obj = self.getDICT()
