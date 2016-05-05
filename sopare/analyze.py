@@ -185,24 +185,23 @@ class analyze():
 
     def first_scan(self, pre_results, word_tendency, data):
         first_guess = { }
-        word_possibilities = self.util.partition(word_tendency['peaks'])
         for id in self.dict_analysis:
-            for pos in range(0, word_tendency['peaks']):
-                for pset in word_possibilities:
-                    for p in pset:
-                        if (id not in first_guess):
-                            if (p >= self.dict_analysis[id]['min_peaks'] and p <= self.dict_analysis[id]['max_peaks']):
-                                peak_length = sum(word_tendency['peak_length'][pos: pos+p])
-                                for a in range(0, len(self.dict_analysis[id]['min_peak_length']), 1):
-                                    mipl = self.dict_analysis[id]['min_peak_length'][a]
-                                    mapl = self.dict_analysis[id]['max_peak_length'][a]
-                                    if (peak_length >= mipl and peak_length <= mapl):
-                                        first_guess[id] = { 'results': [], 'lmin': self.dict_analysis[id]['min_tokens'], 'lmax': self.dict_analysis[id]['max_tokens'] }
+            for start in range(0, word_tendency['peaks']):
+                for end in xrange(word_tendency['peaks'], 0, -1):
+                    if (id not in first_guess):
+                        p = end - start
+                        if (p >= self.dict_analysis[id]['min_peaks'] and p <= self.dict_analysis[id]['max_peaks']):
+                            peak_length = sum(word_tendency['peak_length'][start: start+p])
+                            for a in range(0, len(self.dict_analysis[id]['min_peak_length']), 1):
+                                mipl = self.dict_analysis[id]['min_peak_length'][a]
+                                mapl = self.dict_analysis[id]['max_peak_length'][a]
+                                if (peak_length >= mipl and peak_length <= mapl):
+                                    first_guess[id] = { 'results': [], 'lmin': self.dict_analysis[id]['min_tokens'], 'lmax': self.dict_analysis[id]['max_tokens'] }
         for words in pre_results:
             for startword in words:
                 for id in first_guess:
                     if (startword not in first_guess[id]['results']):
-                        if (config.ALL_START_POS or self.fast_high_compare(id, startword, data) > 0):
+                        if (self.fast_high_compare(id, startword, data) > 0):
                             first_guess[id]['results'].append( startword )
         return first_guess
 
@@ -344,6 +343,8 @@ class analyze():
                 if (config.USE_LENGTH_SIMILARITY):
                     fft_length_similarity = self.approach_length_similarity(fft_max, dict_fft_max)
                     fft_similarity = fft_similarity * fft_length_similarity
+                if (config.POSITION_WEIGHTING):
+                    fft_similarity = fft_similarity * (1-pos*.1) # TODO: calculate weighting in compile_analysis and take it from self.dict_analysis
                 perfect_match_array, fuzzy_array = self.compare_fft_token_approach(fft_approach, dict_fft_approach, perfect_match_array, fuzzy_array)
                 fft_outline.sort(reverse=True)
                 dict_fft_outline.sort(reverse=True)

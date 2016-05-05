@@ -64,7 +64,7 @@ class util:
                 l = len(dict_entries['characteristic'])
                 if (l > analysis[dict_entries['id']]['max_tokens']):
                     analysis[dict_entries['id']]['max_tokens'] = l
-                l = l - 1 # this is necessary as words in a sentence lacks often the last token!
+                l = l - 1 # TODO: Check if this is really necessary
                 if (l < analysis[dict_entries['id']]['min_tokens'] or analysis[dict_entries['id']]['min_tokens'] == 0):
                     analysis[dict_entries['id']]['min_tokens'] = l
                 if (dict_entries['word_tendency']['peaks'] < analysis[dict_entries['id']]['min_peaks'] or analysis[dict_entries['id']]['min_peaks'] == 0):
@@ -178,34 +178,49 @@ class util:
            if (dict_entries['id'] not in ids):
                ids.append(dict_entries['id'])
            counter += 1        
-        print ('compressing ' + str(len(json_data['dict'])) +' entries...')
+        print ('compressing ' + str(len(json_data['dict'])) +' into'),
+
+        compression_analysis = { }
+
         for id in ids:
-            counter = 0
-            compressed_tokens = [ ]
-            compressed_word_tendency = { 'counter': 0 }
             for dict_entries in json_data['dict']:
                 if (id == dict_entries['id']):
+                    if (id not in compression_analysis):
+                        compression_analysis[id] = { 'length': [ ] }
                     characteristic = dict_entries['characteristic']
-                    self.compress_characteristic(characteristic, compressed_tokens)
-            # avg
-            for token in compressed_tokens:
-                avg_c = token['tendency']['counter']
-                if (avg_c > 0):
-                    token['fft_freq'] = token['fft_freq'] / avg_c
-                    for key in token['tendency']:
-                        token['tendency'][key] = token['tendency'][key] / avg_c
-                    for i, fm in enumerate(token['fft_max']):
-                        if (token['fft_max_avg_c'][i] > 0):
-                            token['fft_max'][i] = fm  / token['fft_max_avg_c'][i]                
-                    for i, fa in enumerate(token['fft_approach']):
-                        token['fft_approach'][i] = fa  / avg_c
-                    for i, fo in enumerate(token['fft_outline']):
-                        token['fft_outline'][i] = fo  / avg_c
-                # remove temp stuff
-                del token['tendency']['counter']
-                del token['fft_max_avg_c']
+                    ll = len(characteristic)
+                    if (ll not in compression_analysis[id]['length'] and ll > 1): # TODO: Define min. length of characteristic to filter "garbage" out
+                        compression_analysis[id]['length'].append(ll)
 
-            compressed_dict['dict'].append({'id': id, 'characteristic': compressed_tokens, 'word_tendency': compressed_word_tendency, 'uuid': 'x'+id })
+        for id in compression_analysis:
+            for ll in compression_analysis[id]['length']:
+                counter = 0
+                compressed_tokens = [ ]
+                compressed_word_tendency = { 'counter': 0 }
+                for dict_entries in json_data['dict']:
+                    if (id == dict_entries['id'] and ll == len(dict_entries['characteristic'])):
+                        characteristic = dict_entries['characteristic']
+                        self.compress_characteristic(characteristic, compressed_tokens)
+                # avg
+                for token in compressed_tokens:
+                    avg_c = token['tendency']['counter']
+                    if (avg_c > 0):
+                        token['fft_freq'] = token['fft_freq'] / avg_c
+                        for key in token['tendency']:
+                            token['tendency'][key] = token['tendency'][key] / avg_c
+                        for i, fm in enumerate(token['fft_max']):
+                            if (token['fft_max_avg_c'][i] > 0):
+                                token['fft_max'][i] = fm  / token['fft_max_avg_c'][i]                
+                        for i, fa in enumerate(token['fft_approach']):
+                            token['fft_approach'][i] = fa  / avg_c
+                        for i, fo in enumerate(token['fft_outline']):
+                            token['fft_outline'][i] = fo  / avg_c
+                    # remove temp stuff
+                    del token['tendency']['counter']
+                    del token['fft_max_avg_c']
+
+                compressed_dict['dict'].append({'id': id, 'characteristic': compressed_tokens, 'word_tendency': compressed_word_tendency, 'uuid': 'x-'+id+'-'+str(ll) })
+        print (str(len(compressed_dict['dict']))+' entries')
         return compressed_dict
 
     def compress_characteristic(self, characteristic, compressed_tokens):

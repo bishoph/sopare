@@ -36,8 +36,8 @@ def main(argv):
 
     if (len(argv) > 0):
         try:                                
-            opts, args = getopt.getopt(argv, "hepvwcnrs:o:i:l:d:", [
-"help", "endless", "plot", "verbose", "wave", "content", "recreate_dict", "show=", "out=",
+            opts, args = getopt.getopt(argv, "hepvwcnrts:o:i:l:d:", [
+"help", "endless", "plot", "verbose", "wave", "content", "recreate_dict", "test", "show=", "out=",
 "in=", "learn=", "delete="])
         except getopt.GetoptError:
             usage()
@@ -68,6 +68,9 @@ def main(argv):
             if opt in ("-r", "recreate_dict"):
                 recreate_dict(debug)
                 sys.exit(0)
+            if opt in ("-t", "test"):
+                testing(debug)
+                sys.exit(0)
             if opt in ("-s", "--show"):
                 show_word_entries(arg, debug)
                 sys.exit(0)
@@ -78,6 +81,12 @@ def main(argv):
                 infile = arg
     recorder.recorder(endless_loop, debug, plot, wave, outfile, 
                       infile, dict)
+
+def testing(debug):
+    print ("testing...")
+    utilities = util.util(debug, False)
+    DICT = utilities.getDICT()
+    DICT = utilities.compress_dict(DICT)
 
 def recreate_dict(debug):
     print ("recreating dictionary from raw input files...")

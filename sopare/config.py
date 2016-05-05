@@ -19,7 +19,7 @@ MARGINAL_VALUE = 0.4
 # This value defines the min value that is needed
 # for consideration if the analyzed result becomes a
 # "readable result"
-MIN_READABLE_RESULT_VALUE = 0.7
+MIN_READABLE_RESULT_VALUE = 0.6
 
 # Last line of defence
 SHAPE_SIMILARITY = 0.9
@@ -28,6 +28,10 @@ SHAPE_SIMILARITY = 0.9
 # Set to False if you want more results but be aware that
 # this could raise more false positives as well.
 USE_LENGTH_SIMILARITY = True
+
+# Set to True if you want to dilute results from 0-n in
+# the similarity calculation.
+POSITION_WEIGHTING = True
 
 # Boolean 
 # If true the fuzzy matches are used to calculate points
@@ -84,12 +88,8 @@ HIGH_FREQ = 5000
 MIN_FFT_LEN = 12
 
 # Minimal FFT max. value for consideration
-# Default: 5000
+# Default: ?
 MIN_FFT_MAX = 5000
-
-# Set ALL_START_POS to True if all poitions should be checked
-# for a potential match.
-ALL_START_POS = False
 
 # COMPRESS_DICT packs the dict. Simple as that.
 # Set to True if you have a use amount of

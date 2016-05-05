@@ -125,6 +125,8 @@ class characteristic:
   
     def get_word_tendency(self, peaks):
         ll = len(peaks)
+        if (ll == 0):
+            return None
         peakavg = sum(peaks)/ll
         highpeak = 0
         peakpos = 0
@@ -171,7 +173,7 @@ class characteristic:
                     start_pos.append(start_end_pos[a])
                     peak_length.append(start_end_pos[a+1] - start_end_pos[a])
         word_tendency = { 'peaks': len(start_pos), 'start_pos': start_pos, 'peak_length': peak_length, 'shape': peaks }
-        if (len(start_pos) > 15): # make configurable
+        if (len(start_pos) > 25): # TODO: Make configurable
             if (self.debug):
                 print ('ignoring as we got '+str(len(peaks)) + ' peaks from ' + str(len(start_pos)) + ' start positions ' )
             return None
