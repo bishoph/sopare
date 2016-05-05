@@ -62,9 +62,9 @@ Installation:
 Next steps/TODOs:
 
   * Optimizations, testing and bugfixing
-  * Speed up first_scan 
+  * Performance optimizations
   * Work on sanity checks, config options
-  * Stop/timeout in analysis combo needs overhaul
+  * Enhance dict compression
 
 Project status:
 

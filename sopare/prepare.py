@@ -43,7 +43,7 @@ class preparing():
         self.plot_buffer = [ ]
 
     def tokenize(self, meta):
-        if (len(self.buffer) > 512):
+        if (len(self.buffer) > 512 and self.valid_token(meta)):
             end = len(self.buffer)
             self.filter.filter(self.buffer[0:end], meta)
             self.buffer = [ ]
@@ -52,6 +52,13 @@ class preparing():
             if (self.force):
                 self.reset()
                 self.filter_reset()
+
+    def valid_token(self, meta):
+        for m in meta:
+            if (m['token'] == 'noop'):
+                self.reset()
+                return False
+        return True
 
     def stop(self):
         self.tokenize([{ 'token': 'stop' }])
@@ -105,6 +112,10 @@ class preparing():
                     self.entered_silence = True
                     meta.append({ 'token': 'start analysis', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'token_peaks': self.token_peaks, 'peaks': self.peaks })
                     self.peaks = [ ]
+            elif (self.silence % preparing.LONG_SILENCE == 0):
+                self.new_word = True
+                meta.append({ 'token': 'noop', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'token_peaks': self.token_peaks })
+                self.peaks = [ ]
             elif (self.low > 0):
                 self.new_token = True
                 meta.append({ 'token': 'token', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'token_peaks': self.token_peaks })

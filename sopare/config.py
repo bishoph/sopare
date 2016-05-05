@@ -13,8 +13,13 @@ MATCH_POINTS = 0.1
 
 # This value defines the marginal value that is needed
 # for consideration if the analyzed result becomes a
-# "readable value"
-MARGINAL_VALUE = 0.7
+# "pre_readable result"
+MARGINAL_VALUE = 0.4
+
+# This value defines the min value that is needed
+# for consideration if the analyzed result becomes a
+# "readable result"
+MIN_READABLE_RESULT_VALUE = 0.7
 
 # Last line of defence
 SHAPE_SIMILARITY = 0.9
@@ -22,7 +27,7 @@ SHAPE_SIMILARITY = 0.9
 # Set to True for extra precision for similarity calculation.
 # Set to False if you want more results but be aware that
 # this could raise more false positives as well.
-USE_LENGTH_SIMILARITY = False
+USE_LENGTH_SIMILARITY = True
 
 # Boolean 
 # If true the fuzzy matches are used to calculate points
@@ -30,6 +35,11 @@ USE_LENGTH_SIMILARITY = False
 # can easily result in false positives.
 # Default: False
 USE_FUZZY = False
+
+# This value defines the marginal value that is needed
+# for consideration if the analyzed result is added to 
+# "first_guess"
+FAST_HIGH_COMPARE_MARGINAL_VALUE = 0.8
 
 # Number of matches that are taken into consideration
 # for the first comparison and to get first results.

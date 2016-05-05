@@ -105,9 +105,16 @@ class analyze():
             if (readable_match == None):
                 readable_match = [ 0 ] * len(best_match[id])
             for i, match in enumerate(best_match[id]):
-                if (match > readable_match[i]):
+                if (match > readable_match[i] and match > config.MIN_READABLE_RESULT_VALUE):
                     readable_match[i] = match
                     pre_results[i] = id
+        if (pre_results != None):
+            for i, result in enumerate(pre_results):
+                if (i > 0 and i < len(pre_results)-1):
+                    if (result != pre_results[i-1] and result != pre_results[i+1] and pre_results[i-1] == pre_results[i+1]):
+                        if (self.debug):
+                            print ('found enclosed element '+result+' at position '+str(i)+ ' ... replacing it with '+pre_results[i-1])
+                        pre_results[i] = pre_results[i-1]
         return pre_results
 
     def get_readable_results(self, pre_results, data):
@@ -150,7 +157,8 @@ class analyze():
             if (shape_similarity > config.SHAPE_SIMILARITY):
                 return True
         if (self.debug):
-            print ('Sanity check failed for '+ id +' / '+str(start) + ' max was :'+str(max_shape_similarity))
+            print ('Sanity check failed for '+ id +' / '+str(start) + '. Max was :'+str(max_shape_similarity))
+            print ('failed word_shape '+str(word_shape))
         return False
  
     def deep_scan(self, first_guess, data):
@@ -209,7 +217,7 @@ class analyze():
                 dhi, dh = o
                 dh = self.characteristic.get_highest(dh, config.FAST_HIGH_COMPARISON)
                 if (len(self.approach_intersection(hi, dhi)) > 0):
-                    if (self.approach_similarity(h, dh) > .9): # TODO: Make configurable
+                    if (self.approach_similarity(h, dh) > config.FAST_HIGH_COMPARE_MARGINAL_VALUE):
                         return 1
         return 0
 
@@ -305,7 +313,7 @@ class analyze():
                 for end in endpos:
                     if (start <= end):
                         word.append(end)
-                if (len(word) > 0 and word not in wordpos):
+                if (len(word) > 0 and len(word) < 10 and word not in wordpos): # TODO: make max. word length configurable
                     wordpos.append(word)
         else:
             wordpos.append(endpos)

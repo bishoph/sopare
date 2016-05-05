@@ -97,9 +97,10 @@ class util:
                         analysis[dict_entries['id']]['max_length'] = length
                     if (length < analysis[dict_entries['id']]['min_length'] or analysis[dict_entries['id']]['min_length'] == 0):
                         analysis[dict_entries['id']]['min_length'] = length
-                    fft_max = characteristic['fft_max']
-                    dhi, dh, do = self.characteristic.get_approach(fft_max, config.FAST_HIGH_COMPARISON)
-                    analysis[dict_entries['id']]['high5'].append((dhi, dh))
+                    if (i == 0):
+                        fft_max = characteristic['fft_max']
+                        dhi, dh, do = self.characteristic.get_approach(fft_max, config.FAST_HIGH_COMPARISON)
+                        analysis[dict_entries['id']]['high5'].append((dhi, dh))
         return analysis
 
     def store_raw_dict_entry(self, dict_id, raw_characteristics, word_tendency):
@@ -176,8 +177,8 @@ class util:
         for dict_entries in json_data['dict']:
            if (dict_entries['id'] not in ids):
                ids.append(dict_entries['id'])
-           counter += 1
-        print ('compressing ' + str(counter) +' entries into ' + str(len(ids)))
+           counter += 1        
+        print ('compressing ' + str(len(json_data['dict'])) +' entries...')
         for id in ids:
             counter = 0
             compressed_tokens = [ ]
