@@ -30,7 +30,7 @@ SHAPE_SIMILARITY = 0.9
 USE_LENGTH_SIMILARITY = True
 
 # Set to True if you want to dilute results from 0-n in
-# the similarity calculation.
+# the similarity calculation
 POSITION_WEIGHTING = True
 
 # Boolean 

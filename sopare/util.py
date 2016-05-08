@@ -62,6 +62,9 @@ class util:
                 if (dict_entries['id'] not in analysis):
                     analysis[dict_entries['id']] = { 'min_tokens': 0, 'max_tokens': 0, 'min_peaks': 0, 'max_peaks': 0, 'min_peak_length': [ ], 'max_peak_length': [ ], 'min_fft_len': 0, 'max_fft_len': 0, 'min_delta': 0, 'max_delta': 0, 'min_length': 0, 'max_length': 0, 'high5': [ ], 'shape': [ ] }
                 l = len(dict_entries['characteristic'])
+                if (l < 2):
+                    print ('the following characteristic is < 2!')
+                    print dict_entries['id'], l, dict_entries['uuid']
                 if (l > analysis[dict_entries['id']]['max_tokens']):
                     analysis[dict_entries['id']]['max_tokens'] = l
                 l = l - 1 # TODO: Check if this is really necessary
@@ -189,7 +192,7 @@ class util:
                         compression_analysis[id] = { 'length': [ ] }
                     characteristic = dict_entries['characteristic']
                     ll = len(characteristic)
-                    if (ll not in compression_analysis[id]['length'] and ll > 1): # TODO: Define min. length of characteristic to filter "garbage" out
+                    if (ll not in compression_analysis[id]['length']):
                         compression_analysis[id]['length'].append(ll)
 
         for id in compression_analysis:

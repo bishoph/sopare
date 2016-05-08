@@ -129,14 +129,13 @@ class analyze():
                 count += 1
             else:
                 if (last in self.dict_analysis and count >= self.dict_analysis[last]['min_tokens'] and count <= self.dict_analysis[last]['max_tokens']):
-                    if (self.sanity_check(start, count, last, data)):
-                        readable_results.append(last)
+                    readable_results.append(last)
                 count = 1
                 start = i
             last = result
         return readable_results
 
-    def sanity_check(self, start, count, id, data):
+    def word_shape_check(self, start, count, id, data):
         word_shape = [ ]
         counter = 0
         for x in range(start, len(data)):
@@ -157,7 +156,7 @@ class analyze():
             if (shape_similarity > config.SHAPE_SIMILARITY):
                 return True
         if (self.debug):
-            print ('Sanity check failed for '+ id +' / '+str(start) + '. Max was :'+str(max_shape_similarity))
+            print ('Word shape check failed for '+ id +' / '+str(start) + '. Max was :'+str(max_shape_similarity))
             print ('failed word_shape '+str(word_shape))
         return False
  
@@ -185,9 +184,9 @@ class analyze():
 
     def first_scan(self, pre_results, word_tendency, data):
         first_guess = { }
-        for id in self.dict_analysis:
-            for start in range(0, word_tendency['peaks']):
-                for end in xrange(word_tendency['peaks'], 0, -1):
+        for start in range(0, word_tendency['peaks']):
+            for end in xrange(word_tendency['peaks'], 0, -1):
+                for id in self.dict_analysis:
                     if (id not in first_guess):
                         p = end - start
                         if (p >= self.dict_analysis[id]['min_peaks'] and p <= self.dict_analysis[id]['max_peaks']):
@@ -201,7 +200,7 @@ class analyze():
             for startword in words:
                 for id in first_guess:
                     if (startword not in first_guess[id]['results']):
-                        if (self.fast_high_compare(id, startword, data) > 0):
+                        if (self.fast_high_compare(id, startword, data) > 0 and self.word_shape_check(startword, first_guess[id]['lmax'], id, data)):
                             first_guess[id]['results'].append( startword )
         return first_guess
 
