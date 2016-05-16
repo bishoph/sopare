@@ -61,10 +61,11 @@ Installation:
 
 Next steps/TODOs:
 
+  * First scan needs overhaul for better recognition
   * Optimizations, testing and bugfixing
   * Performance optimizations
   * Work on sanity checks, config options
-  * Enhance dict compression
+  * Write dict compression 
 
 Project status:
 

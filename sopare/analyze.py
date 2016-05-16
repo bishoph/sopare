@@ -21,7 +21,6 @@ import characteristics
 import config
 import path
 import util
-import math
 import imp
 import os
 
@@ -90,24 +89,29 @@ class analyze():
             pos = guess[1]
             ll = len(guess[2])
             if (id not in best_match):
-                best_match[id] =  [ 0 ] * len(startpos)
+                best_match[id] =  [ [ 0 ] * len(startpos), [ 0 ] * len(startpos) ]
             for i, point in enumerate(guess[2]):
-                if (point > config.MARGINAL_VALUE):
-                    best_match[id][pos+i] += point
+                if (point[0] > config.MARGINAL_VALUE):
+                    best_match[id][0][pos+i] += point[0]
+                    best_match[id][1][pos+i] += point[1]
         return best_match
 
     def prepare_readable_results(self, best_match):
         pre_results = None
         readable_match = None
+        readable_match_weighting = None
         for id in best_match:
             if (pre_results == None):
-                pre_results = [ '' ] * len(best_match[id])
+                pre_results = [ '' ] * len(best_match[id][0])
             if (readable_match == None):
-                readable_match = [ 0 ] * len(best_match[id])
-            for i, match in enumerate(best_match[id]):
+                readable_match = [ 0 ] * len(best_match[id][0])
+            if (readable_match_weighting == None):
+                readable_match_weighting = [ 0 ] * len(best_match[id][0])
+            for i, match in enumerate(best_match[id][0]):
                 if (match > readable_match[i] and match > config.MIN_READABLE_RESULT_VALUE):
                     readable_match[i] = match
                     pre_results[i] = id
+                readable_match_weighting[i] = best_match[id][1][i]
         if (pre_results != None):
             for i, result in enumerate(pre_results):
                 if (i > 0 and i < len(pre_results)-1):
@@ -128,8 +132,13 @@ class analyze():
             if (result != '' and last == result and i < len(pre_results)-1):
                 count += 1
             else:
+                if (i == len(pre_results)-1 and last == result):
+                    count += 1
                 if (last in self.dict_analysis and count >= self.dict_analysis[last]['min_tokens'] and count <= self.dict_analysis[last]['max_tokens']):
+                    # TODO: instead if the word_shape_check we shoulc check that we get at least one token weighting > .9!
                     readable_results.append(last)
+                elif (last != '' and self.debug):
+                    print ('get_readable_results failed for '+ last +' cause '+str(self.dict_analysis[last]['min_tokens']) + ' < ' +str(count) + ' > '+str(self.dict_analysis[last]['max_tokens']))
                 count = 1
                 start = i
             last = result
@@ -150,14 +159,13 @@ class analyze():
                 break
         max_shape_similarity = 0
         for shape in self.dict_analysis[id]['shape']:
-            shape_similarity = self.approach_length_similarity(word_shape, shape)
+            shape_similarity = self.util.approach_length_similarity(word_shape, shape)
             if (shape_similarity > max_shape_similarity):
                 max_shape_similarity = shape_similarity
             if (shape_similarity > config.SHAPE_SIMILARITY):
                 return True
         if (self.debug):
-            print ('Word shape check failed for '+ id +' / '+str(start) + '. Max was :'+str(max_shape_similarity))
-            print ('failed word_shape '+str(word_shape))
+            print ('Word shape check failed for '+ id +' at pos '+str(start) + '. Max was :'+str(max_shape_similarity))
         return False
  
     def deep_scan(self, first_guess, data):
@@ -196,6 +204,11 @@ class analyze():
                                 mapl = self.dict_analysis[id]['max_peak_length'][a]
                                 if (peak_length >= mipl and peak_length <= mapl):
                                     first_guess[id] = { 'results': [], 'lmin': self.dict_analysis[id]['min_tokens'], 'lmax': self.dict_analysis[id]['max_tokens'] }
+        if (not first_guess):
+            if (self.debug):
+                print ('first guess got no results ... now adding all dict entries!') # TODO: We need something better
+            for id in self.dict_analysis:
+                first_guess[id] = { 'results': [], 'lmin': self.dict_analysis[id]['min_tokens'], 'lmax': self.dict_analysis[id]['max_tokens'] }
         for words in pre_results:
             for startword in words:
                 for id in first_guess:
@@ -214,8 +227,9 @@ class analyze():
             for o in analysis_object['high5']:
                 dhi, dh = o
                 dh = self.characteristic.get_highest(dh, config.FAST_HIGH_COMPARISON)
-                if (len(self.approach_intersection(hi, dhi)) > 0):
-                    if (self.approach_similarity(h, dh) > config.FAST_HIGH_COMPARE_MARGINAL_VALUE):
+                intersection = self.util.approach_intersection(hi, dhi)
+                if (len(intersection) > 0):
+                    if (self.util.approach_similarity(h, dh) > config.FAST_HIGH_COMPARE_MARGINAL_VALUE):
                         return 1
         return 0
 
@@ -237,7 +251,7 @@ class analyze():
         got_matches_for_all_tokens = 0
         ll = len(match_array)
         if (ll < lmin):
-            return [ 0 ]
+            return [ 0 ], [ 0 ]
         for i, arr in enumerate(match_array):
             if (config.USE_FUZZY):
                 arr[0] = self.make_fuzzy(arr[0], arr[1])
@@ -247,6 +261,7 @@ class analyze():
             fft_similarity = self.get_similarity(arr[2], 'fft_similarity')
             tendency_similarity = self.get_similarity(arr[2], 'tendency_similarity')
             outline_distance = self.get_similarity(arr[2], 'outline_distance')
+            weighting = self.get_weighting(arr[2])
             point = fft_similarity * config.FFT_SIMILARITY 
             point += tendency_similarity * config.TENDENCY_SIMILARITY
             if (outline_distance > 100):
@@ -257,8 +272,16 @@ class analyze():
             point += high_match_points * config.HIGH_MATCH_POINTS 
             match_points = (perfect_match_sum * 100 / perfect_match_sum_check) / 100
             point += match_points * config.MATCH_POINTS
-            points.append(round(point,2))
+            points.append([round(point,2), weighting])
         return points
+
+    def get_weighting(self, arr):
+        weighting = 0
+        counter = 0
+        for s in arr:
+            weighting += s['weighting']
+            counter += 1.0
+        return weighting/counter
 
     def get_similarity(self, arr, field):
         similarity_max = 0
@@ -323,7 +346,6 @@ class analyze():
         perfect_match_array = [0] * len(config.IMPORTANCE)
         fuzzy_array = [0] * len(config.IMPORTANCE)
         similarity_array = [ ]
-        negative = 0
         for dict_entries in self.DICT['dict']:
             did = dict_entries['id']
             if (id == did and pos < len(dict_entries['characteristic'])):
@@ -334,41 +356,25 @@ class analyze():
                 fft_outline = characteristic['fft_outline']
                 dict_tendency = dict_entries['characteristic'][pos]['tendency']
                 dict_fft_freq = dict_entries['characteristic'][pos]['fft_freq']
-                tendency_similarity = self.approach_similarity([fft_freq, tendency['len'], tendency['avg'], tendency['delta'], tendency['deg'] ], [dict_fft_freq, dict_tendency['len'], dict_tendency['avg'], dict_tendency['delta'], dict_tendency['deg']])
+                tendency_similarity = self.util.approach_similarity(
+                 [fft_freq, tendency['len'], tendency['avg'], tendency['delta'], tendency['deg'] ],
+                 [dict_fft_freq, dict_tendency['len'], dict_tendency['avg'], dict_tendency['delta'], dict_tendency['deg']]
+                )
                 dict_fft_approach = dict_entries['characteristic'][pos]['fft_approach']
                 dict_fft_max = dict_entries['characteristic'][pos]['fft_max']
                 dict_fft_outline = dict_entries['characteristic'][pos]['fft_outline']
-                fft_similarity = self.approach_similarity(fft_max, dict_fft_max)
+                fft_similarity = self.util.approach_similarity(fft_max, dict_fft_max)
                 if (config.USE_LENGTH_SIMILARITY):
-                    fft_length_similarity = self.approach_length_similarity(fft_max, dict_fft_max)
+                    fft_length_similarity = self.util.approach_length_similarity(fft_max, dict_fft_max)
                     fft_similarity = fft_similarity * fft_length_similarity
-                if (config.POSITION_WEIGHTING):
-                    fft_similarity = fft_similarity * (1-pos*.1) # TODO: calculate weighting in compile_analysis and take it from self.dict_analysis
                 perfect_match_array, fuzzy_array = self.compare_fft_token_approach(fft_approach, dict_fft_approach, perfect_match_array, fuzzy_array)
                 fft_outline.sort(reverse=True)
                 dict_fft_outline.sort(reverse=True)
-                outline_distance = self.approach_distance(fft_outline, dict_fft_outline)
-                similarity_array.append({ 'tendency_similarity': tendency_similarity, 'fft_similarity': fft_similarity, 'outline_distance': outline_distance })
+                outline_distance = self.util.approach_distance(fft_outline, dict_fft_outline)
+                if (config.POSITION_WEIGHTING):
+                    fft_similarity = fft_similarity * (1-pos*.1)
+                similarity_array.append({ 'tendency_similarity': tendency_similarity, 'fft_similarity': fft_similarity, 'outline_distance': outline_distance, 'weighting': dict_entries['characteristic'][pos]['weighting'] })
         match_array.append([perfect_match_array, fuzzy_array, similarity_array])
-
-    def approach_distance(self, arr1, arr2):
-        return math.sqrt(sum(pow(a - b, 2) for a, b in zip(arr1, arr2)))
-
-    def sqr(self, arr):
-        return round(math.sqrt(sum([a * a for a in arr])), 2)
-
-    def approach_similarity(self, arr1, arr2):
-        n = sum(a * b for a, b in zip(arr1, arr2))
-        d = self.sqr(arr1) * self.sqr(arr2)
-        return round(n / float(d), 2)
-
-    def approach_length_similarity(self, arr1, arr2):
-        larr1 = sum(arr1)
-        larr2 = sum(arr2)
-        return min(larr1, larr2) / float(max(larr1, larr2))
-
-    def approach_intersection(self, arr1, arr2):
-       return list(set(arr1).intersection(arr2))
 
     def compare_fft_token_approach(self, cfft, dfft, perfect_match_array, fuzzy_array):
         zipped = zip(cfft, dfft)

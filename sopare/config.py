@@ -22,7 +22,7 @@ MARGINAL_VALUE = 0.4
 MIN_READABLE_RESULT_VALUE = 0.6
 
 # Last line of defence
-SHAPE_SIMILARITY = 0.9
+SHAPE_SIMILARITY = 0.6
 
 # Set to True for extra precision for similarity calculation.
 # Set to False if you want more results but be aware that
@@ -30,8 +30,8 @@ SHAPE_SIMILARITY = 0.9
 USE_LENGTH_SIMILARITY = True
 
 # Set to True if you want to dilute results from 0-n in
-# the similarity calculation
-POSITION_WEIGHTING = True
+# the similarity calculation.
+POSITION_WEIGHTING = False
 
 # Boolean 
 # If true the fuzzy matches are used to calculate points
@@ -43,12 +43,12 @@ USE_FUZZY = False
 # This value defines the marginal value that is needed
 # for consideration if the analyzed result is added to 
 # "first_guess"
-FAST_HIGH_COMPARE_MARGINAL_VALUE = 0.8
+FAST_HIGH_COMPARE_MARGINAL_VALUE = 0.9
 
 # Number of matches that are taken into consideration
 # for the first comparison and to get first results.
 # Default: 5
-FAST_HIGH_COMPARISON = 5
+FAST_HIGH_COMPARISON = 20
 
 # This number calculates the threshold for consideration
 # for the first comparison.
@@ -60,8 +60,8 @@ GET_HIGH_THRESHOLD = 4
 # We use a progressive value to get smaller steps in the
 # low frequencies
 PROGRESSIVE_FACTOR = 0.1
-MIN_PROGRESSIVE_STEP = 20
-MAX_PROGRESSIVE_STEP = 500
+MIN_PROGRESSIVE_STEP = 10
+MAX_PROGRESSIVE_STEP = 50
 
 # If result are > CUT_RESULT_LENGTH results are cut
 # to the CUT_RESULT_LENGTH length
@@ -70,7 +70,7 @@ CUT_RESULT_LENGTH = 80
 # Used to analyze and compare sounds.
 # Position starts at 0 from the fft approach which means 
 # that the importance goes from left to right.
-IMPORTANCE = [ 1,1,1,1,1, 1,1,1,1,1, 1,1,1,1,1, 1,1,1,1,1 ]
+IMPORTANCE = [ 1,1,1,1,1, 1,1,1,1,1, 1,1,1,1,1, 1,1,1,1,1, 1,1,1,1,1, 1,1,1,1,1 ]
 
 # Tolerance table to find matches.
 # Higher values mean more tolerance and therefor potential false positives!

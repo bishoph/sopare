@@ -27,8 +27,8 @@ class characteristic:
         self.debug = debug
 
     def getcharacteristic(self, fft, tendency):
+        fft = fft[config.LOW_FREQ:config.HIGH_FREQ]
         fft = [abs(i) for i in fft]
-        fft = fft[config.LOW_FREQ:]
         fft_len = 0
         chunked_fft_max = [ ]
         last = 0
@@ -118,14 +118,16 @@ class characteristic:
             pos += 1
         if (hpos == 0):
             return None
-        e = highest/(hpos*1.0)
+        e = highest/(hpos*512.0)
         alpha = math.degrees(math.atan(e))
         tendency = { 'len': ll, 'deg': alpha, 'avg': avg, 'delta': delta }
         return tendency
   
     def get_word_tendency(self, peaks):
         ll = len(peaks)
-        if (ll == 0):
+        if (ll == 0 or ll > 120): # TODO: Make configurable
+            if (self.debug):
+                print ('ignoring word_tendency as we got '+str(ll) + ' peaks' )
             return None
         peakavg = sum(peaks)/ll
         highpeak = 0
@@ -173,8 +175,4 @@ class characteristic:
                     start_pos.append(start_end_pos[a])
                     peak_length.append(start_end_pos[a+1] - start_end_pos[a])
         word_tendency = { 'peaks': len(start_pos), 'start_pos': start_pos, 'peak_length': peak_length, 'shape': peaks }
-        if (len(start_pos) > 25): # TODO: Make configurable
-            if (self.debug):
-                print ('ignoring as we got '+str(len(peaks)) + ' peaks from ' + str(len(start_pos)) + ' start positions ' )
-            return None
         return word_tendency            

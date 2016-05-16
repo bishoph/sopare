@@ -41,12 +41,6 @@ class filtering():
         fft = numpy.fft.rfft(data)
         fft[config.HIGH_FREQ:] = 0
         fft[:config.LOW_FREQ] = 0
-        fft_64 = base64.b64encode(fft.data)
-         
         data = numpy.fft.irfft(fft)
         obj = { 'action': 'data', 'token': data, 'fft': fft, 'meta': meta }
         self.queue.put(obj)
-
-   
-
-

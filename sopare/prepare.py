@@ -43,7 +43,7 @@ class preparing():
         self.plot_buffer = [ ]
 
     def tokenize(self, meta):
-        if (len(self.buffer) > 512 and self.valid_token(meta)):
+        if (len(self.buffer) > 1024 and self.valid_token(meta)):
             end = len(self.buffer)
             self.filter.filter(self.buffer[0:end], meta)
             self.buffer = [ ]
