@@ -25,9 +25,9 @@ import util
 class preparing():
 
     # TODO: Make configurable 
-    TOKEN_HIGH = 400
+    TOKEN_HIGH = 440
     SILENCE = 5
-    LONG_SILENCE = 30
+    LONG_SILENCE = 60
 
     def __init__(self, debug, plot, wave, dict):
         self.debug = debug

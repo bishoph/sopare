@@ -25,8 +25,8 @@ import config
 
 class processor:
 
-    MAX_SILENCE_AFTER_START = 3
-    MAX_TIME = 4
+    MAX_SILENCE_AFTER_START = 4
+    MAX_TIME = 5
 
     def __init__(self, endless_loop, debug, plot, wave, outfile, dict, buffering, live = True):
         self.append = False

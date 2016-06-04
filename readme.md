@@ -72,6 +72,10 @@ Project status:
   * The project is able to learn sound patterns and to identify similar sounds even under different circumstances.
   * False positives still occur sometimes.
   * Currently the project is in a test and optimization phase.
+  * Test cases:
+    * Single word detection : 10/10
+    * Two word detection    : 4/5
+    * Three word detection  : 0/5
 
 
 Usage:

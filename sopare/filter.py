@@ -20,7 +20,6 @@ under the License.
 import numpy
 import multiprocessing
 import worker
-import base64
 import config
 
 class filtering():
@@ -38,7 +37,7 @@ class filtering():
         self.queue.put({ 'action': 'reset' })
 
     def filter(self, data, meta):
-        fft = numpy.fft.rfft(data)
+        fft = numpy.fft.rfft(data * numpy.hanning(len(data)))
         fft[config.HIGH_FREQ:] = 0
         fft[:config.LOW_FREQ] = 0
         data = numpy.fft.irfft(fft)

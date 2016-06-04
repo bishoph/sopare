@@ -64,14 +64,14 @@ class util:
                 for dict_entries in json_data['dict']:
                     if (dict_entries['id'] == id  and len(dict_entries['characteristic']) > i):
                         output = str(dict_entries['characteristic'][i]['fft_max'])
-                        print (id + ', ' + str(i)+  ', '+ output[1:len(output)-1] )
+                        print (id + '-' + str(i)+  ', '+ output[1:len(output)-1] )
 
     def compile_analysis(self, json_data):
         analysis = { }
         for dict_entries in json_data['dict']:
             if ('word_tendency' in dict_entries and dict_entries['word_tendency'] != None):
                 if (dict_entries['id'] not in analysis):
-                    analysis[dict_entries['id']] = { 'min_tokens': 0, 'max_tokens': 0, 'min_peaks': 0, 'max_peaks': 0, 'min_peak_length': [ ], 'max_peak_length': [ ], 'min_fft_len': 0, 'max_fft_len': 0, 'min_delta': 0, 'max_delta': 0, 'min_length': 0, 'max_length': 0, 'high5': [ ], 'shape': [ ] }
+                    analysis[dict_entries['id']] = { 'min_tokens': 0, 'max_tokens': 0, 'min_peaks': 0, 'max_peaks': 0, 'min_peak_length': [ ], 'max_peak_length': [ ], 'min_fft_len': 0, 'max_fft_len': 0, 'min_delta': 0, 'max_delta': 0, 'min_length': 0, 'max_length': 0, 'first_token': [ ], 'shape': [ ] }
                 l = len(dict_entries['characteristic'])
                 if (l < 2):
                     print ('the following characteristic is < 2!')
@@ -111,10 +111,8 @@ class util:
                         analysis[dict_entries['id']]['max_length'] = length
                     if (length < analysis[dict_entries['id']]['min_length'] or analysis[dict_entries['id']]['min_length'] == 0):
                         analysis[dict_entries['id']]['min_length'] = length
-                    if (i == 0):
-                        fft_max = characteristic['fft_max']
-                        dhi, dh, do = self.characteristic.get_approach(fft_max, config.FAST_HIGH_COMPARISON)
-                        analysis[dict_entries['id']]['high5'].append((dhi, dh))
+                    if (characteristic['weighting'] > .9):
+                        analysis[dict_entries['id']]['first_token'].append((characteristic['tendency'], characteristic['fft_outline'], characteristic['fft_max']))
         return analysis
 
     def store_raw_dict_entry(self, dict_id, raw_characteristics, word_tendency):
@@ -195,7 +193,7 @@ class util:
             w_arr.append(c_weighting)
         high = max(w_arr)
         for i, weighting in enumerate(w_arr):
-            v = weighting * 1.0 / high
+            v = (1.0 - (i*0.1)) # TODO: Add magic
             tokens[i]['weighting'] = v
 
     def compress_dict(self, json_data):
@@ -231,12 +229,13 @@ class util:
                         if (config.USE_LENGTH_SIMILARITY):
                             fft_length_similarity = self.approach_length_similarity(fft_max, dict_fft_max)
                             fft_similarity = fft_similarity * fft_length_similarity
-                        if (tendency_similarity < .9 or fft_similarity < .8):
+                        if (tendency_similarity < config.MIN_READABLE_RESULT_VALUE or fft_similarity < config.MIN_READABLE_RESULT_VALUE):
                             contains = False
             if (contains == False):
                 compressed_dict['dict'].append({'id': id, 'characteristic': dict_entries['characteristic'], 'word_tendency': { }, 'uuid': 'x-'+id+'-'+str(ll) })
             else:
-                print ('TODO: WRITE COMPRESSION ALGORYTHM')
+                if (self.debug):
+                    print ('Not considering ' + dict_entries['uuid'] + ' (' + id + ') from dict because we have a similar object already.')
            
 
     def deletefromdict(self, id):

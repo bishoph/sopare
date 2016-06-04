@@ -20,6 +20,7 @@ under the License.
 import config
 import math
 import heapq
+import util
 
 class characteristic:
 
@@ -42,7 +43,7 @@ class characteristic:
                 progessive = config.MAX_PROGRESSIVE_STEP
             last = i
             i += int(progessive)
-	    chunked_fft_max.append(int(max(fft[last:i])))
+            chunked_fft_max.append(int(sum(fft[last:i])))
             
         fft_len = len(chunked_fft_max)
         max_max = max(chunked_fft_max)
@@ -51,26 +52,11 @@ class characteristic:
         if (fft_len <= config.MIN_FFT_LEN or max_max < config.MIN_FFT_MAX): 
             return None
 
-        right_trim = fft_len
-        for i in range(len(chunked_fft_max)-1, 0, -1):
-            if (chunked_fft_max[i] == 0):
-                right_trim = i
-            else:
-                break
-
-        fft_len = len(chunked_fft_max)
-
-        if (right_trim > config.CUT_RESULT_LENGTH):
-            right_trim = config.CUT_RESULT_LENGTH
-
-        if (right_trim < len(chunked_fft_max)):
-            chunked_fft_max = chunked_fft_max[0:right_trim]
-
         tendency_characteristic = self.get_tendency(tendency)
         if (tendency_characteristic == None):
             return None
 
-        fft_approach, fft_max, fft_outline = self.get_approach(chunked_fft_max, len(config.IMPORTANCE))
+        fft_approach, fft_max, fft_outline = self.get_approach(chunked_fft_max, len(chunked_fft_max))
         model_characteristic = {'fft_freq': fft_len , 'fft_max': fft_max, 'fft_approach': fft_approach, 'fft_outline': fft_outline, 'tendency': tendency_characteristic }
         return model_characteristic
 
@@ -125,7 +111,7 @@ class characteristic:
   
     def get_word_tendency(self, peaks):
         ll = len(peaks)
-        if (ll == 0 or ll > 120): # TODO: Make configurable
+        if (ll == 0 or ll > 300): # TODO: Make configurable
             if (self.debug):
                 print ('ignoring word_tendency as we got '+str(ll) + ' peaks' )
             return None
@@ -176,3 +162,4 @@ class characteristic:
                     peak_length.append(start_end_pos[a+1] - start_end_pos[a])
         word_tendency = { 'peaks': len(start_pos), 'start_pos': start_pos, 'peak_length': peak_length, 'shape': peaks }
         return word_tendency            
+

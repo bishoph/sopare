@@ -106,12 +106,9 @@ class worker(multiprocessing.Process):
                         if (self.word_tendency != None):
                             if (self.dict == None):
                                 self.analyze.do_analysis(self.character, self.word_tendency, self.rawbuf)
-                            else:
+                            else: 
                                 self.util.store_raw_dict_entry(self.dict, self.raw_character, self.word_tendency)
                         self.reset()
-
-        if (self.dict != None and self.word_tendency != None and meta != None):
-            self.util.store_raw_dict_entry(self.dict, self.raw_character, self.word_tendency)
 
         if (self.wave and len(self.rawbuf) > 0):
             self.save_wave_buf()
