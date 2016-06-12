@@ -37,7 +37,10 @@ class filtering():
         self.queue.put({ 'action': 'reset' })
 
     def filter(self, data, meta):
-        fft = numpy.fft.rfft(data * numpy.hanning(len(data)))
+        if (config.HANNING == False):
+            fft = numpy.fft.rfft(data)
+        else:
+            fft = numpy.fft.rfft(data * numpy.hanning(len(data)))
         fft[config.HIGH_FREQ:] = 0
         fft[:config.LOW_FREQ] = 0
         data = numpy.fft.irfft(fft)

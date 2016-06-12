@@ -65,10 +65,10 @@ def main(argv):
             if opt in ("-d", "--delete"):
                 delete_word(arg, debug)
                 sys.exit(0)
-            if opt in ("-r", "recreate_dict"):
+            if opt in ("-r", "--recreate_dict"):
                 recreate_dict(debug)
                 sys.exit(0)
-            if opt in ("-t", "test"):
+            if opt in ("-t", "--test"):
                 testing(debug)
                 sys.exit(0)
             if opt in ("-s", "--show"):

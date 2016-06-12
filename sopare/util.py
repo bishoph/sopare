@@ -63,15 +63,16 @@ class util:
             for i in range(0, ml):
                 for dict_entries in json_data['dict']:
                     if (dict_entries['id'] == id  and len(dict_entries['characteristic']) > i):
-                        output = str(dict_entries['characteristic'][i]['fft_max'])
+                        output = str(dict_entries['characteristic'][i]['fft_outline']) #fft_max, fft_outline
                         print (id + '-' + str(i)+  ', '+ output[1:len(output)-1] )
 
     def compile_analysis(self, json_data):
+        # TODO: Cleanup
         analysis = { }
         for dict_entries in json_data['dict']:
             if ('word_tendency' in dict_entries and dict_entries['word_tendency'] != None):
                 if (dict_entries['id'] not in analysis):
-                    analysis[dict_entries['id']] = { 'min_tokens': 0, 'max_tokens': 0, 'min_peaks': 0, 'max_peaks': 0, 'min_peak_length': [ ], 'max_peak_length': [ ], 'min_fft_len': 0, 'max_fft_len': 0, 'min_delta': 0, 'max_delta': 0, 'min_length': 0, 'max_length': 0, 'first_token': [ ], 'shape': [ ] }
+                    analysis[dict_entries['id']] = { 'min_tokens': 0, 'max_tokens': 0, 'min_peaks': 0, 'max_peaks': 0, 'min_peak_length': [ ], 'max_peak_length': [ ], 'min_fft_len': 0, 'max_fft_len': 0, 'min_delta': 0, 'max_delta': 0, 'min_length': 0, 'max_length': 0, 'first_token': [ ], 'shape': [ ], 'fft_shape': [ ] }
                 l = len(dict_entries['characteristic'])
                 if (l < 2):
                     print ('the following characteristic is < 2!')
@@ -86,33 +87,8 @@ class util:
                 if (dict_entries['word_tendency']['peaks'] > analysis[dict_entries['id']]['max_peaks']):
                      analysis[dict_entries['id']]['max_peaks'] = dict_entries['word_tendency']['peaks']
                 analysis[dict_entries['id']]['shape'].append(dict_entries['word_tendency']['shape'])
-                for i, pl in enumerate(dict_entries['word_tendency']['peak_length']):
-                    if (len(analysis[dict_entries['id']]['min_peak_length']) <= i):
-                        analysis[dict_entries['id']]['min_peak_length'].append(0)
-                    if (len(analysis[dict_entries['id']]['max_peak_length']) <= i):
-                        analysis[dict_entries['id']]['max_peak_length'].append(0)
-                    if (pl < analysis[dict_entries['id']]['min_peak_length'][i] or analysis[dict_entries['id']]['min_peak_length'][i] == 0):
-                        analysis[dict_entries['id']]['min_peak_length'][i] = pl
-                    if (pl > analysis[dict_entries['id']]['max_peak_length'][i]):
-                       analysis[dict_entries['id']]['max_peak_length'][i] = pl
-                for i, characteristic in enumerate(dict_entries['characteristic']):
-                    fft_len = characteristic['fft_freq']
-                    length = characteristic['tendency']['len']
-                    delta = characteristic['tendency']['delta']
-                    if (fft_len > analysis[dict_entries['id']]['max_fft_len']):
-                        analysis[dict_entries['id']]['max_fft_len'] = fft_len
-                    if (fft_len < analysis[dict_entries['id']]['min_fft_len'] or analysis[dict_entries['id']]['min_fft_len'] == 0):
-                        analysis[dict_entries['id']]['min_fft_len'] = fft_len
-                    if (delta > analysis[dict_entries['id']]['max_delta']):
-                        analysis[dict_entries['id']]['max_delta'] = delta
-                    if (delta < analysis[dict_entries['id']]['min_delta'] or analysis[dict_entries['id']]['min_delta'] == 0):
-                        analysis[dict_entries['id']]['min_delta'] = delta
-                    if (length > analysis[dict_entries['id']]['max_length']):
-                        analysis[dict_entries['id']]['max_length'] = length
-                    if (length < analysis[dict_entries['id']]['min_length'] or analysis[dict_entries['id']]['min_length'] == 0):
-                        analysis[dict_entries['id']]['min_length'] = length
-                    if (characteristic['weighting'] > .9):
-                        analysis[dict_entries['id']]['first_token'].append((characteristic['tendency'], characteristic['fft_outline'], characteristic['fft_max']))
+                analysis[dict_entries['id']]['fft_shape'].append(dict_entries['word_tendency']['fft_shape'])
+                analysis[dict_entries['id']]['first_token'].append(dict_entries['characteristic'][0])
         return analysis
 
     def store_raw_dict_entry(self, dict_id, raw_characteristics, word_tendency):
@@ -170,7 +146,7 @@ class util:
                         meta = raw_obj['meta']
                         fft = raw_obj['fft']
                         raw_tendency = raw_obj['raw_tendency']
-                        characteristic = self.characteristic.getcharacteristic(fft, raw_tendency)
+                        characteristic = self.characteristic.getcharacteristic(fft, raw_tendency, meta)
                         if (characteristic != None):
                             for m in meta:
                                 if (m['token'] != 'stop'):
@@ -276,20 +252,27 @@ class util:
         return p
 
     def approach_distance(self, arr1, arr2):
-        return math.sqrt(sum(pow(a - b, 2) for a, b in zip(arr1, arr2)))
+        larr1 = sum(arr1)
+        larr2 = sum(arr2)
+        ll = len(arr1)
+        ll2 = len(arr2)
+        sum_distance =  min(larr1, larr2) / float(max(larr1, larr2))
+        len_distance = min(ll, ll2) / float(max(ll, ll2))
+        distance = ((sum_distance + len_distance) / 2)
+        return round(distance, 2)
 
     def sqr(self, arr):
-        return round(math.sqrt(sum([a * a for a in arr])), 2)
+        return round(math.sqrt(sum([((a/1000.0) * (a/1000.0)) for a in arr])), 2)
 
     def approach_similarity(self, arr1, arr2):
-        n = sum(a * b for a, b in zip(arr1, arr2))
+        n = sum(((a/1000.0) * (b/1000.0)) for a, b in zip(arr1, arr2))
         d = self.sqr(arr1) * self.sqr(arr2)
         return round(n / float(d), 2)
 
     def approach_length_similarity(self, arr1, arr2):
         larr1 = sum(arr1)
         larr2 = sum(arr2)
-        return min(larr1, larr2) / float(max(larr1, larr2))
+        return round(min(larr1, larr2) / float(max(larr1, larr2)), 2)
 
     def approach_intersection(self, arr1, arr2):
        return list(set(arr1).intersection(arr2))

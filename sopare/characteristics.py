@@ -27,7 +27,7 @@ class characteristic:
     def __init__(self, debug):
         self.debug = debug
 
-    def getcharacteristic(self, fft, tendency):
+    def getcharacteristic(self, fft, tendency, meta):
         fft = fft[config.LOW_FREQ:config.HIGH_FREQ]
         fft = [abs(i) for i in fft]
         fft_len = 0
@@ -56,14 +56,22 @@ class characteristic:
         if (tendency_characteristic == None):
             return None
 
-        fft_approach, fft_max, fft_outline = self.get_approach(chunked_fft_max, len(chunked_fft_max))
-        model_characteristic = {'fft_freq': fft_len , 'fft_max': fft_max, 'fft_approach': fft_approach, 'fft_outline': fft_outline, 'tendency': tendency_characteristic }
+        fft_max, fft_outline = self.get_outline(chunked_fft_max, len(chunked_fft_max))
+        token_peaks = self.get_token_peaks(meta)
+        model_characteristic = {'fft_freq': fft_len , 'fft_max': fft_max, 'fft_outline': fft_outline, 'tendency': tendency_characteristic, 'token_peaks': token_peaks }
         return model_characteristic
+
+    def get_token_peaks(self, meta):
+        token_peaks = [ ]
+        for m in meta:
+            if ('token_peaks' in m):
+                return m['token_peaks']
+        return token_peaks
 
     def get_highest(self, arr, n):
         return heapq.nlargest(n, arr)
 
-    def get_approach(self, arr, n):
+    def get_outline(self, arr, n):
         high5 = self.get_highest(arr, n)
         high5i = [ ]
         highoutline = [ ]
@@ -78,7 +86,7 @@ class characteristic:
                 i = arr.index(h)
                 high5i.append(i)
                 arr[i] = 0
-        return high5i, arr, highoutline
+        return arr, highoutline
 
     def get_tendency(self, data):
         ll = len(data)
@@ -109,11 +117,11 @@ class characteristic:
         tendency = { 'len': ll, 'deg': alpha, 'avg': avg, 'delta': delta }
         return tendency
   
-    def get_word_tendency(self, peaks):
+    def get_word_tendency(self, peaks, characteristics):
         ll = len(peaks)
-        if (ll == 0 or ll > 300): # TODO: Make configurable
+        if (ll == 0 or len(characteristics) > 20): # TODO: Make configurable
             if (self.debug):
-                print ('ignoring word_tendency as we got '+str(ll) + ' peaks' )
+                print ('ignoring get_word_tendency as we got '+str(ll) + ' characteristics' )
             return None
         peakavg = sum(peaks)/ll
         highpeak = 0
@@ -160,6 +168,11 @@ class characteristic:
                 if (hpos > start_end_pos[a] and hpos < start_end_pos[a+1]):
                     start_pos.append(start_end_pos[a])
                     peak_length.append(start_end_pos[a+1] - start_end_pos[a])
-        word_tendency = { 'peaks': len(start_pos), 'start_pos': start_pos, 'peak_length': peak_length, 'shape': peaks }
+        fft_shape = [ ]
+        for c in characteristics:
+            characteristic, meta = c
+            if (characteristic != None):
+                fft_shape.extend(characteristic['fft_max'])
+        word_tendency = { 'peaks': len(start_pos), 'start_pos': start_pos, 'peak_length': peak_length, 'shape': peaks, 'fft_shape': fft_shape }
         return word_tendency            
 

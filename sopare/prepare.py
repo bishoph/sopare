@@ -21,13 +21,9 @@ import numpy
 import filter
 import visual
 import util
+import config
 
 class preparing():
-
-    # TODO: Make configurable 
-    TOKEN_HIGH = 440
-    SILENCE = 5
-    LONG_SILENCE = 60
 
     def __init__(self, debug, plot, wave, dict):
         self.debug = debug
@@ -101,18 +97,19 @@ class preparing():
         meta = [ ]
 
         # tokenizer/word detection
-        if (volume < preparing.TOKEN_HIGH):
+        if (volume < config.TOKEN_HIGH):
             self.silence += 1
-            if (self.silence == preparing.SILENCE):
+            if (self.silence == config.SILENCE):
                 self.new_token = True
                 meta.append({ 'token': 'token', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'token_peaks': self.token_peaks })
                 self.low = 0
-            elif (self.silence == preparing.LONG_SILENCE):
+            elif (self.silence == config.LONG_SILENCE):
                     self.new_word = True
                     self.entered_silence = True
+                    self.peaks.extend(self.token_peaks)
                     meta.append({ 'token': 'start analysis', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'token_peaks': self.token_peaks, 'peaks': self.peaks })
                     self.peaks = [ ]
-            elif (self.silence % preparing.LONG_SILENCE == 0):
+            elif (self.silence % config.LONG_SILENCE == 0):
                 self.new_word = True
                 meta.append({ 'token': 'noop', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'token_peaks': self.token_peaks })
                 self.peaks = [ ]

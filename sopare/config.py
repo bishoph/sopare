@@ -1,46 +1,51 @@
 # Sample rate
 SAMPLE_RATE = 44100
 
-# Threshold
+# Volume threshold when audio processing starts
 THRESHOLD = 500
 
+# Silence time in seconds when analysis is called
+MAX_SILENCE_AFTER_START = 4
+
+# Time in seconds after the analysis is forced
+MAX_TIME = 5
+
+# Counter to stop procesing and prepare more data
+# Should be > LONG_SILENCE
+SILENCE_COUNTER = 100
+
+# Tokenizer values to detect a new token
+TOKEN_HIGH = 440
+SILENCE = 5
+# Start the analysis after reaching LONG_SILENCE
+LONG_SILENCE = 60
+
 # SIMILARITY calculation basis
-FFT_SIMILARITY = .7
+FFT_SIMILARITY = .8
+FFT_DISTANCE = .3
 TENDENCY_SIMILARITY = .3
 
 # This value defines the marginal value that is needed
 # for consideration if the analyzed result becomes a
 # "pre_readable result"
-MARGINAL_VALUE = 0.4
+MARGINAL_VALUE = 0.6
 
 # This value defines the min value that is needed
 # for consideration if the analyzed result becomes a
 # "readable result"
-MIN_READABLE_RESULT_VALUE = 0.5
+MIN_READABLE_RESULT_VALUE = 0.6
 
-# Last line of defence
-SHAPE_SIMILARITY = 0.6
+# Last line of defense
+SHAPE_SIMILARITY = 0.5
 
 # Set to True if you want to dilute results from 0-n in
 # the similarity calculation.
-POSITION_WEIGHTING = True
-
-# Boolean 
-# If true the fuzzy matches are used to calculate points
-# and to consider result. Based on learned data this
-# can easily result in false positives.
-# Default: False
-USE_FUZZY = False
+POSITION_WEIGHTING = False
 
 # This value defines the marginal value that is needed
 # for consideration if the analyzed result is added to 
 # "first_guess"
-FAST_HIGH_COMPARE_MARGINAL_VALUE = 0.3
-
-# Number of matches that are taken into consideration
-# for the first comparison and to get first results.
-# Default: 5
-FAST_HIGH_COMPARISON = 20
+FAST_HIGH_COMPARE_MARGINAL_VALUE = 0.5
 
 # This number calculates the threshold for consideration
 # for the first comparison.
@@ -60,14 +65,18 @@ MAX_PROGRESSIVE_STEP = 1000
 LOW_FREQ = 20
 HIGH_FREQ = 5000
 
-# Minimal FFT len for considerartion
+# Make use of hann window function
+HANNING = False
+
+# Minimal FFT len for consideration
 # Default: 12
 MIN_FFT_LEN = 12
 
 # Minimal FFT max. value for consideration
-# Default: ?
+# Default: 5000
 MIN_FFT_MAX = 5000
 
 # COMPRESS_DICT packs the dict. Simple as that.
-# Not yet implemented. Just for testing purpose.
+# Note: Not yet implemented, currently used 
+# to get statistical information.
 COMPRESS_DICT = False

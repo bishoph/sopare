@@ -42,25 +42,34 @@ class analyze():
     def do_analysis(self, data, word_tendency, rawbuf):
         pre_results, startpos = self.pre_scan(data, word_tendency)
         if (self.debug):
-            print ('pre_results : '+str(pre_results))
+            print ('pre_results : ' + str(pre_results))
         if (pre_results == None):
             return
         first_guess = self.first_scan(pre_results, word_tendency, data)
         if (self.debug):
             print ('first_guess : ' + str(first_guess))
-        deep_guess = self.deep_scan(first_guess, data)
+        first_token_weighting = self.analyze_first_token(first_guess, data)
         if (self.debug):
-            print ('deep_guess :' +str(deep_guess))
+            print ('first_token_weighting : ' + str(first_token_weighting))
+        weighted_results = self.weight_first_token(first_token_weighting, data)
+        if (self.debug):
+            print ('weighted_results : ' + str(weighted_results))
+        deep_guess = self.deep_scan(weighted_results, data)
+        if (self.debug):
+            print ('deep_guess : ' + str(deep_guess))
         if (deep_guess != None):
             best_match = self.get_best_match(deep_guess, startpos)
             if (self.debug):
-                print ('best_match : '+ str(best_match))
+                print ('best_match : ' + str(best_match))
             pre_readable_results = self.prepare_readable_results(best_match)
             if (self.debug):
-                print ('pre_readable_results :'+str(pre_readable_results))
-            readable_results = self.get_readable_results(pre_readable_results, data)
+                print ('pre_readable_results : ' + str(pre_readable_results))
+            validated_results =  self.validate_results(pre_readable_results, word_tendency, data)
             if (self.debug):
-                print ('readable_results :'+str(readable_results))
+                print ('validated_result : ' + str(validated_results))
+            readable_results = self.get_readable_results(validated_results, data)
+            if (self.debug):
+                print ('readable_results : ' + str(readable_results))
             if (len(readable_results) > 0):
                 for p in self.plugins:
                     p.run(readable_results, best_match, data, word_tendency, rawbuf)
@@ -92,7 +101,7 @@ class analyze():
             if (id not in best_match_temp):
                 best_match_temp[id] =  [ [ 0 ] * len(startpos), [ 0 ] * len(startpos) ]
             for i, point in enumerate(guess[2]):
-                if (point[0] > config.MARGINAL_VALUE):
+                if (point[0] > config.MARGINAL_VALUE and pos+i < len(best_match_temp[id][0])):
                     best_match_temp[id][0][pos+i] += point[0]
                     best_match_temp[id][1][pos+i] += point[1]
         for id in best_match_temp:
@@ -130,6 +139,7 @@ class analyze():
                         if (self.debug):
                             print ('found enclosed element '+result+' at position '+str(i)+ ' ... replacing it with '+pre_results[i-1])
                         pre_results[i] = pre_results[i-1]
+        # TODO: Eliminate single token entities at pos 0 and len(pre_results)
         return pre_results
 
     def get_readable_results(self, pre_results, data):
@@ -154,30 +164,95 @@ class analyze():
             last = result
         return readable_results
 
-    def word_shape_check(self, start, count, id, data):
+    def validate_results(self, pre_readable_results, word_tendency, data):
+        if (pre_readable_results == None):
+            return None
+        ll = len(pre_readable_results)
+        last = ''
+        start = 0
+        count = 0
+        validated_results = [ '' ] * ll
+        for i, word in enumerate(pre_readable_results):
+            if (i == 0 or (word == last and i < ll-1)):
+                count += 1
+            else:
+                if (i == ll-1):
+                    count += 1
+                if (count > 0):
+                    if (self.debug):
+                        print ('checking '+last + ' from ' + str(start) + ' - ' + str(count))
+                    check = self.word_shape_check(last, start, count, word_tendency, data)
+                    if (check == True):
+                        for a in range(start, start+count):
+                            validated_results[a] = last
+                start = i
+                count = 0
+            last = word
+        return validated_results
+
+    def word_shape_check(self, word, start, count, word_tendency, data):
+        if (word not in self.dict_analysis):
+            return False
+        ll = len(data)
         word_shape = [ ]
+        word_shape_fft = [ ]
         counter = 0
-        for x in range(start, len(data)):
-            d = data[x]
-            characteristic, meta = d
-            if (characteristic != None):
-                counter += 1
-                for m in meta:
-                    if ('token_peaks' in m):
-                        word_shape.extend(m['token_peaks'])
-            if (counter >= count):
-                break
+        for x in range(start, start + count):
+            if (x < ll):
+                d = data[x]
+                characteristic, meta = d
+                if (characteristic != None):
+                    counter += 1
+                    for m in meta:
+                        if ('token_peaks' in m):
+                            word_shape.extend(m['token_peaks'])
+                    word_shape_fft.extend(characteristic['fft_max'])
         max_shape_similarity = 0
-        for shape in self.dict_analysis[id]['shape']:
+        for shape in self.dict_analysis[word]['shape']:
             shape_similarity = self.util.approach_similarity(word_shape, shape)
             if (shape_similarity > max_shape_similarity):
                 max_shape_similarity = shape_similarity
-            if (shape_similarity > config.SHAPE_SIMILARITY):
-                return True
+        # TODO: Check if we can do something with the fft_shape
+        if (max_shape_similarity >= config.SHAPE_SIMILARITY):
+            return True
         if (self.debug):
-            print ('Word shape check failed for '+ id +' at pos '+str(start) + '. Max was :'+str(max_shape_similarity))
+            print ('Word shape check failed for '+ word +' at pos '+str(start) + '. Max was :'+str(max_shape_similarity))
         return False
  
+    def analyze_first_token(self, first_guess, data):
+        first_token_weighting = [ ]
+        for id in first_guess:
+            analysis_object = self.dict_analysis[id]
+            results = first_guess[id]['results']
+            if (self.debug):
+                print ('analyzing first token for ' + id + ' at potential position ' + str(results))
+            for i, pos in enumerate(results):
+                d = data[pos]
+                characteristic, meta = d
+                fft_similarity = 0
+                if (characteristic != None):
+                    count = 0
+                    for dcharacteristic in analysis_object['first_token']:
+                        cfft = characteristic['fft_max']
+                        dfft = dcharacteristic['fft_max']
+                        fft_similarity += self.util.approach_similarity(cfft, dfft)
+                        count += 1.0
+                    first_token_weighting.append([id, pos, round(fft_similarity/count,2)])
+        return first_token_weighting
+
+    def weight_first_token(self, first_token_weighting, data):
+        weighted_results = { }
+        for o in first_token_weighting:
+            id = o[0]
+            pos = o[1]
+            guess = o[2]
+            if (id not in weighted_results):
+                weighted_results[id] = { 'results': [ pos ], 'lmin': self.dict_analysis[id]['min_tokens'], 'lmax': self.dict_analysis[id]['max_tokens'], 'weighting': guess }
+            elif (guess > weighted_results[id]['weighting']):
+                weighted_results[id]['results'] = [ pos ]
+                weighted_results[id]['weighting'] = guess
+        return weighted_results
+
     def deep_scan(self, first_guess, data):
         deep_guess = [ ]
         for id in first_guess:
@@ -186,12 +261,7 @@ class analyze():
             lmin = first_guess[id]['lmin']
             for i, pos in enumerate(results):
                 if (self.debug):
-                   if (i == 0):
-                        print ('searching for ' + id + ' between ' + str(pos) + ' and ' + str(pos+lmax)),
-                   else:
-                        print (', ' + str(pos) + ' and ' + str(pos+lmax)),
-                        if (i == len(results)-1):
-                            print
+                    print ('searching for ' + id + ' between ' + str(pos) + ' and ' + str(pos+lmax))
                 value = self.word_compare(id, pos, lmin, lmax, data)
                 if (value != None):
                     deep_guess.append(value)
@@ -208,18 +278,12 @@ class analyze():
                     if (id not in first_guess):
                         p = end - start
                         if (p >= self.dict_analysis[id]['min_peaks'] and p <= self.dict_analysis[id]['max_peaks']):
-                            peak_length = sum(word_tendency['peak_length'][start: start+p])
-                            for a in range(0, len(self.dict_analysis[id]['min_peak_length']), 1):
-                                mipl = self.dict_analysis[id]['min_peak_length'][a]
-                                mapl = self.dict_analysis[id]['max_peak_length'][a]
-                                if (peak_length >= mipl and peak_length <= mapl):
-                                    first_guess[id] = { 'results': [], 'lmin': self.dict_analysis[id]['min_tokens'], 'lmax': self.dict_analysis[id]['max_tokens'] }
+                            first_guess[id] = { 'results': [], 'lmin': self.dict_analysis[id]['min_tokens'], 'lmax': self.dict_analysis[id]['max_tokens'] }
         if (not first_guess):
             if (self.debug):
                 print ('first guess got no results ... now adding all dict entries!') # TODO: We need something better
             for id in self.dict_analysis:
                 first_guess[id] = { 'results': [], 'lmin': self.dict_analysis[id]['min_tokens'], 'lmax': self.dict_analysis[id]['max_tokens'] }
-
         startwords = [ ]
         for words in pre_results:
             for s in words:
@@ -227,32 +291,21 @@ class analyze():
                     startwords.append(s)
         for id in first_guess:
             for startword in startwords:
-                if (self.fast_high_compare(id, startword, data) > 0): 
+                if (self.fast_high_compare(id, startword, data, len(startwords)) > 0):
                     first_guess[id]['results'].append( startword )
         return first_guess
 
-    def fast_high_compare(self, id, start, data):
+    def fast_high_compare(self, id, start, data, token_length):
         d = data[start]
         characteristic, meta = d
         if (characteristic != None):
-            coutline = characteristic['fft_outline']
-            cta = characteristic['tendency']['avg']
-            ctl = characteristic['tendency']['len']
-            cfftm = characteristic['fft_max']
+            fft = characteristic['fft_max']
             analysis_object = self.dict_analysis[id]
-            for o in analysis_object['first_token']:
-                dtendency, doutline, dfftm = o
-                dta = dtendency['avg']
-                dtl = dtendency['len']
-                tendency_similarity = self.util.approach_length_similarity([cta, ctl], [dta, dtl])
-                if (tendency_similarity > config.FAST_HIGH_COMPARE_MARGINAL_VALUE): # TODO: Check if we need a seperate config option
-                    similarity_first_token = self.util.approach_similarity(coutline, doutline)
-                    if (similarity_first_token > config.FAST_HIGH_COMPARE_MARGINAL_VALUE):
-                        return 1
-                    else:
-                        similarity_fft = self.util.approach_similarity(cfftm, dfftm)
-                        if (similarity_fft > config.FAST_HIGH_COMPARE_MARGINAL_VALUE):
-                            return 1
+            for dcharacteristic in analysis_object['first_token']:
+                dfft = dcharacteristic['fft_max']
+                similarity_fft = self.util.approach_similarity(fft, dfft)
+                if (similarity_fft >= config.FAST_HIGH_COMPARE_MARGINAL_VALUE and (start + analysis_object['min_tokens']) <= token_length): 
+                    return 1
         return 0
 
     def word_compare(self, id, start, lmin, lmax, data):
@@ -265,23 +318,22 @@ class analyze():
                 if (characteristic != None):
                     self.token_compare(id, pos, characteristic, match_array)
                     pos += 1
-        points = self.calculate_points(id, start, match_array, lmin, lmax)
+        points = self.calculate_points(id, start, match_array, lmin)
         return [id, start, points]
 
-    def calculate_points(self, id, start, match_array, lmin, lmax):
+    def calculate_points(self, id, start, match_array, lmin):
         points = [ ]
-        got_matches_for_all_tokens = 0
         ll = len(match_array)
         if (ll < lmin):
             return [ 0 ], [ 0 ]
         for i, arr in enumerate(match_array):
             fft_similarity = self.get_similarity(arr, 'fft_similarity')
             tendency_similarity = self.get_similarity(arr, 'tendency_similarity')
-            min_distance = self.get_distance(arr)
+            distance = self.get_similarity(arr, 'fft_distance')
             weighting = self.get_weighting(arr)
             point = fft_similarity * config.FFT_SIMILARITY
+            point += distance * config.FFT_DISTANCE
             point += tendency_similarity * config.TENDENCY_SIMILARITY
-            # TODO: Find some logic around min_distance!
             points.append([round(point,2), weighting])
         return points
 
@@ -294,14 +346,6 @@ class analyze():
         if (counter == 0):
             return 0
         return weighting/counter
-
-    def get_distance(self, arr):
-        min_distance = 999999999
-        for similarity in arr:
-            v = similarity['fft_distance']
-            if (v < min_distance):
-                min_distance = v
-        return min_distance
 
     def get_similarity(self, arr, field):
         similarity_max = 0
@@ -351,7 +395,7 @@ class analyze():
                 for end in endpos:
                     if (start <= end):
                         word.append(end)
-                if (len(word) > 0 and len(word) < 10 and word not in wordpos): # TODO: make max. word length configurable
+                if (len(word) > 0 and word not in wordpos): # TODO: Eventually add max word length
                     wordpos.append(word)
         else:
             wordpos.append(endpos)
@@ -365,17 +409,16 @@ class analyze():
             did = dict_entries['id']
             if (id == did and pos < len(dict_entries['characteristic'])):
                 tendency = characteristic['tendency']
-                fft_approach = characteristic['fft_approach']
                 fft_max = characteristic['fft_max']
                 fft_freq = characteristic['fft_freq']
+
                 dict_tendency = dict_entries['characteristic'][pos]['tendency']
+                dict_fft_max = dict_entries['characteristic'][pos]['fft_max']
                 dict_fft_freq = dict_entries['characteristic'][pos]['fft_freq']
                 tendency_similarity = self.util.approach_length_similarity(
                  [fft_freq, tendency['len'], tendency['avg'], tendency['delta'], tendency['deg'] ],
                  [dict_fft_freq, dict_tendency['len'], dict_tendency['avg'],  dict_tendency['delta'], dict_tendency['deg']]
                 )
-                dict_fft_approach = dict_entries['characteristic'][pos]['fft_approach']
-                dict_fft_max = dict_entries['characteristic'][pos]['fft_max']
                 fft_similarity = self.util.approach_similarity(fft_max, dict_fft_max)
                 fft_distance = self.util.approach_distance(fft_max, dict_fft_max)
                 similarity_array.append({ 'tendency_similarity': tendency_similarity, 'fft_similarity': fft_similarity, 'fft_distance': fft_distance, 'weighting': dict_entries['characteristic'][pos]['weighting'] })
