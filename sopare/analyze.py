@@ -45,13 +45,13 @@ class analyze():
             print ('pre_results : ' + str(pre_results))
         if (pre_results == None):
             return
-        first_guess = self.first_scan(pre_results, word_tendency, data)
+        first_guess = self.first_scan(pre_results, startpos, word_tendency, data)
         if (self.debug):
             print ('first_guess : ' + str(first_guess))
         first_token_weighting = self.analyze_first_token(first_guess, data)
         if (self.debug):
             print ('first_token_weighting : ' + str(first_token_weighting))
-        weighted_results = self.weight_first_token(first_token_weighting, data)
+        weighted_results = self.weight_first_token(first_token_weighting)
         if (self.debug):
             print ('weighted_results : ' + str(weighted_results))
         deep_guess = self.deep_scan(weighted_results, data)
@@ -238,19 +238,15 @@ class analyze():
                         fft_similarity += self.util.approach_similarity(cfft, dfft)
                         count += 1.0
                     first_token_weighting.append([id, pos, round(fft_similarity/count,2)])
+        
         return first_token_weighting
 
-    def weight_first_token(self, first_token_weighting, data):
+    def weight_first_token(self, first_token_weighting):
         weighted_results = { }
-        for o in first_token_weighting:
-            id = o[0]
-            pos = o[1]
-            guess = o[2]
-            if (id not in weighted_results):
-                weighted_results[id] = { 'results': [ pos ], 'lmin': self.dict_analysis[id]['min_tokens'], 'lmax': self.dict_analysis[id]['max_tokens'], 'weighting': guess }
-            elif (guess > weighted_results[id]['weighting']):
-                weighted_results[id]['results'] = [ pos ]
-                weighted_results[id]['weighting'] = guess
+        for arr in first_token_weighting:
+            if (arr[0] not in weighted_results):
+                weighted_results[arr[0]] = { 'results': [ ], 'lmin': self.dict_analysis[arr[0]]['min_tokens'], 'lmax': self.dict_analysis[arr[0]]['max_tokens'] }
+            weighted_results[arr[0]]['results'].append(arr[1])
         return weighted_results
 
     def deep_scan(self, first_guess, data):
@@ -270,7 +266,7 @@ class analyze():
                         print (id + ' at ' + str(pos) + ' did not pass word_compare')
         return deep_guess
 
-    def first_scan(self, pre_results, word_tendency, data):
+    def first_scan(self, pre_results, startpos, word_tendency, data):
         first_guess = { }
         for start in range(0, word_tendency['peaks']):
             for end in xrange(word_tendency['peaks'], 0, -1):
@@ -285,13 +281,16 @@ class analyze():
             for id in self.dict_analysis:
                 first_guess[id] = { 'results': [], 'lmin': self.dict_analysis[id]['min_tokens'], 'lmax': self.dict_analysis[id]['max_tokens'] }
         startwords = [ ]
-        for words in pre_results:
-            for s in words:
-                if s not in startwords:
-                    startwords.append(s)
+        for i, words in enumerate(pre_results):
+            # we add some more potential positions as words overlap quite a bit
+            match = words[0]
+            for x in range(-1, 2, 1): # TODO: Make configurable
+                matchr = match + x
+                if (matchr >= 0 and matchr not in startwords and matchr < len(startpos)):
+                    startwords.append(matchr)
         for id in first_guess:
-            for startword in startwords:
-                if (self.fast_high_compare(id, startword, data, len(startwords)) > 0):
+            for i, startword in enumerate(startwords):
+                if (self.fast_high_compare(id, startword, data, len(startpos)) > 0):
                     first_guess[id]['results'].append( startword )
         return first_guess
 
@@ -327,13 +326,14 @@ class analyze():
         if (ll < lmin):
             return [ 0 ], [ 0 ]
         for i, arr in enumerate(match_array):
-            fft_similarity = self.get_similarity(arr, 'fft_similarity')
-            tendency_similarity = self.get_similarity(arr, 'tendency_similarity')
-            distance = self.get_similarity(arr, 'fft_distance')
+            fft_similarity_min, fft_similarity_max, fft_similarity_avg = self.get_similarity(arr, 'fft_similarity')
+            tendency_similarity_min, tendency_similarity_max, tendency_similarity_avg = self.get_similarity(arr, 'tendency_similarity')
+            distance_min, distance_max, distance_avg = self.get_similarity(arr, 'fft_distance')
+            #print id, start, fft_similarity_avg,tendency_similarity_avg, distance_avg
             weighting = self.get_weighting(arr)
-            point = fft_similarity * config.FFT_SIMILARITY
-            point += distance * config.FFT_DISTANCE
-            point += tendency_similarity * config.TENDENCY_SIMILARITY
+            point = fft_similarity_avg * config.FFT_SIMILARITY
+            point += distance_avg * config.FFT_DISTANCE
+            point += tendency_similarity_avg * config.TENDENCY_SIMILARITY
             points.append([round(point,2), weighting])
         return points
 
@@ -349,11 +349,19 @@ class analyze():
 
     def get_similarity(self, arr, field):
         similarity_max = 0
+        similarity_min = 1
+        similarity_avg = 0
+        counter = 0
         for similarity in arr:
             v = similarity[field]
+            similarity_avg += v
             if (v > similarity_max):
                 similarity_max = v
-        return similarity_max
+            if (v < similarity_min):
+                similarity_min = v
+            counter += 1.0
+        similarity_avg = similarity_avg / counter
+        return similarity_min, similarity_max, similarity_avg
 
     def make_fuzzy(self, arr, fuzzy):
         for x in range(0, len(arr)):
@@ -383,11 +391,14 @@ class analyze():
                 if (token != 'stop'):
                     if (token == 'token' or token == 'start analysis'):
                         posmapper.append(m['pos'])
-        for sp in word_tendency['start_pos']:
-            for i, pm in enumerate(posmapper):
-                if (pm > sp):
-                    startpos.append(i-1)
-                    break
+        last = 0
+        for x in range(0, len(endpos)):
+            if (x < len(posmapper) and last < len(word_tendency['start_pos'])):  
+                if (posmapper[x] >= word_tendency['start_pos'][last]):
+                    startpos.append(x)
+                    last += 1
+                    if (last >= len(word_tendency['start_pos'])):
+                        break
         wordpos = [ ]
         if (len(endpos) > 0 and len(startpos) > 0):
             for start in startpos:

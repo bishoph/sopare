@@ -5,14 +5,12 @@ The output is an array of potential best guess matches. SoPaRe works offline
 and was tested successfully on a Raspberry Pi 2 and on a Banana Pi. 
 
 
-Here is an example output for the words 'light off' in German:
+Here is an example output for the spoken words 'light off' in German:
 
 ```
  [u'licht', u'aus']
 
 ```
-
-Find more detailed information on http://www.bishoph.org and https://sway.com/BQ8uXDse9LLhL0Zf
 
 
 Scope and goals:
@@ -26,23 +24,22 @@ Scope and goals:
 Examples of use:
 
   * (Smart) home control
-  * Voice controlled stuff like robots
+  * Voice controlled stuff like robots, smart mirrors and alike
   * Can be used in combination with any available cloud API or service like
      Alexa: https://developer.amazon.com/public/solutions/alexa/alexa-voice-service  
      Google: https://cloud.google.com/speech/  
      (and many more)  
-     e.g. to listen to a special pattern upfront
-  
+
 
 Dependencies:
 
-  * Python
+  * python2
   * pyaudio (apt-get install python-pyaudio)
   * numpy (apt-get install python-numpy)
   * scipy (apt-get install python-scipy)
   * mathplot (apt-get install python-matplotlib)
 
-  
+
 Installation:
 
  Just checkout the project and resolve the dependencies:
@@ -59,58 +56,66 @@ Installation:
  samples
 `
 
+Abstract:
+
+  * SoPaRe detects words/patterns based on learned results
+  * SoPaRe must be trained to get results
+  * SoPaRe works offline
+  * SoPaRe recognizes words/patterns in real time and requires a multi core processor architecture
+  * SoPaRe is highly configurable for quick and dirty results as well as for more precise recognition
+  * SoPaRe was tested and developed with Python 2.7 on a Raspberry Pi 2
+  * SoPaRe comes with a very simple plugin interface for further processing
+
+
 Next steps/TODOs:
 
-  * First scan needs overhaul for better recognition
-  * Optimizations, testing and bugfixing
-  * Performance optimizations
-  * Work on sanity checks, config options
-  * Write dict compression 
+  * Testing and bugfixing
+  * Make use of logging
+  * Refactoring and performance optimizations
+  * Python3 compatibility
+
 
 Project status:
 
   * The project is able to learn sound patterns and to identify similar sounds even under different circumstances
   * False positives still occur
-  * Currently the project is in a test and optimization phase
-  * Test cases:
-    * Single word detection : 10/10
-    * Two word detection    : 4/5
-    * Three word detection  : 0/5
+  * Word separation is not perfect
 
 
 Usage:
 
 ```
- -h --help            : this help
+usage:
 
- -e --endless         : loop forever
+ -h --help           : this help
 
- -p --plot            : plot results (only without loop option)
+ -l --loop           : loop forever
 
- -v --verbose         : enable verbose mode
+ -e --error          : redirect sdterr to error.log
 
- -w --wave            : creates wav files (token/tokenN.wav) for
-                         each detected word
+ -p --plot           : plot results (only without loop option)
 
- -s --show            : shows detailed [dict] entry information
-                         '*' shows all entries!
+ -v --verbose        : enable verbose mode
 
- -c --content         : list all dict entries
+ -~ --wave           : create *.wav files (token/tokenN.wav) for
+                       each detected word
 
- -o --out [samples/filename]  : write to [samples/filename]
+ -c --create         : create dict from raw input files
 
- -i --in [samples/filename]   : read [samples/filename]
+ -o --overview       : list all dict entries
 
- -l --learn [word]    : adds raw data to raw dictionary file.
-                         (only without loop option)
+ -s --show   [word]  : show detailed [word] entry information
+                       '*' shows all entries!
 
- -r --recreate_dict   : recreates dict from raw input files.
-                         should be used when changing
-                         config options.
-                         Please note that all raw files are
-                         considered and compiled into the dict!
-                         (only without loop option)
+ -w --write  [file]  : write raw to [dir/filename]
 
- -d --delete [word]   : delete [word] from dictionary and exit.
-                         '*' deletes everyting!
+ -r --read   [file]  : read raw from [dir/filename]
+
+ -t --train  [word]  : add raw data to raw dictionary file
+
+ -d --delete [word]  : delete [word] from dictionary and exit.
+                       '*' deletes everyting!
 ```
+
+
+Find more detailed information on http://www.bishoph.org

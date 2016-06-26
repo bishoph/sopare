@@ -36,7 +36,10 @@ class characteristic:
         progessive = 1
         i = 0
         while (i < len(fft)):
-            progessive += progessive*config.PROGRESSIVE_FACTOR
+            if (hasattr(config, 'START_PROGRESSIVE_FACTOR')  and i >= config.START_PROGRESSIVE_FACTOR):
+                progessive += progessive*config.PROGRESSIVE_FACTOR
+            else:
+                progessive = config.MIN_PROGRESSIVE_STEP
             if (progessive < config.MIN_PROGRESSIVE_STEP):
                 progessive = config.MIN_PROGRESSIVE_STEP
             if (progessive > config.MAX_PROGRESSIVE_STEP):

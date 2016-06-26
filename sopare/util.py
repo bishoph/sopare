@@ -63,7 +63,7 @@ class util:
             for i in range(0, ml):
                 for dict_entries in json_data['dict']:
                     if (dict_entries['id'] == id  and len(dict_entries['characteristic']) > i):
-                        output = str(dict_entries['characteristic'][i]['fft_outline']) #fft_max, fft_outline
+                        output = str(dict_entries['characteristic'][i]['fft_max']) #fft_max, fft_outline
                         print (id + '-' + str(i)+  ', '+ output[1:len(output)-1] )
 
     def compile_analysis(self, json_data):
@@ -76,7 +76,7 @@ class util:
                 l = len(dict_entries['characteristic'])
                 if (l < 2):
                     print ('the following characteristic is < 2!')
-                    print dict_entries['id'], l, dict_entries['uuid']
+                    print (dict_entries['id'] + ', ' + dict_entries['uuid'])
                 if (l > analysis[dict_entries['id']]['max_tokens']):
                     analysis[dict_entries['id']]['max_tokens'] = l
                 l = l - 1 # TODO: Check if this is really necessary
@@ -267,7 +267,9 @@ class util:
     def approach_similarity(self, arr1, arr2):
         n = sum(((a/1000.0) * (b/1000.0)) for a, b in zip(arr1, arr2))
         d = self.sqr(arr1) * self.sqr(arr2)
-        return round(n / float(d), 2)
+        if (d > 0):
+            return round(n / float(d), 2)
+        return 0
 
     def approach_length_similarity(self, arr1, arr2):
         larr1 = sum(arr1)

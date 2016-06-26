@@ -10,7 +10,7 @@ MAX_SILENCE_AFTER_START = 4
 # Time in seconds after the analysis is forced
 MAX_TIME = 5
 
-# Counter to stop procesing and prepare more data
+# Counter to stop processing and prepare more data
 # Should be > LONG_SILENCE
 SILENCE_COUNTER = 100
 
@@ -22,8 +22,8 @@ LONG_SILENCE = 60
 
 # SIMILARITY calculation basis
 FFT_SIMILARITY = .8
-FFT_DISTANCE = .3
-TENDENCY_SIMILARITY = .3
+FFT_DISTANCE = .1
+TENDENCY_SIMILARITY = .1
 
 # This value defines the marginal value that is needed
 # for consideration if the analyzed result becomes a
@@ -45,27 +45,29 @@ POSITION_WEIGHTING = False
 # This value defines the marginal value that is needed
 # for consideration if the analyzed result is added to 
 # "first_guess"
-FAST_HIGH_COMPARE_MARGINAL_VALUE = 0.5
+FAST_HIGH_COMPARE_MARGINAL_VALUE = 0.3
 
 # This number calculates the threshold for consideration
 # for the first comparison.
 GET_HIGH_THRESHOLD = 4
 
-# Steps boil down the data into smaller junks of data.
+# Steps boil down the data into smaller chunks of data.
 # Smaller steps means more precision but require
-# normally more learned entries in the dictionary 
-# We use a progressive value to get smaller steps in the
-# low frequencies
-PROGRESSIVE_FACTOR = 0.1
-MIN_PROGRESSIVE_STEP = 1
-MAX_PROGRESSIVE_STEP = 1000
+# normally more learned entries in the dictionary.
+# Progressive value is used if you want to pack not
+# so relavant frequencies
+PROGRESSIVE_FACTOR = .05
+START_PROGRESSIVE_FACTOR = 1000
+MIN_PROGRESSIVE_STEP = 20
+MAX_PROGRESSIVE_STEP = 200
 
 # Specifies freq ranges that are kept for further
-# analysis. Freq outside of the ranges are set to zero
+# analysis. Freq outside of the ranges are set to zero.
+# Human language can be found bewtween 20 and 5000.
 LOW_FREQ = 20
 HIGH_FREQ = 5000
 
-# Make use of hann window function
+# Make use of Hann window function
 HANNING = False
 
 # Minimal FFT len for consideration
@@ -77,6 +79,5 @@ MIN_FFT_LEN = 12
 MIN_FFT_MAX = 5000
 
 # COMPRESS_DICT packs the dict. Simple as that.
-# Note: Not yet implemented, currently used 
-# to get statistical information.
+# Note: Not yet functional implemented 
 COMPRESS_DICT = False

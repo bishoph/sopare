@@ -21,6 +21,7 @@ import sys
 import getopt
 import sopare.util as util
 import sopare.recorder as recorder
+import sopare.err_logger as err_logger
 from sopare.version import __version__
 
 def main(argv):
@@ -36,9 +37,10 @@ def main(argv):
 
     if (len(argv) > 0):
         try:                                
-            opts, args = getopt.getopt(argv, "hepvwcnrts:o:i:l:d:", [
-"help", "endless", "plot", "verbose", "wave", "content", "recreate_dict", "test", "show=", "out=",
-"in=", "learn=", "delete="])
+            opts, args = getopt.getopt(argv, "helpv~cos:w:r:t:d:",
+             ["help", "error", "loop", "plot", "verbose", "wave", "create", "overview",
+              "show=", "write=", "read=", "train=", "delete="
+             ])
         except getopt.GetoptError:
             usage()
             sys.exit(2)
@@ -46,47 +48,41 @@ def main(argv):
             if (opt in ("-h", "--help")):
                 usage()
                 sys.exit(0)
-            if (opt in ("-e", "--endless")):
+            if (opt in ("-e", "--error")):
+                errlog = err_logger.err_logger()
+            if (opt in ("-l", "--loop")):
                 endless_loop = True
-            if (opt in ("-v", "--verbose")):
-                debug = True
-            if (opt in ("-w", "--wave")):
-                wave = True
             if (opt in ("-p", "--plot")):
                 if (endless_loop == False):
                     plot = True
                 else:
                     print ("Plotting only works without loop option!")
                     sys.exit(0)
-            if opt in ("-o", "--output"):
+            if (opt in ("-v", "--verbose")):
+                debug = True
+            if (opt in ("-~", "--wave")):
+                wave = True
+            if opt in ("-c", "--create"):
+                recreate_dict(debug)
+                sys.exit(0)
+            if opt in ("-o", "--overview"):
+                show_dict_ids(debug)
+                sys.exit(0)
+
+            if opt in ("-s", "--show"):
+                show_word_entries(arg, debug)
+                sys.exit(0)
+            if opt in ("-w", "--write"):
                 outfile = arg
-            if opt in ("-l", "--learn"):
+            if opt in ("-r", "--read"):
+                infile = arg
+            if opt in ("-t", "--train"):
                 dict = arg
             if opt in ("-d", "--delete"):
                 delete_word(arg, debug)
                 sys.exit(0)
-            if opt in ("-r", "--recreate_dict"):
-                recreate_dict(debug)
-                sys.exit(0)
-            if opt in ("-t", "--test"):
-                testing(debug)
-                sys.exit(0)
-            if opt in ("-s", "--show"):
-                show_word_entries(arg, debug)
-                sys.exit(0)
-            if opt in ("-c", "--content"):
-                show_dict_ids(debug)
-                sys.exit(0)
-            if opt in ("-i", "--in"):
-                infile = arg
     recorder.recorder(endless_loop, debug, plot, wave, outfile, 
                       infile, dict)
-
-def testing(debug):
-    print ("testing...")
-    utilities = util.util(debug, False)
-    DICT = utilities.getDICT()
-    DICT = utilities.compress_dict(DICT)
 
 def recreate_dict(debug):
     print ("recreating dictionary from raw input files...")
@@ -114,29 +110,21 @@ def show_dict_ids(debug):
 
 def usage():
     print ("usage:\n")
-    print (" -h --help            : this help\n")
-    print (" -e --endless         : loop forever\n")
-    print (" -p --plot            : plot results (only without loop option)\n")
-    print (" -v --verbose         : enable verbose mode\n")
-    print (" -w --wave            : creates wav files (token/tokenN.wav) for")
-    print ("                         each detected word\n")
-    print (" -s --show            : shows detailed [dict] entry information")
-    print ("                         '*' shows all entries!\n")
-    print (" -c --content         : list all dict entries\n")
-    print (" -o --out [samples/filename]  : write to [samples/filename]\n")
-    print (" -i --in [samples/filename]   : read [samples/filename]\n")
-    print (" -l --learn [word]    : adds raw data to raw dictionary file.")
-    print ("                         (only without loop option)\n")
-    print (" -r --recreate_dict   : recreates dict from raw input files.")
-    print ("                         should be used when changing")
-    print ("                         config options.")
-    print ("                         Please note that all raw files are")
-    print ("                         considered and compiled into the dict!")
-    print ("                         (only without loop option)\n")
-    print (" -d --delete [word]   : delete [word] from dictionary and exit.")
-    print ("                         '*' deletes everyting!\n")
+    print (" -h --help           : this help\n")
+    print (" -l --loop           : loop forever\n")
+    print (" -e --error          : redirect sdterr to error.log\n")
+    print (" -p --plot           : plot results (only without loop option)\n")
+    print (" -v --verbose        : enable verbose mode\n")
+    print (" -~ --wave           : create *.wav files (token/tokenN.wav) for")
+    print ("                       each detected word\n")
+    print (" -c --create         : create dict from raw input files\n")
+    print (" -o --overview       : list all dict entries\n")
+    print (" -s --show   [word]  : show detailed [word] entry information")
+    print ("                       '*' shows all entries!\n")
+    print (" -w --write  [file]  : write raw to [dir/filename]\n")
+    print (" -r --read   [file]  : read raw from [dir/filename]\n")
+    print (" -t --train  [word]  : add raw data to raw dictionary file\n")
+    print (" -d --delete [word]  : delete [word] from dictionary and exit.")
+    print ("                       '*' deletes everyting!\n")
 
 main(sys.argv[1:])
-
-
-
