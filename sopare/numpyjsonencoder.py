@@ -39,7 +39,7 @@ class numpyjsonencoder(json.JSONEncoder):
 
 def numpyjsonhook(obj):
     if isinstance(obj, dict) and '__ndarray__' in obj:
-        data = base64.b64decode(pbj['__ndarray__'])
+        data = base64.b64decode(obj['__ndarray__'])
         return numpy.frombuffer(data, obj['dtype']).reshape(obj['shape'])
     return obj
 

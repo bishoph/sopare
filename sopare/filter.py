@@ -20,7 +20,7 @@ under the License.
 import numpy
 import multiprocessing
 import worker
-import base64
+import config
 
 class filtering():
 
@@ -37,15 +37,16 @@ class filtering():
         self.queue.put({ 'action': 'reset' })
 
     def filter(self, data, meta):
-        fft = numpy.fft.rfft(data)
-        fft[9000:] = 0 # TODO: Make configurable
-        fft[:20] = 0 # TODO: Make configurable
-        fft_64 = base64.b64encode(fft.data)
-         
+        if (len(data) < 3 or config.HANNING == False):
+            fft = numpy.fft.rfft(data)
+        else:
+            hl = len(data)
+            if (hl % 2 != 0):
+                hl += 1
+            hw = numpy.hanning(hl)
+            fft = numpy.fft.rfft(data * hw)
+        fft[config.HIGH_FREQ:] = 0
+        fft[:config.LOW_FREQ] = 0
         data = numpy.fft.irfft(fft)
         obj = { 'action': 'data', 'token': data, 'fft': fft, 'meta': meta }
         self.queue.put(obj)
-
-   
-
-

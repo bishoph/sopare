@@ -80,7 +80,7 @@ class worker(multiprocessing.Process):
                 meta = obj['meta']
                 raw_token_compressed = self.condense.compress(raw_token)
                 raw_tendency = self.condense.model_tendency(raw_token_compressed)
-                characteristic = self.characteristic.getcharacteristic(fft, raw_tendency)
+                characteristic = self.characteristic.getcharacteristic(fft, raw_tendency, meta)
                 self.character.append((characteristic, meta))
                 if (self.dict != None):
                     self.raw_character.append({ 'fft': fft, 'meta': meta, 'raw_tendency': raw_tendency })
@@ -92,7 +92,7 @@ class worker(multiprocessing.Process):
                         self.util.savefilteredwave('token'+str(self.counter)+self.uid, raw_token)
                     if (self.plot):
                         self.visual.create_sample(raw_tendency, 'token'+str(self.counter)+'.png')
-                        self.visual.create_sample(fft, 'fft'+str(self.counter)+'.png')
+                        self.visual.create_sample(characteristic['fft_max'], 'fft'+str(self.counter)+'.png')
                 self.counter += 1
             elif (obj['action'] == 'reset' and self.dict == None):
                 self.reset()
@@ -102,14 +102,13 @@ class worker(multiprocessing.Process):
             if (self.counter > 0 and meta != None):
                 for m in meta:
                     if (m['token'] == 'start analysis'):
-                        self.word_tendency = self.characteristic.get_word_tendency(m['peaks'])
-                        if (self.dict == None):
-                            self.analyze.do_analysis(self.character, self.word_tendency, self.rawbuf)
-                            self.reset()
-
-        if (self.dict != None):
-            #self.DICT = self.util.learndict(self.character, self.word_tendency, self.dict)
-            self.util.store_raw_dict_entry(self.dict, self.raw_character, self.word_tendency)
+                        self.word_tendency = self.characteristic.get_word_tendency(m['peaks'], self.character)
+                        if (self.word_tendency != None):
+                            if (self.dict == None):
+                                self.analyze.do_analysis(self.character, self.word_tendency, self.rawbuf)
+                            else:
+                                self.util.store_raw_dict_entry(self.dict, self.raw_character, self.word_tendency)
+                        self.reset()
 
         if (self.wave and len(self.rawbuf) > 0):
             self.save_wave_buf()

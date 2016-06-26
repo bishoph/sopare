@@ -25,9 +25,6 @@ import config
 
 class processor:
 
-    MAX_SILENCE_AFTER_START = 3
-    MAX_TIME = 4
-
     def __init__(self, endless_loop, debug, plot, wave, outfile, dict, buffering, live = True):
         self.append = False
         self.endless_loop = endless_loop
@@ -56,8 +53,7 @@ class processor:
         if (self.endless_loop == False):
             self.prepare.stop()
         else:
-            self.prepare.filter_reset()
-            self.prepare.reset()
+            self.prepare.force_tokenizer()
         if (self.buffering != None):
             self.buffering.stop()
 
@@ -84,13 +80,13 @@ class processor:
         if (self.append == True):
             self.prepare.prepare(buf, volume)
         if (self.append == True and self.silence_timer > 0
-        and self.silence_timer + processor.MAX_SILENCE_AFTER_START < time.time()
+        and self.silence_timer + config.MAX_SILENCE_AFTER_START < time.time()
         and self.live == True and self.endless_loop == False):
             self.stop("stop append mode because of silence")
-        if (self.append == True and self.timer + processor.MAX_TIME < time.time()
+        if (self.append == True and self.timer + config.MAX_TIME < time.time()
         and self.live == True):
             self.stop("stop append mode because time is up")
         if (self.append == True and self.live == True and self.endless_loop == True
-        and self.silence_counter > 300):
+        and self.silence_counter > config.SILENCE_COUNTER):
             self.append = False
             self.stop("endless loop silence detected")

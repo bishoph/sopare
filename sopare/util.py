@@ -24,6 +24,7 @@ import json
 import wave
 import uuid
 import numpy
+import math
 import os
 import heapq
 import datetime
@@ -42,63 +43,52 @@ class util:
         for dict_entries in json_data['dict']:
             print (dict_entries['id'] + ' ' + dict_entries['uuid'])
 
-    def showdictentry(self, id):
+    def showdictentry(self, sid):
         json_data = self.getDICT()
+        ids = [ ]
         for dict_entries in json_data['dict']:
-           if dict_entries['id'] == id or id == "*":
-               print (dict_entries['uuid'])
-               print (dict_entries['word_tendency'])
-               for characteristic in dict_entries['characteristic']:
-                   print (characteristic['tendency'])
-               for characteristic in dict_entries['characteristic']:
-                   print (characteristic['fft_approach'])
-               for characteristic in dict_entries['characteristic']:
-                   print (characteristic['fft_max'])
+           if ((dict_entries['id'] == sid or sid == "*") and dict_entries['id'] not in ids):
+               ids.append(dict_entries['id'])
+        l_arr = { }
+        for id in ids:
+            for dict_entries in json_data['dict']:
+                if (id == dict_entries['id']):
+                    if (id not in l_arr):
+                        l_arr[id] = { 'length': [ ] }
+                    ll = len(dict_entries['characteristic'])
+                    if (ll not in l_arr[id]['length']):
+                        l_arr[id]['length'].append(ll)
+        for id in l_arr:
+            ml = max(l_arr[id]['length'])
+            for i in range(0, ml):
+                for dict_entries in json_data['dict']:
+                    if (dict_entries['id'] == id  and len(dict_entries['characteristic']) > i):
+                        output = str(dict_entries['characteristic'][i]['fft_max']) #fft_max, fft_outline
+                        print (id + '-' + str(i)+  ', '+ output[1:len(output)-1] )
 
-    def compile_analysis(self):
+    def compile_analysis(self, json_data):
+        # TODO: Cleanup
         analysis = { }
-        json_data = self.getDICT()
         for dict_entries in json_data['dict']:
-            if (dict_entries['id'] not in analysis):
-                analysis[dict_entries['id']] = { 'min_tokens': 0, 'max_tokens': 0, 'min_peaks': 0, 'max_peaks': 0, 'min_peak_length': [ ], 'max_peak_length': [ ], 'min_fft_len': 0, 'max_fft_len': 0, 'min_delta': 0, 'max_delta': 0, 'min_length': 0, 'max_length': 0, 'high5': [ ] }
-            l = len(dict_entries['characteristic'])
-            if (l > analysis[dict_entries['id']]['max_tokens']):
-                analysis[dict_entries['id']]['max_tokens'] = l
-            if (l < analysis[dict_entries['id']]['min_tokens'] or analysis[dict_entries['id']]['min_tokens'] == 0):
-                analysis[dict_entries['id']]['min_tokens'] = l
-            if (dict_entries['word_tendency']['peaks'] < analysis[dict_entries['id']]['min_peaks'] or analysis[dict_entries['id']]['min_peaks'] == 0):
-                analysis[dict_entries['id']]['min_peaks'] = dict_entries['word_tendency']['peaks']
-            if (dict_entries['word_tendency']['peaks'] > analysis[dict_entries['id']]['max_peaks']):
-                 analysis[dict_entries['id']]['max_peaks'] = dict_entries['word_tendency']['peaks']
-            for i, pl in enumerate(dict_entries['word_tendency']['peak_length']):
-                if (len(analysis[dict_entries['id']]['min_peak_length'])-1 <= i):
-                    analysis[dict_entries['id']]['min_peak_length'].append(0)
-                if (len(analysis[dict_entries['id']]['max_peak_length'])-1 <= i):
-                    analysis[dict_entries['id']]['max_peak_length'].append(0)
-                if (pl < analysis[dict_entries['id']]['min_peak_length'][i] or analysis[dict_entries['id']]['min_peak_length'][i] == 0):
-                    analysis[dict_entries['id']]['min_peak_length'][i] = pl
-                if (pl > analysis[dict_entries['id']]['max_peak_length'][i]):
-                    analysis[dict_entries['id']]['max_peak_length'][i] = pl
-
-            for i, characteristic in enumerate(dict_entries['characteristic']):
-                fft_len = characteristic['fft_freq']
-                length = characteristic['tendency']['len']
-                delta = characteristic['tendency']['delta']
-                if (fft_len > analysis[dict_entries['id']]['max_fft_len']):
-                    analysis[dict_entries['id']]['max_fft_len'] = fft_len
-                if (fft_len < analysis[dict_entries['id']]['min_fft_len'] or analysis[dict_entries['id']]['min_fft_len'] == 0):
-                    analysis[dict_entries['id']]['min_fft_len'] = fft_len
-                if (delta > analysis[dict_entries['id']]['max_delta']):
-                    analysis[dict_entries['id']]['max_delta'] = delta
-                if (delta < analysis[dict_entries['id']]['min_delta'] or analysis[dict_entries['id']]['min_delta'] == 0):
-                    analysis[dict_entries['id']]['min_delta'] = delta
-                if (length > analysis[dict_entries['id']]['max_length']):
-                    analysis[dict_entries['id']]['max_length'] = length
-                if (length < analysis[dict_entries['id']]['min_length'] or analysis[dict_entries['id']]['min_length'] == 0):
-                    analysis[dict_entries['id']]['min_length'] = length
-                fft_max = characteristic['fft_max']
-                dhi, dh = self.get_highest(fft_max)
-                analysis[dict_entries['id']]['high5'].append((dhi, dh))
+            if ('word_tendency' in dict_entries and dict_entries['word_tendency'] != None):
+                if (dict_entries['id'] not in analysis):
+                    analysis[dict_entries['id']] = { 'min_tokens': 0, 'max_tokens': 0, 'min_peaks': 0, 'max_peaks': 0, 'min_peak_length': [ ], 'max_peak_length': [ ], 'min_fft_len': 0, 'max_fft_len': 0, 'min_delta': 0, 'max_delta': 0, 'min_length': 0, 'max_length': 0, 'first_token': [ ], 'shape': [ ], 'fft_shape': [ ] }
+                l = len(dict_entries['characteristic'])
+                if (l < 2):
+                    print ('the following characteristic is < 2!')
+                    print (dict_entries['id'] + ', ' + dict_entries['uuid'])
+                if (l > analysis[dict_entries['id']]['max_tokens']):
+                    analysis[dict_entries['id']]['max_tokens'] = l
+                l = l - 1 # TODO: Check if this is really necessary
+                if (l < analysis[dict_entries['id']]['min_tokens'] or analysis[dict_entries['id']]['min_tokens'] == 0):
+                    analysis[dict_entries['id']]['min_tokens'] = l
+                if (dict_entries['word_tendency']['peaks'] < analysis[dict_entries['id']]['min_peaks'] or analysis[dict_entries['id']]['min_peaks'] == 0):
+                    analysis[dict_entries['id']]['min_peaks'] = dict_entries['word_tendency']['peaks']
+                if (dict_entries['word_tendency']['peaks'] > analysis[dict_entries['id']]['max_peaks']):
+                     analysis[dict_entries['id']]['max_peaks'] = dict_entries['word_tendency']['peaks']
+                analysis[dict_entries['id']]['shape'].append(dict_entries['word_tendency']['shape'])
+                analysis[dict_entries['id']]['fft_shape'].append(dict_entries['word_tendency']['fft_shape'])
+                analysis[dict_entries['id']]['first_token'].append(dict_entries['characteristic'][0])
         return analysis
 
     def store_raw_dict_entry(self, dict_id, raw_characteristics, word_tendency):
@@ -156,14 +146,73 @@ class util:
                         meta = raw_obj['meta']
                         fft = raw_obj['fft']
                         raw_tendency = raw_obj['raw_tendency']
-                        characteristic = self.characteristic.getcharacteristic(fft, raw_tendency)
+                        characteristic = self.characteristic.getcharacteristic(fft, raw_tendency, meta)
                         if (characteristic != None):
                             for m in meta:
                                 if (m['token'] != 'stop'):
                                     tokens.append(characteristic)
-                    compiled_dict['dict'].append({'id': json_obj['id'], 'characteristic': tokens, 'word_tendency': json_obj['word_tendency'], 'uuid': file_uuid })
+                    if (len(tokens) > 0):
+                        self.add_weighting(tokens)
+                        compiled_dict['dict'].append({'id': json_obj['id'], 'characteristic': tokens, 'word_tendency': json_obj['word_tendency'], 'uuid': file_uuid })
+                    else:
+                        print (json_obj['id'] + ' ' + file_uuid+ ' got no tokens!')
                 raw_json_file.close()
         return compiled_dict
+
+    def add_weighting(self, tokens):
+        weighting = 0
+        w_arr = [ ]
+        for token in tokens:
+            c_weighting = token['tendency']['avg'] * token['tendency']['len']
+            if (c_weighting > weighting):
+                weighting = c_weighting
+            w_arr.append(c_weighting)
+        high = max(w_arr)
+        for i, weighting in enumerate(w_arr):
+            v = (1.0 - (i*0.1)) # TODO: Add magic
+            tokens[i]['weighting'] = v
+
+    def compress_dict(self, json_data):
+        compressed_dict =  { 'dict': [ ] }
+        for dict_entries in json_data['dict']:
+            self.check_compression(dict_entries, compressed_dict)
+        print ('compression: ' + str(len(json_data['dict'])) + ' / ' + str(len(compressed_dict['dict'])))
+        return compressed_dict
+
+    def check_compression(self, dict_entries, compressed_dict):
+        id = dict_entries['id']
+        ll = len(dict_entries['characteristic'])
+        if (len(compressed_dict['dict']) == 0):
+            compressed_dict['dict'].append({'id': id, 'characteristic': dict_entries['characteristic'], 'word_tendency': { }, 'uuid': 'x-'+id+'-'+str(ll) })
+        else:
+            contains = False
+            for compressed_dict_entries in compressed_dict['dict']:
+                if (id == compressed_dict_entries['id'] and ll == len(compressed_dict_entries['characteristic'])):
+                    contains = True
+                    for i, characteristic in enumerate(dict_entries['characteristic']):
+                        tendency = characteristic['tendency']
+                        fft_freq = characteristic['fft_freq']
+                        dict_tendency = compressed_dict_entries['characteristic'][i]['tendency']
+                        dict_fft_freq = compressed_dict_entries['characteristic'][i]['fft_freq']
+                        tendency_similarity = self.approach_similarity(
+                         [fft_freq, tendency['len'], tendency['avg'], tendency['delta'], tendency['deg']],
+                         [dict_fft_freq, dict_tendency['len'], dict_tendency['avg'], dict_tendency['delta'], dict_tendency['deg']]
+                        )
+                        
+                        fft_max = characteristic['fft_max']
+                        dict_fft_max = compressed_dict_entries['characteristic'][i]['fft_max']
+                        fft_similarity = self.approach_similarity(fft_max, dict_fft_max)
+                        if (config.USE_LENGTH_SIMILARITY):
+                            fft_length_similarity = self.approach_length_similarity(fft_max, dict_fft_max)
+                            fft_similarity = fft_similarity * fft_length_similarity
+                        if (tendency_similarity < config.MIN_READABLE_RESULT_VALUE or fft_similarity < config.MIN_READABLE_RESULT_VALUE):
+                            contains = False
+            if (contains == False):
+                compressed_dict['dict'].append({'id': id, 'characteristic': dict_entries['characteristic'], 'word_tendency': { }, 'uuid': 'x-'+id+'-'+str(ll) })
+            else:
+                if (self.debug):
+                    print ('Not considering ' + dict_entries['uuid'] + ' (' + id + ') from dict because we have a similar object already.')
+           
 
     def deletefromdict(self, id):
         json_obj = self.getDICT()
@@ -194,14 +243,38 @@ class util:
         newdata = [int(float(i)/sum(data)*normalization) for i in data]
         return newdata
 
-    def get_highest(self, arr):
-        high5 = heapq.nlargest(config.FAST_HIGH_COMPARISON, arr)
-        high5i = [ ]
-        highv = 50000
-        if (len(high5) > 0):
-            highv = high5[0] / config.GET_HIGH_THRESHOLD
-        for h in high5:
-            if (h > highv):
-                i = arr.index(h)
-                high5i.append(i)
-        return high5i, high5
+    def partition(self, n):
+        p = set()
+        p.add((n, ))
+        for a in range(1, n):
+            for b in self.partition(n - a):
+                p.add((a, ) + b)
+        return p
+
+    def approach_distance(self, arr1, arr2):
+        larr1 = sum(arr1)
+        larr2 = sum(arr2)
+        ll = len(arr1)
+        ll2 = len(arr2)
+        sum_distance =  min(larr1, larr2) / float(max(larr1, larr2))
+        len_distance = min(ll, ll2) / float(max(ll, ll2))
+        distance = ((sum_distance + len_distance) / 2)
+        return round(distance, 2)
+
+    def sqr(self, arr):
+        return round(math.sqrt(sum([((a/1000.0) * (a/1000.0)) for a in arr])), 2)
+
+    def approach_similarity(self, arr1, arr2):
+        n = sum(((a/1000.0) * (b/1000.0)) for a, b in zip(arr1, arr2))
+        d = self.sqr(arr1) * self.sqr(arr2)
+        if (d > 0):
+            return round(n / float(d), 2)
+        return 0
+
+    def approach_length_similarity(self, arr1, arr2):
+        larr1 = sum(arr1)
+        larr2 = sum(arr2)
+        return round(min(larr1, larr2) / float(max(larr1, larr2)), 2)
+
+    def approach_intersection(self, arr1, arr2):
+       return list(set(arr1).intersection(arr2))

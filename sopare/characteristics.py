@@ -19,78 +19,82 @@ under the License.
 
 import config
 import math
+import heapq
+import util
 
 class characteristic:
 
     def __init__(self, debug):
         self.debug = debug
 
-    def getcharacteristic(self, fft, tendency):
+    def getcharacteristic(self, fft, tendency, meta):
+        fft = fft[config.LOW_FREQ:config.HIGH_FREQ]
         fft = [abs(i) for i in fft]
-        fft = fft[config.REMOVE_LEFT_FFT_RESULTS:]
         fft_len = 0
         chunked_fft_max = [ ]
         last = 0
         progessive = 1
         i = 0
         while (i < len(fft)):
-            progessive += progessive*config.PROGRESSIVE_FACTOR
+            if (hasattr(config, 'START_PROGRESSIVE_FACTOR')  and i >= config.START_PROGRESSIVE_FACTOR):
+                progessive += progessive*config.PROGRESSIVE_FACTOR
+            else:
+                progessive = config.MIN_PROGRESSIVE_STEP
             if (progessive < config.MIN_PROGRESSIVE_STEP):
                 progessive = config.MIN_PROGRESSIVE_STEP
             if (progessive > config.MAX_PROGRESSIVE_STEP):
                 progessive = config.MAX_PROGRESSIVE_STEP
             last = i
             i += int(progessive)
-	    chunked_fft_max.append(int(max(fft[last:i])))
+            chunked_fft_max.append(int(sum(fft[last:i])))
             
         fft_len = len(chunked_fft_max)
+        max_max = max(chunked_fft_max)
 
-        # We return nothing if the fft_len is below 12 as it seems to be useless
-        if (fft_len <= 12): # TODO: Make configurable
+        # return None for useless stuff
+        if (fft_len <= config.MIN_FFT_LEN or max_max < config.MIN_FFT_MAX): 
             return None
-
-        right_trim = fft_len
-        for i in range(len(chunked_fft_max)-1, 0, -1):
-            if (chunked_fft_max[i] == 0):
-                right_trim = i
-            else:
-                break
-
-        if (right_trim > config.CUT_RESULT_LENGTH):
-            right_trim = config.CUT_RESULT_LENGTH
-
-        if (right_trim < len(chunked_fft_max)):
-            chunked_fft_max = chunked_fft_max[0:right_trim]
-
 
         tendency_characteristic = self.get_tendency(tendency)
         if (tendency_characteristic == None):
             return None
 
-        fft_approach = self.get_approach(chunked_fft_max)
-        model_characteristic = {'fft_freq': fft_len , 'fft_max': chunked_fft_max, 'fft_approach': fft_approach, 'tendency': tendency_characteristic }
+        fft_max, fft_outline = self.get_outline(chunked_fft_max, len(chunked_fft_max))
+        token_peaks = self.get_token_peaks(meta)
+        model_characteristic = {'fft_freq': fft_len , 'fft_max': fft_max, 'fft_outline': fft_outline, 'tendency': tendency_characteristic, 'token_peaks': token_peaks }
         return model_characteristic
 
-    def get_approach(self, data):
-        data = [abs(i) for i in data]
-        ld = len(data)
-        result = [ld] * ld
-        m = max(data)+1
-        l = 0
-        pos = 0
-        for z in range(0, ld):
-            pos = z
-            for i, a in enumerate(data):
-                if (a < m and a > l):
-                    l = a
-                    pos = i
-            result[pos] = z
-            m = l
-            l = 0
-        return result
+    def get_token_peaks(self, meta):
+        token_peaks = [ ]
+        for m in meta:
+            if ('token_peaks' in m):
+                return m['token_peaks']
+        return token_peaks
+
+    def get_highest(self, arr, n):
+        return heapq.nlargest(n, arr)
+
+    def get_outline(self, arr, n):
+        high5 = self.get_highest(arr, n)
+        high5i = [ ]
+        highoutline = [ ]
+        highv = high5[0] / config.GET_HIGH_THRESHOLD
+        for h in high5:
+            if (h >= highv):
+                i = arr.index(h)
+                high5i.append(i)
+                alpha = math.degrees(math.atan( h / ((i+1.0) * (i+1)*512) ))
+                highoutline.append(alpha)
+            else:
+                i = arr.index(h)
+                high5i.append(i)
+                arr[i] = 0
+        return arr, highoutline
 
     def get_tendency(self, data):
         ll = len(data)
+        if (ll == 0):
+            return None
         peaks = 0
         avg = (sum(data)/ll)
         delta = data[0]-data[ll-1]
@@ -111,13 +115,17 @@ class characteristic:
             pos += 1
         if (hpos == 0):
             return None
-        e = highest/(hpos*1.0)
+        e = highest/(hpos*512.0)
         alpha = math.degrees(math.atan(e))
         tendency = { 'len': ll, 'deg': alpha, 'avg': avg, 'delta': delta }
         return tendency
   
-    def get_word_tendency(self, peaks):
+    def get_word_tendency(self, peaks, characteristics):
         ll = len(peaks)
+        if (ll == 0 or len(characteristics) > 20): # TODO: Make configurable
+            if (self.debug):
+                print ('ignoring get_word_tendency as we got '+str(ll) + ' characteristics' )
+            return None
         peakavg = sum(peaks)/ll
         highpeak = 0
         peakpos = 0
@@ -163,5 +171,11 @@ class characteristic:
                 if (hpos > start_end_pos[a] and hpos < start_end_pos[a+1]):
                     start_pos.append(start_end_pos[a])
                     peak_length.append(start_end_pos[a+1] - start_end_pos[a])
-        word_tendency = { 'peaks': len(start_pos), 'start_pos': start_pos, 'peak_length': peak_length }
+        fft_shape = [ ]
+        for c in characteristics:
+            characteristic, meta = c
+            if (characteristic != None):
+                fft_shape.extend(characteristic['fft_max'])
+        word_tendency = { 'peaks': len(start_pos), 'start_pos': start_pos, 'peak_length': peak_length, 'shape': peaks, 'fft_shape': fft_shape }
         return word_tendency            
+

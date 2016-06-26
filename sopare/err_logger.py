@@ -17,7 +17,11 @@ License for the specific language governing permissions and limitations
 under the License.
 """
 
-# Default plugin for output of analysis
+import sys
 
-def run(readable_results, best_match, data, word_tendency, rawbuf):
-    print readable_results
+class err_logger():
+
+    def __init__(self):
+        print ('redirecting stderr to error.log!')
+        fsock = open('error.log', 'a')
+        sys.stderr = fsock

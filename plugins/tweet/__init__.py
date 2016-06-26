@@ -50,17 +50,8 @@ except:
 
 def run(readable_results, best_match, data, word_tendency, rawbuf):
     status = None
-    if ('licht' in readable_results): # and 'dach' in readable_results):
+    if ('licht' in readable_results and 'dach' in readable_results and ('an' in readable_results or 'aus' in readable_results)):
         status = str(uuid.uuid4())
-        an = False
-        if ('an' in readable_results):
-            status = status + '-1'
-            an = True
-        if ('aus' in readable_results):
-            status = status + '-0'
-            if (an == True):
-                # an and aus makes no sense so we just return
-                return
     if (status != None):
         debug_output(status, readable_results, best_match, data, word_tendency, rawbuf)
         tweet(status)
