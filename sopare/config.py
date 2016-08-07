@@ -2,7 +2,7 @@
 SAMPLE_RATE = 44100
 
 # Volume threshold when audio processing starts
-THRESHOLD = 500
+THRESHOLD = 300
 
 # Silence time in seconds when analysis is called
 MAX_SILENCE_AFTER_START = 3

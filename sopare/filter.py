@@ -37,7 +37,7 @@ class filtering():
         self.queue.put({ 'action': 'reset' })
 
     def filter(self, data, meta):
-        if (len(data) < 3 or config.HANNING == False):
+        if (config.HANNING == False or len(data) < 3):
             fft = numpy.fft.rfft(data)
         else:
             hl = len(data)
