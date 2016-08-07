@@ -153,7 +153,8 @@ class analyze():
                             if (self.debug):
                                 print ('boosting : ' + result)
                             for x in range(pos, pos +  self.dict_analysis[result]['max_tokens']):
-                                pre_results[x] = result
+                                if (x < len(pre_results)):
+                                    pre_results[x] = result
 
         return pre_results
 
