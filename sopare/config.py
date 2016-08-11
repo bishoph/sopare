@@ -28,15 +28,19 @@ TENDENCY_SIMILARITY = .1
 # This value defines the marginal value that is needed
 # for consideration if the analyzed result becomes a
 # "pre_readable result"
-MARGINAL_VALUE = 0.5
+MARGINAL_VALUE = 0.8
+
+# Ignore MIN-/MAX token length check in pre_readable results
+SOFT_IGNORE_MIN_MAX = True
 
 # This value defines the min value that is needed
 # for consideration if the analyzed result becomes a
 # "readable result"
-MIN_READABLE_RESULT_VALUE = 0.5
+MIN_READABLE_RESULT_VALUE = 0.8
 
 # Last line of defense
 SHAPE_SIMILARITY = 0.9
+RESULT_PERCENTAGE = .8
 
 # Set to True if you want to dilute results from 0-n in
 # the similarity calculation.
@@ -45,7 +49,7 @@ POSITION_WEIGHTING = False
 # This value defines the marginal value that is needed
 # for consideration if the analyzed result is added to 
 # "first_guess"
-FAST_HIGH_COMPARE_MARGINAL_VALUE = 0.9
+FAST_HIGH_COMPARE_MARGINAL_VALUE = 0.7
 
 # This number calculates the threshold for consideration
 # for the first comparison.
@@ -68,7 +72,7 @@ LOW_FREQ = 20
 HIGH_FREQ = 5000
 
 # Make use of Hann window function
-HANNING = True
+HANNING = False
 
 # Minimal FFT len for consideration
 # Default: 12

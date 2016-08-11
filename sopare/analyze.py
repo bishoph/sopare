@@ -171,7 +171,7 @@ class analyze():
             else:
                 if (i == len(pre_results)-1 and last == result):
                     count += 1
-                if (last in self.dict_analysis and count >= self.dict_analysis[last]['min_tokens'] and count <= self.dict_analysis[last]['max_tokens']):
+                if (last in self.dict_analysis and (config.SOFT_IGNORE_MIN_MAX == True or count >= self.dict_analysis[last]['min_tokens'] and count <= self.dict_analysis[last]['max_tokens'])):
                     readable_results.append(last)
                 elif (last != '' and self.debug):
                     print ('get_readable_results failed for '+ last +' cause '+str(self.dict_analysis[last]['min_tokens']) + ' < ' +str(count) + ' > '+str(self.dict_analysis[last]['max_tokens']))
@@ -204,6 +204,20 @@ class analyze():
                 start = i
                 count = 0
             last = word
+        # check % of results
+        empty_count = 0
+        for validate in validated_results:
+            if (validate == ''):
+                empty_count += 1
+        if (empty_count > 0):
+            lv = len(validated_results)*1.0
+            validated_percentage = ((lv-empty_count) / lv)
+        else:
+            validated_percentage = 1
+        if (validated_percentage < config.RESULT_PERCENTAGE):
+            if (self.debug):
+                print ('validated_results failed because validated_percentage == '+str(validated_percentage))
+            return [ '' ] * ll
         return validated_results
 
     def word_shape_check(self, word, start, count, word_tendency, data):
@@ -428,7 +442,17 @@ class analyze():
             wordpos.append(endpos)
         if (self.debug):
             print ('wordpos : '+str(wordpos))
-        return wordpos, endpos
+        
+        cleanstartpos = [ ]
+        remove = [ ]
+        for i, d in enumerate(data):
+            characteristic, meta = d
+            if (characteristic == None):
+                remove.append(i)
+        for e in endpos:
+            if (e not in remove):
+                cleanstartpos.append(e)
+        return wordpos, cleanstartpos
 
     def token_compare(self, id, pos, characteristic, match_array):
         similarity_array = [ ]

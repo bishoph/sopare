@@ -30,7 +30,7 @@ class characteristic:
     def getcharacteristic(self, fft, tendency, meta):
         for m in meta:
             if ('adapting' in m):
-                if (m['adapting'] < 20000): # TODO: Make configurable
+                if (m['adapting'] < 15000): # TODO: Make configurable
                     if (self.debug):
                         print ('adapting < X was '+str(m['adapting']))
                     return None
