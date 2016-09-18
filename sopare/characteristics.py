@@ -28,6 +28,13 @@ class characteristic:
         self.debug = debug
 
     def getcharacteristic(self, fft, tendency, meta):
+        for m in meta:
+            if ('adapting' in m):
+                if (m['adapting'] < 15000): # TODO: Make configurable
+                    if (self.debug):
+                        print ('adapting < X was '+str(m['adapting']))
+                    return None
+
         fft = fft[config.LOW_FREQ:config.HIGH_FREQ]
         fft = [abs(i) for i in fft]
         fft_len = 0
@@ -122,7 +129,7 @@ class characteristic:
   
     def get_word_tendency(self, peaks, characteristics):
         ll = len(peaks)
-        if (ll == 0 or len(characteristics) > 20): # TODO: Make configurable
+        if (ll == 0 or len(characteristics) > 40): # TODO: Make configurable
             if (self.debug):
                 print ('ignoring get_word_tendency as we got '+str(ll) + ' characteristics' )
             return None

@@ -2,10 +2,10 @@
 SAMPLE_RATE = 44100
 
 # Volume threshold when audio processing starts
-THRESHOLD = 500
+THRESHOLD = 300
 
 # Silence time in seconds when analysis is called
-MAX_SILENCE_AFTER_START = 4
+MAX_SILENCE_AFTER_START = 3
 
 # Time in seconds after the analysis is forced
 MAX_TIME = 5
@@ -30,13 +30,17 @@ TENDENCY_SIMILARITY = .1
 # "pre_readable result"
 MARGINAL_VALUE = 0.6
 
+# Ignore MIN-/MAX token length check in pre_readable results
+SOFT_IGNORE_MIN_MAX = True
+
 # This value defines the min value that is needed
 # for consideration if the analyzed result becomes a
 # "readable result"
 MIN_READABLE_RESULT_VALUE = 0.6
 
 # Last line of defense
-SHAPE_SIMILARITY = 0.5
+SHAPE_SIMILARITY = 0.8
+RESULT_PERCENTAGE = .9
 
 # Set to True if you want to dilute results from 0-n in
 # the similarity calculation.
@@ -45,7 +49,7 @@ POSITION_WEIGHTING = False
 # This value defines the marginal value that is needed
 # for consideration if the analyzed result is added to 
 # "first_guess"
-FAST_HIGH_COMPARE_MARGINAL_VALUE = 0.3
+FAST_HIGH_COMPARE_MARGINAL_VALUE = 0.6
 
 # This number calculates the threshold for consideration
 # for the first comparison.
@@ -57,9 +61,9 @@ GET_HIGH_THRESHOLD = 4
 # Progressive value is used if you want to pack not
 # so relavant frequencies
 PROGRESSIVE_FACTOR = .05
-START_PROGRESSIVE_FACTOR = 1000
+START_PROGRESSIVE_FACTOR = 5000
 MIN_PROGRESSIVE_STEP = 20
-MAX_PROGRESSIVE_STEP = 200
+MAX_PROGRESSIVE_STEP = 20
 
 # Specifies freq ranges that are kept for further
 # analysis. Freq outside of the ranges are set to zero.

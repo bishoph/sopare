@@ -34,14 +34,14 @@ class preparing():
         self.util = util.util(debug, wave)
         self.filter = filter.filtering(debug, plot, dict, wave)
         self.silence = 0
-        self.silence2 = 0
         self.reset()
         self.plot_buffer = [ ]
 
     def tokenize(self, meta):
-        if (len(self.buffer) > 1024 and self.valid_token(meta)):
-            end = len(self.buffer)
-            self.filter.filter(self.buffer[0:end], meta)
+        if (self.valid_token(meta)):
+            if (len(self.buffer) == 0):
+                self.buffer = [ 0 ] * 512
+            self.filter.filter(self.buffer, meta)
             self.buffer = [ ]
             self.peaks.extend(self.token_peaks)
             self.token_peaks = [ ]
@@ -73,7 +73,6 @@ class preparing():
         self.buffer = [ ]
         self.peaks = [ ]
         self.token_peaks = [ ]
-        self.low = 0
         self.last_low_pos = 0
         self.force = False
 
@@ -96,33 +95,26 @@ class preparing():
         self.token_peaks.append(adaptive)
         meta = [ ]
 
-        # tokenizer/word detection
         if (volume < config.TOKEN_HIGH):
             self.silence += 1
-            if (self.silence == config.SILENCE):
+	    if (self.silence == config.SILENCE):
                 self.new_token = True
                 meta.append({ 'token': 'token', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'token_peaks': self.token_peaks })
-                self.low = 0
             elif (self.silence == config.LONG_SILENCE):
-                    self.new_word = True
-                    self.entered_silence = True
-                    self.peaks.extend(self.token_peaks)
-                    meta.append({ 'token': 'start analysis', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'token_peaks': self.token_peaks, 'peaks': self.peaks })
-                    self.peaks = [ ]
-            elif (self.silence % config.LONG_SILENCE == 0):
                 self.new_word = True
-                meta.append({ 'token': 'noop', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'token_peaks': self.token_peaks })
+                self.entered_silence = True
+                self.peaks.extend(self.token_peaks)
+                meta.append({ 'token': 'start analysis', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'token_peaks': self.token_peaks, 'peaks': self.peaks })
                 self.peaks = [ ]
-            elif (self.low > 0):
-                self.new_token = True
-                meta.append({ 'token': 'token', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'token_peaks': self.token_peaks })
-                self.low = 0
-        elif (self.low == 0):
+            elif (self.silence > config.LONG_SILENCE):
+                meta.append({ 'token': 'noop', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume })
+        else:
+            self.entered_silence = False
+            self.silence = 0
+
+        if (len(self.buffer) == 4096):
             self.new_token = True
             meta.append({ 'token': 'token', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'token_peaks': self.token_peaks })
-            self.low += 1
-            self.silence =  0
-            self.silence2 = 0
 
         if (self.new_token == True or self.new_word == True):
             self.new_token = False
@@ -130,4 +122,3 @@ class preparing():
             self.tokenize(meta)
             if (self.new_word == True):
                 self.new_word = False
-                self.low = 0

@@ -51,7 +51,7 @@ class analyze():
         first_token_weighting = self.analyze_first_token(first_guess, data)
         if (self.debug):
             print ('first_token_weighting : ' + str(first_token_weighting))
-        weighted_results = self.weight_first_token(first_token_weighting)
+        weighted_results = self.weight_first_token(first_token_weighting, word_tendency, data)
         if (self.debug):
             print ('weighted_results : ' + str(weighted_results))
         deep_guess = self.deep_scan(weighted_results, data)
@@ -64,7 +64,10 @@ class analyze():
             pre_readable_results = self.prepare_readable_results(best_match)
             if (self.debug):
                 print ('pre_readable_results : ' + str(pre_readable_results))
-            validated_results =  self.validate_results(pre_readable_results, word_tendency, data)
+            boosted_results = self.get_boosted_results(pre_readable_results, pre_results, weighted_results)
+            if (self.debug):
+                print ('boosted_results : ' + str(boosted_results))
+            validated_results =  self.validate_results(boosted_results, word_tendency, data)
             if (self.debug):
                 print ('validated_result : ' + str(validated_results))
             readable_results = self.get_readable_results(validated_results, data)
@@ -132,14 +135,27 @@ class analyze():
                 if (match > readable_match[i] and match >= config.MIN_READABLE_RESULT_VALUE):
                     readable_match[i] = match
                     pre_results[i] = id
+        return pre_results
+
+    def get_boosted_results(self, pre_results, pre_array, weighted_results):
         if (pre_results != None):
-            for i, result in enumerate(pre_results):
-                if (i > 0 and i < len(pre_results)-1):
-                    if (result != pre_results[i-1] and result != pre_results[i+1] and pre_results[i-1] == pre_results[i+1]):
-                        if (self.debug):
-                            print ('found enclosed element '+result+' at position '+str(i)+ ' ... replacing it with '+pre_results[i-1])
-                        pre_results[i] = pre_results[i-1]
-        # TODO: Eliminate single token entities at pos 0 and len(pre_results)
+            for result in weighted_results:
+                pos_arr = weighted_results[result]['results']
+                for pos in pos_arr:
+                    if (result in pre_results):
+                        match = 0
+                        no_match = self.dict_analysis[result]['max_tokens']
+                        for x in range(pos, pos +  self.dict_analysis[result]['max_tokens']):
+                            if (x < len(pre_results) and pre_results[x] == result):
+                                match += 1
+                        no_match = no_match - match
+                        if (match >= no_match):
+                            if (self.debug):
+                                print ('boosting : ' + result)
+                            for x in range(pos, pos +  self.dict_analysis[result]['max_tokens']):
+                                if (x < len(pre_results)):
+                                    pre_results[x] = result
+
         return pre_results
 
     def get_readable_results(self, pre_results, data):
@@ -155,7 +171,7 @@ class analyze():
             else:
                 if (i == len(pre_results)-1 and last == result):
                     count += 1
-                if (last in self.dict_analysis and count >= self.dict_analysis[last]['min_tokens'] and count <= self.dict_analysis[last]['max_tokens']):
+                if (last in self.dict_analysis and (config.SOFT_IGNORE_MIN_MAX == True or count >= self.dict_analysis[last]['min_tokens'] and count <= self.dict_analysis[last]['max_tokens'])):
                     readable_results.append(last)
                 elif (last != '' and self.debug):
                     print ('get_readable_results failed for '+ last +' cause '+str(self.dict_analysis[last]['min_tokens']) + ' < ' +str(count) + ' > '+str(self.dict_analysis[last]['max_tokens']))
@@ -188,6 +204,20 @@ class analyze():
                 start = i
                 count = 0
             last = word
+        # check % of results
+        empty_count = 0
+        for validate in validated_results:
+            if (validate == ''):
+                empty_count += 1
+        if (empty_count > 0):
+            lv = len(validated_results)*1.0
+            validated_percentage = ((lv-empty_count) / lv)
+        else:
+            validated_percentage = 1
+        if (validated_percentage < config.RESULT_PERCENTAGE):
+            if (self.debug):
+                print ('validated_results failed because validated_percentage == '+str(validated_percentage))
+            return [ '' ] * ll
         return validated_results
 
     def word_shape_check(self, word, start, count, word_tendency, data):
@@ -212,7 +242,6 @@ class analyze():
             shape_similarity = self.util.approach_similarity(word_shape, shape)
             if (shape_similarity > max_shape_similarity):
                 max_shape_similarity = shape_similarity
-        # TODO: Check if we can do something with the fft_shape
         if (max_shape_similarity >= config.SHAPE_SIMILARITY):
             return True
         if (self.debug):
@@ -241,12 +270,13 @@ class analyze():
         
         return first_token_weighting
 
-    def weight_first_token(self, first_token_weighting):
+    def weight_first_token(self, first_token_weighting, word_tendency, data):
         weighted_results = { }
         for arr in first_token_weighting:
             if (arr[0] not in weighted_results):
                 weighted_results[arr[0]] = { 'results': [ ], 'lmin': self.dict_analysis[arr[0]]['min_tokens'], 'lmax': self.dict_analysis[arr[0]]['max_tokens'] }
-            weighted_results[arr[0]]['results'].append(arr[1])
+            if (self.word_shape_check(arr[0], arr[1], self.dict_analysis[arr[0]]['max_tokens'], word_tendency, data)):
+                weighted_results[arr[0]]['results'].append(arr[1])
         return weighted_results
 
     def deep_scan(self, first_guess, data):
@@ -412,7 +442,17 @@ class analyze():
             wordpos.append(endpos)
         if (self.debug):
             print ('wordpos : '+str(wordpos))
-        return wordpos, endpos
+        
+        cleanstartpos = [ ]
+        remove = [ ]
+        for i, d in enumerate(data):
+            characteristic, meta = d
+            if (characteristic == None):
+                remove.append(i)
+        for e in endpos:
+            if (e not in remove):
+                cleanstartpos.append(e)
+        return wordpos, cleanstartpos
 
     def token_compare(self, id, pos, characteristic, match_array):
         similarity_array = [ ]
