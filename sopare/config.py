@@ -28,7 +28,7 @@ TENDENCY_SIMILARITY = .1
 # This value defines the marginal value that is needed
 # for consideration if the analyzed result becomes a
 # "pre_readable result"
-MARGINAL_VALUE = 0.8
+MARGINAL_VALUE = 0.6
 
 # Ignore MIN-/MAX token length check in pre_readable results
 SOFT_IGNORE_MIN_MAX = True
@@ -36,11 +36,11 @@ SOFT_IGNORE_MIN_MAX = True
 # This value defines the min value that is needed
 # for consideration if the analyzed result becomes a
 # "readable result"
-MIN_READABLE_RESULT_VALUE = 0.8
+MIN_READABLE_RESULT_VALUE = 0.6
 
 # Last line of defense
-SHAPE_SIMILARITY = 0.9
-RESULT_PERCENTAGE = .8
+SHAPE_SIMILARITY = 0.8
+RESULT_PERCENTAGE = .9
 
 # Set to True if you want to dilute results from 0-n in
 # the similarity calculation.
@@ -49,7 +49,7 @@ POSITION_WEIGHTING = False
 # This value defines the marginal value that is needed
 # for consideration if the analyzed result is added to 
 # "first_guess"
-FAST_HIGH_COMPARE_MARGINAL_VALUE = 0.7
+FAST_HIGH_COMPARE_MARGINAL_VALUE = 0.6
 
 # This number calculates the threshold for consideration
 # for the first comparison.
@@ -62,8 +62,8 @@ GET_HIGH_THRESHOLD = 4
 # so relavant frequencies
 PROGRESSIVE_FACTOR = .05
 START_PROGRESSIVE_FACTOR = 5000
-MIN_PROGRESSIVE_STEP = 50
-MAX_PROGRESSIVE_STEP = 50
+MIN_PROGRESSIVE_STEP = 20
+MAX_PROGRESSIVE_STEP = 20
 
 # Specifies freq ranges that are kept for further
 # analysis. Freq outside of the ranges are set to zero.
