@@ -110,7 +110,7 @@ class analyze():
         for id in best_match_temp:
             top_similarity = max(best_match_temp[id][0])
             top_weight = max(best_match_temp[id][1])
-            if (top_similarity >= config.MIN_READABLE_RESULT_VALUE):
+            if (top_similarity >= config.BEST_MATCH_VALUE):
                 best_match[id] = [ best_match_temp[id][0], best_match_temp[id][1] ]
             else:
                 if (self.debug):
@@ -180,15 +180,15 @@ class analyze():
             last = result
         return readable_results
 
-    def validate_results(self, pre_readable_results, word_tendency, data):
-        if (pre_readable_results == None):
+    def validate_results(self, boosted_results, word_tendency, data):
+        if (boosted_results == None):
             return None
-        ll = len(pre_readable_results)
+        ll = len(boosted_results)
         last = ''
         start = 0
         count = 0
         validated_results = [ '' ] * ll
-        for i, word in enumerate(pre_readable_results):
+        for i, word in enumerate(boosted_results):
             if (i == 0 or (word == last and i < ll-1)):
                 count += 1
             else:
@@ -216,7 +216,7 @@ class analyze():
             validated_percentage = 1
         if (validated_percentage < config.RESULT_PERCENTAGE):
             if (self.debug):
-                print ('validated_results failed because validated_percentage == '+str(validated_percentage))
+                print ('validated_results failed because validated_percentage == '+str(validated_percentage) + ' -> ' + str(len(validated_results)) + ' / ' + str(empty_count))
             return [ '' ] * ll
         return validated_results
 
@@ -238,14 +238,18 @@ class analyze():
                             word_shape.extend(m['token_peaks'])
                     word_shape_fft.extend(characteristic['fft_max'])
         max_shape_similarity = 0
+        max_shape_length_similarity = 0
         for shape in self.dict_analysis[word]['shape']:
             shape_similarity = self.util.approach_similarity(word_shape, shape)
+            shape_length_similarity = self.util.approach_length_similarity(word_shape, shape)
             if (shape_similarity > max_shape_similarity):
                 max_shape_similarity = shape_similarity
-        if (max_shape_similarity >= config.SHAPE_SIMILARITY):
+            if (shape_length_similarity > max_shape_length_similarity):
+                max_shape_length_similarity = shape_length_similarity
+        if (max_shape_similarity >= config.SHAPE_SIMILARITY and max_shape_length_similarity >= config.SHAPE_LENGTH_SIMILARITY):
             return True
         if (self.debug):
-            print ('Word shape check failed for '+ word +' at pos '+str(start) + '. Max was :'+str(max_shape_similarity))
+            print ('Word shape check failed for '+ word +' at pos '+str(start) + '. Max was :'+str(max_shape_similarity)+'/'+str(max_shape_length_similarity))
         return False
  
     def analyze_first_token(self, first_guess, data):
@@ -275,8 +279,8 @@ class analyze():
         for arr in first_token_weighting:
             if (arr[0] not in weighted_results):
                 weighted_results[arr[0]] = { 'results': [ ], 'lmin': self.dict_analysis[arr[0]]['min_tokens'], 'lmax': self.dict_analysis[arr[0]]['max_tokens'] }
-            if (self.word_shape_check(arr[0], arr[1], self.dict_analysis[arr[0]]['max_tokens'], word_tendency, data)):
-                weighted_results[arr[0]]['results'].append(arr[1])
+            # TODO: Write a real weight check algorithm
+            weighted_results[arr[0]]['results'].append(arr[1])
         return weighted_results
 
     def deep_scan(self, first_guess, data):

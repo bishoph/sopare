@@ -48,23 +48,10 @@ class util:
         ids = [ ]
         for dict_entries in json_data['dict']:
            if ((dict_entries['id'] == sid or sid == "*") and dict_entries['id'] not in ids):
-               ids.append(dict_entries['id'])
-        l_arr = { }
-        for id in ids:
-            for dict_entries in json_data['dict']:
-                if (id == dict_entries['id']):
-                    if (id not in l_arr):
-                        l_arr[id] = { 'length': [ ] }
-                    ll = len(dict_entries['characteristic'])
-                    if (ll not in l_arr[id]['length']):
-                        l_arr[id]['length'].append(ll)
-        for id in l_arr:
-            ml = max(l_arr[id]['length'])
-            for i in range(0, ml):
-                for dict_entries in json_data['dict']:
-                    if (dict_entries['id'] == id  and len(dict_entries['characteristic']) > i):
-                        output = str(dict_entries['characteristic'][i]['fft_max']) #fft_max, fft_outline
-                        print (id + '-' + str(i)+  ', '+ output[1:len(output)-1] )
+               print (dict_entries['id'] + ' - ' + dict_entries['uuid'])
+               for i, entry in enumerate(dict_entries['characteristic']):
+                   output = str(entry['fft_max'])
+                   print (str(i)+ ',' + output[1:len(output)-1])
 
     def compile_analysis(self, json_data):
         # TODO: Cleanup
