@@ -27,6 +27,7 @@ class filtering():
     def __init__(self, debug, plot, dict, wave):
         self.debug = debug
         self.plot = plot
+        self.first = True
         self.queue = multiprocessing.Queue()
         self.worker = worker.worker(self.queue, debug, plot, dict, wave)
 
@@ -36,15 +37,23 @@ class filtering():
     def reset(self):
         self.queue.put({ 'action': 'reset' })
 
+    def check_for_windowing(self, meta):
+        for m in meta:
+            if (m['token'] == 'start analysis' or m['token'] == 'silence'):
+                return True
+        return False
+
     def filter(self, data, meta):
-        if (config.HANNING == False or len(data) < 3):
+        if (self.first == False or config.HANNING == False or len(data) < 3):
             fft = numpy.fft.rfft(data)
-        else:
+            self.first = self.check_for_windowing(meta)
+        elif (self.first == True):
             hl = len(data)
             if (hl % 2 != 0):
                 hl += 1
             hw = numpy.hanning(hl)
             fft = numpy.fft.rfft(data * hw)
+            self.first = False
         fft[config.HIGH_FREQ:] = 0
         fft[:config.LOW_FREQ] = 0
         data = numpy.fft.irfft(fft)

@@ -64,7 +64,7 @@ class analyze():
             pre_readable_results = self.prepare_readable_results(best_match)
             if (self.debug):
                 print ('pre_readable_results : ' + str(pre_readable_results))
-            boosted_results = self.get_boosted_results(pre_readable_results, pre_results, weighted_results)
+            boosted_results = self.get_boosted_results(pre_readable_results, weighted_results)
             if (self.debug):
                 print ('boosted_results : ' + str(boosted_results))
             validated_results =  self.validate_results(boosted_results, word_tendency, data)
@@ -137,25 +137,27 @@ class analyze():
                     pre_results[i] = id
         return pre_results
 
-    def get_boosted_results(self, pre_results, pre_array, weighted_results):
+    def get_boosted_results(self, pre_results, weighted_results):
         if (pre_results != None):
             for result in weighted_results:
                 pos_arr = weighted_results[result]['results']
                 for pos in pos_arr:
                     if (result in pre_results):
                         match = 0
-                        no_match = self.dict_analysis[result]['max_tokens']
-                        for x in range(pos, pos +  self.dict_analysis[result]['max_tokens']):
+                        no_match = 0
+                        for x in range(pos, pos + self.dict_analysis[result]['max_tokens']):
                             if (x < len(pre_results) and pre_results[x] == result):
                                 match += 1
+                            else:
+                                no_match += 1
                         no_match = no_match - match
                         if (match >= no_match):
                             if (self.debug):
                                 print ('boosting : ' + result)
-                            for x in range(pos, pos +  self.dict_analysis[result]['max_tokens']):
+                            for x in range(pos, pos + self.dict_analysis[result]['max_tokens']):
                                 if (x < len(pre_results)):
-                                    pre_results[x] = result
-
+                                    if (pre_results[x] == ''):
+                                        pre_results[x] = result
         return pre_results
 
     def get_readable_results(self, pre_results, data):
@@ -225,7 +227,6 @@ class analyze():
             return False
         ll = len(data)
         word_shape = [ ]
-        word_shape_fft = [ ]
         counter = 0
         for x in range(start, start + count):
             if (x < ll):
@@ -236,7 +237,6 @@ class analyze():
                     for m in meta:
                         if ('token_peaks' in m):
                             word_shape.extend(m['token_peaks'])
-                    word_shape_fft.extend(characteristic['fft_max'])
         max_shape_similarity = 0
         max_shape_length_similarity = 0
         for shape in self.dict_analysis[word]['shape']:
@@ -318,7 +318,7 @@ class analyze():
         for i, words in enumerate(pre_results):
             # we add some more potential positions as words overlap quite a bit
             match = words[0]
-            for x in range(-1, 2, 1): # TODO: Make configurable
+            for x in range(config.SEARCH_POTENTIAL_POSITION_LEFT, config.SEARCH_POTENTIAL_POSITION_RIGHT, 1):
                 matchr = match + x
                 if (matchr >= 0 and matchr not in startwords and matchr < len(startpos)):
                     startwords.append(matchr)
@@ -337,7 +337,7 @@ class analyze():
             for dcharacteristic in analysis_object['first_token']:
                 dfft = dcharacteristic['fft_max']
                 similarity_fft = self.util.approach_similarity(fft, dfft)
-                if (similarity_fft >= config.FAST_HIGH_COMPARE_MARGINAL_VALUE and (start + analysis_object['min_tokens']) <= token_length): 
+                if (similarity_fft >= config.FAST_HIGH_COMPARE_MARGINAL_VALUE and ((start + analysis_object['min_tokens'])/2) <= token_length): # TODO: Check if 1/2 is feasible
                     return 1
         return 0
 
@@ -351,6 +351,8 @@ class analyze():
                 if (characteristic != None):
                     self.token_compare(id, pos, characteristic, match_array)
                     pos += 1
+                else:
+                    match_array.append([{ 'tendency_similarity': 0, 'fft_similarity': 0, 'fft_distance': 0, 'weighting': 0 }])
         points = self.calculate_points(id, start, match_array, lmin)
         return [id, start, points]
 
@@ -358,12 +360,12 @@ class analyze():
         points = [ ]
         ll = len(match_array)
         if (ll < lmin):
+            print ('warning: calculate_points for '+id+' failed at '+str(start)+' as ll < min failed: '+str(ll)+' < ' + str(lmin))
             return [ 0 ], [ 0 ]
         for i, arr in enumerate(match_array):
             fft_similarity_min, fft_similarity_max, fft_similarity_avg = self.get_similarity(arr, 'fft_similarity')
             tendency_similarity_min, tendency_similarity_max, tendency_similarity_avg = self.get_similarity(arr, 'tendency_similarity')
             distance_min, distance_max, distance_avg = self.get_similarity(arr, 'fft_distance')
-            #print id, start, fft_similarity_avg,tendency_similarity_avg, distance_avg
             weighting = self.get_weighting(arr)
             point = fft_similarity_avg * config.FFT_SIMILARITY
             point += distance_avg * config.FFT_DISTANCE
@@ -423,7 +425,7 @@ class analyze():
             for m in meta:
                 token = m['token']
                 if (token != 'stop'):
-                    if (token == 'token' or token == 'start analysis'):
+                    if (token == 'token' or token == 'silence' or token == 'start analysis'):
                         posmapper.append(m['pos'])
         last = 0
         for x in range(0, len(endpos)):

@@ -99,7 +99,7 @@ class preparing():
             self.silence += 1
 	    if (self.silence == config.SILENCE):
                 self.new_token = True
-                meta.append({ 'token': 'token', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'token_peaks': self.token_peaks })
+                meta.append({ 'token': 'silence', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'token_peaks': self.token_peaks })
             elif (self.silence == config.LONG_SILENCE):
                 self.new_word = True
                 self.entered_silence = True

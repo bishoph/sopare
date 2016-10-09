@@ -66,7 +66,6 @@ class util:
                     print (dict_entries['id'] + ', ' + dict_entries['uuid'])
                 if (l > analysis[dict_entries['id']]['max_tokens']):
                     analysis[dict_entries['id']]['max_tokens'] = l
-                l = l - 1 # TODO: Check if this is really necessary
                 if (l < analysis[dict_entries['id']]['min_tokens'] or analysis[dict_entries['id']]['min_tokens'] == 0):
                     analysis[dict_entries['id']]['min_tokens'] = l
                 if (dict_entries['word_tendency']['peaks'] < analysis[dict_entries['id']]['min_peaks'] or analysis[dict_entries['id']]['min_peaks'] == 0):
@@ -132,8 +131,7 @@ class util:
                     for raw_obj in json_obj['characteristic']:
                         meta = raw_obj['meta']
                         fft = raw_obj['fft']
-                        raw_tendency = raw_obj['raw_tendency']
-                        characteristic = self.characteristic.getcharacteristic(fft, raw_tendency, meta)
+                        characteristic = self.characteristic.getcharacteristic(fft, meta)
                         if (characteristic != None):
                             for m in meta:
                                 if (m['token'] != 'stop'):

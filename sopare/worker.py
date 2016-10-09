@@ -18,7 +18,6 @@ under the License.
 """
 
 import multiprocessing 
-import condense
 import util
 import visual
 import analyze
@@ -35,7 +34,6 @@ class worker(multiprocessing.Process):
         self.dict = dict
         self.wave = wave
         self.visual = visual.visual()
-        self.condense = condense.packing()
         self.util = util.util(debug, None)
         self.analyze = analyze.analyze(debug)
         self.characteristic = characteristics.characteristic(debug)
@@ -78,12 +76,10 @@ class worker(multiprocessing.Process):
                 if (self.plot):
                     self.rawfft.extend(fft)
                 meta = obj['meta']
-                raw_token_compressed = self.condense.compress(raw_token)
-                raw_tendency = self.condense.model_tendency(raw_token_compressed)
-                characteristic = self.characteristic.getcharacteristic(fft, raw_tendency, meta)
+                characteristic = self.characteristic.getcharacteristic(fft, meta)
                 self.character.append((characteristic, meta))
                 if (self.dict != None):
-                    self.raw_character.append({ 'fft': fft, 'meta': meta, 'raw_tendency': raw_tendency })
+                    self.raw_character.append({ 'fft': fft, 'meta': meta })
                 if (characteristic != None):
                     if (self.debug):
                         print ('characteristic = ' + str(self.counter) + ' ' + str(characteristic))
@@ -91,7 +87,6 @@ class worker(multiprocessing.Process):
                     if (self.wave):
                         self.util.savefilteredwave('token'+str(self.counter)+self.uid, raw_token)
                     if (self.plot):
-                        self.visual.create_sample(raw_tendency, 'token'+str(self.counter)+'.png')
                         self.visual.create_sample(characteristic['fft_max'], 'fft'+str(self.counter)+'.png')
                 self.counter += 1
             elif (obj['action'] == 'reset' and self.dict == None):

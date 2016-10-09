@@ -27,10 +27,10 @@ class characteristic:
     def __init__(self, debug):
         self.debug = debug
 
-    def getcharacteristic(self, fft, tendency, meta):
+    def getcharacteristic(self, fft, meta):
         for m in meta:
             if ('adapting' in m):
-                if (m['adapting'] < 15000): # TODO: Make configurable
+                if (m['adapting'] < config.MIN_ADAPTING):
                     if (self.debug):
                         print ('adapting < X was '+str(m['adapting']))
                     return None
@@ -59,15 +59,18 @@ class characteristic:
         max_max = max(chunked_fft_max)
 
         # return None for useless stuff
-        if (fft_len <= config.MIN_FFT_LEN or max_max < config.MIN_FFT_MAX): 
-            return None
-
-        tendency_characteristic = self.get_tendency(tendency)
-        if (tendency_characteristic == None):
+        if (fft_len <= config.MIN_FFT_LEN or max_max < config.MIN_FFT_MAX):
+            if (self.debug):
+                print ('returning None for useless stuff')
             return None
 
         fft_max, fft_outline = self.get_outline(chunked_fft_max, len(chunked_fft_max))
         token_peaks = self.get_token_peaks(meta)
+        tendency_characteristic = self.get_tendency(token_peaks)
+        if (tendency_characteristic == None):
+            if (self.debug):
+                 print ('tendency_characteristic was None')
+            return None
         model_characteristic = {'fft_freq': fft_len , 'fft_max': fft_max, 'fft_outline': fft_outline, 'tendency': tendency_characteristic, 'token_peaks': token_peaks }
         return model_characteristic
 
@@ -185,4 +188,3 @@ class characteristic:
                 fft_shape.extend(characteristic['fft_max'])
         word_tendency = { 'peaks': len(start_pos), 'start_pos': start_pos, 'peak_length': peak_length, 'shape': peaks, 'fft_shape': fft_shape }
         return word_tendency            
-

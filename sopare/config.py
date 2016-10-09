@@ -41,7 +41,7 @@ TENDENCY_SIMILARITY = .1
 # Progressive value is used if you want to pack not
 # so relevant frequencies
 PROGRESSIVE_FACTOR = .01
-START_PROGRESSIVE_FACTOR = 8000
+START_PROGRESSIVE_FACTOR = 4000
 MIN_PROGRESSIVE_STEP = 20
 MAX_PROGRESSIVE_STEP = 20
 
@@ -66,11 +66,24 @@ MIN_FFT_MAX = 5000
 # for the first comparison.
 GET_HIGH_THRESHOLD = 4
 
+# Min. adaptive value to create a characteristic
+# Default: TDB
+MIN_ADAPTING = 5000
+
 
 
 #########################################################
 # Analysis configuration options ########################
 #########################################################
+
+# First scan for candidates.
+# We want to find potential positions as words tends to 
+# overlap quite a bit. LEFT scans negative from a potential
+# position, RIGHT positve. 
+# Defaults: -3, 3
+SEARCH_POTENTIAL_POSITION_LEFT = -3
+SEARCH_POTENTIAL_POSITION_RIGHT = 3
+
 
 # This value defines the marginal value that is needed
 # for consideration if the analyzed result is added to
@@ -105,8 +118,8 @@ SOFT_IGNORE_MIN_MAX = True
 # compare the shapes of dict data against or analyzed
 # data and the filled percentage of the results
 # Last line of defense
-SHAPE_SIMILARITY = 0.8
-SHAPE_LENGTH_SIMILARITY = 0.75
+SHAPE_SIMILARITY = 0.4
+SHAPE_LENGTH_SIMILARITY = 0.4
 RESULT_PERCENTAGE = 0.8
 
 # Ignore MIN-/MAX token length check in get_readable results
