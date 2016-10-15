@@ -30,20 +30,15 @@ LONG_SILENCE = 60
 # Characteristic configuration options ##################
 #########################################################
 
-# SIMILARITY calculation basis
-FFT_SIMILARITY = .8
-FFT_DISTANCE = .1
-TENDENCY_SIMILARITY = .1
-
 # Steps boil down the data into smaller chunks of data.
 # Smaller steps means more precision but require
 # normally more learned entries in the dictionary.
 # Progressive value is used if you want to pack not
 # so relevant frequencies
 PROGRESSIVE_FACTOR = .01
-START_PROGRESSIVE_FACTOR = 4000
+#START_PROGRESSIVE_FACTOR = 3000
 MIN_PROGRESSIVE_STEP = 20
-MAX_PROGRESSIVE_STEP = 20
+MAX_PROGRESSIVE_STEP = 100
 
 # Specifies freq ranges that are kept for further
 # analysis. Freq outside of the ranges are set to zero.
@@ -76,6 +71,11 @@ MIN_ADAPTING = 5000
 # Analysis configuration options ########################
 #########################################################
 
+# SIMILARITY calculation basis
+FFT_SIMILARITY = 0.7
+FFT_DISTANCE = 0.3
+TENDENCY_SIMILARITY = 0
+
 # First scan for candidates.
 # We want to find potential positions as words tends to 
 # overlap quite a bit. LEFT scans negative from a potential
@@ -84,42 +84,35 @@ MIN_ADAPTING = 5000
 SEARCH_POTENTIAL_POSITION_LEFT = -3
 SEARCH_POTENTIAL_POSITION_RIGHT = 3
 
-
 # This value defines the marginal value that is needed
 # for consideration if the analyzed result is added to
 # "first_guess"
-# (1)
-FAST_HIGH_COMPARE_MARGINAL_VALUE = 0.9
+FAST_HIGH_COMPARE_MARGINAL_VALUE = 0.7
 
+# Min. distance for consideration to keep "first_guess"
+# potentials
+MIN_DISTANCE = 0.7
 
 # This values define the upper percentage for consideration
 # if the analyzed result becomes a best_match value
-# (2)
-MARGINAL_VALUE = 0.5
-BEST_MATCH_VALUE = 0.6
-
+MARGINAL_VALUE = 0.6
+BEST_MATCH_VALUE = 0.7
 
 # Set to True if you want to dilute results from 0-n in
 # the similarity calculation.
-# (3)
 POSITION_WEIGHTING = False
 
 # This value defines the min value that is needed
 # for consideration if the analyzed result becomes a
 # "readable result"
-# (3)
-MIN_READABLE_RESULT_VALUE = 0.65
-
-# Ignore MIN-/MAX token length check in pre_readable results
-SOFT_IGNORE_MIN_MAX = True
-
+MIN_READABLE_RESULT_VALUE = 0.8
 
 # This values define the percentage needed when we
 # compare the shapes of dict data against or analyzed
 # data and the filled percentage of the results
 # Last line of defense
-SHAPE_SIMILARITY = 0.4
-SHAPE_LENGTH_SIMILARITY = 0.4
+SHAPE_SIMILARITY = 0.8
+SHAPE_LENGTH_SIMILARITY = 0.7
 RESULT_PERCENTAGE = 0.8
 
 # Ignore MIN-/MAX token length check in get_readable results

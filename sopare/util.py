@@ -145,17 +145,13 @@ class util:
         return compiled_dict
 
     def add_weighting(self, tokens):
-        weighting = 0
-        w_arr = [ ]
+        high = 0
         for token in tokens:
-            c_weighting = token['tendency']['avg'] * token['tendency']['len']
-            if (c_weighting > weighting):
-                weighting = c_weighting
-            w_arr.append(c_weighting)
-        high = max(w_arr)
-        for i, weighting in enumerate(w_arr):
-            v = (1.0 - (i*0.1)) # TODO: Add magic
-            tokens[i]['weighting'] = v
+            cs = sum(token['token_peaks'])/1000.0
+            if (cs > high):
+                high = cs
+        for i, token in enumerate(tokens):
+            token['weighting'] = sum(token['token_peaks'])/1000.0 / high            
 
     def compress_dict(self, json_data):
         compressed_dict =  { 'dict': [ ] }

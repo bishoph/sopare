@@ -19,6 +19,7 @@ under the License.
 
 import characteristics
 import config
+import operator
 import path
 import util
 import imp
@@ -51,7 +52,7 @@ class analyze():
         first_token_weighting = self.analyze_first_token(first_guess, data)
         if (self.debug):
             print ('first_token_weighting : ' + str(first_token_weighting))
-        weighted_results = self.weight_first_token(first_token_weighting, word_tendency, data)
+        weighted_results = self.weight_first_token(first_token_weighting, startpos)
         if (self.debug):
             print ('weighted_results : ' + str(weighted_results))
         deep_guess = self.deep_scan(weighted_results, data)
@@ -61,10 +62,10 @@ class analyze():
             best_match = self.get_best_match(deep_guess, startpos)
             if (self.debug):
                 print ('best_match : ' + str(best_match))
-            pre_readable_results = self.prepare_readable_results(best_match)
+            pre_readable_results = self.prepare_readable_results(best_match, weighted_results)
             if (self.debug):
                 print ('pre_readable_results : ' + str(pre_readable_results))
-            boosted_results = self.get_boosted_results(pre_readable_results, weighted_results)
+            boosted_results = self.get_boosted_results(pre_readable_results, pre_results)
             if (self.debug):
                 print ('boosted_results : ' + str(boosted_results))
             validated_results =  self.validate_results(boosted_results, word_tendency, data)
@@ -95,71 +96,156 @@ class analyze():
                 print 'ImportError:', err
 
     def get_best_match(self, deep_guess, startpos):
-        best_match_temp = { }
         best_match = { }
         for guess in deep_guess:
             id = guess[0]
             pos = guess[1]
-            ll = len(guess[2])
-            if (id not in best_match_temp):
-                best_match_temp[id] =  [ [ 0 ] * len(startpos), [ 0 ] * len(startpos) ]
+            if (id not in best_match):
+                best_match[id] =  [ [ 0 ] * len(startpos), [ 0 ] * len(startpos) ]
             for i, point in enumerate(guess[2]):
-                if (point[0] > config.MARGINAL_VALUE and pos+i < len(best_match_temp[id][0])):
-                    best_match_temp[id][0][pos+i] += point[0]
-                    best_match_temp[id][1][pos+i] += point[1]
-        for id in best_match_temp:
-            top_similarity = max(best_match_temp[id][0])
-            top_weight = max(best_match_temp[id][1])
-            if (top_similarity >= config.BEST_MATCH_VALUE):
-                best_match[id] = [ best_match_temp[id][0], best_match_temp[id][1] ]
-            else:
-                if (self.debug):
-                    print ('removing '+id+' from best_match as top_similarity = ' + str(top_similarity) + ' / top_weight = ' + str(top_weight))
+                if (point[0] > config.MARGINAL_VALUE and pos+i < len(best_match[id][0])):
+                    if (point[0] > best_match[id][0][pos+i]):
+                         best_match[id][0][pos+i] = point[0]
+                         best_match[id][1][pos+i] = point[1]
+        best_result_list = [ ]
+        for id in best_match:
+            bms = sum(best_match[id][0])/len(best_match[id][0])
+            if (bms >= config.BEST_MATCH_VALUE):
+                best_result_list.append([id, bms])
+        best_result_list = sorted(best_result_list, key=lambda x: x[1], reverse=True)
         return best_match
 
-    def prepare_readable_results(self, best_match):
+    def prepare_readable_results(self, best_match, weighted_results):
+        # Building confidence and prepare pre_results
+        confidence = { }
+        for id in best_match:
+            confidence[id] = { 'best_match_sum': sum(best_match[id][0]), 'count': 0, 'score': 0 }
         pre_results = None
-        readable_match = None
+        stacked_results = [ ]
+        ll = 0
         for id in best_match:
             if (pre_results == None):
-                pre_results = [ '' ] * len(best_match[id][0])
-            if (readable_match == None):
-                readable_match = [ 0 ] * len(best_match[id][0])
-            di = 0
+                ll = len(best_match[id][0])
+                pre_results = [ '' ] * ll
+            stack = [ '' ] * ll
+            weighting = [ 0 ] * ll
+            if (pre_results == None):
+                ll = len(best_match[id][0])
+                pre_results = [ '' ] * ll
             for i, match in enumerate(best_match[id][0]):
                 if (config.POSITION_WEIGHTING):
                     match = match * best_match[id][1][i]
-                    if (best_match[id][1][i] > .9):
-                        di = 0
-                    di += 1
-                if (match > readable_match[i] and match >= config.MIN_READABLE_RESULT_VALUE):
-                    readable_match[i] = match
-                    pre_results[i] = id
+                if (match >= config.MIN_READABLE_RESULT_VALUE):
+                    stack[i] = id
+                    weighting[i] = round(best_match[id][1][i],2)
+            stacked_results.append([stack, weighting])
+        for result in stacked_results:
+            for i, id in enumerate(result[0]):
+                if (id in confidence):
+                    confidence[id]['count'] += 1
+                    if (result[1][i] > 0.25):
+                        confidence[id]['score'] += 1
+        for x in range(0, ll):
+            result_arr = [ ]
+            for y in range(0, len(stacked_results)):
+                weight_arr = [ '', '', 0, 0, 0 ]
+                id = stacked_results[y][0][x]
+                w = stacked_results[y][1][x]
+                if (id != ''):
+                    weight_arr[0] = id
+                    if (x in weighted_results[id]['results']):
+                        weight_arr[1] = id
+                    weight_arr[2] = w
+                    weight_arr[3] = confidence[id]['score']
+                    weight_arr[4] = confidence[id]['count']
+                result_arr.append(weight_arr)
+            weighted = sorted(result_arr, key=lambda x: x[2], reverse=True)
+            scored = sorted(result_arr, key=lambda x: x[3], reverse=True)
+            counted = sorted(result_arr, key=lambda x: x[4],reverse=True)
+            if (weighted[0][0] == scored[0][0] == counted[0][0]):
+                # We are quite confident that we got the right match
+                pre_results[x] = weighted[0][0]
+            else:
+                if (weighted[0][2] >= 0.1):
+                    # We are not 100% confident but it seems to be ok
+                    if (weighted[0][0] == counted[0][0]):
+                        pre_results[x] = weighted[0][0]
+                    elif (scored[0][0] == counted[0][0]):
+                        pre_results[x] = scored[0][0]
+                    else:
+                        print ('Write me!!! Decision for position '+str(x) + ' is not clear')
+                        print weighted[0]
+                        print scored[0]
+                        print counted[0]
+        if (self.debug):
+            print ('confidence: '+str(confidence))
         return pre_results
 
-    def get_boosted_results(self, pre_results, weighted_results):
-        if (pre_results != None):
-            for result in weighted_results:
-                pos_arr = weighted_results[result]['results']
-                for pos in pos_arr:
-                    if (result in pre_results):
-                        match = 0
-                        no_match = 0
-                        for x in range(pos, pos + self.dict_analysis[result]['max_tokens']):
-                            if (x < len(pre_results) and pre_results[x] == result):
-                                match += 1
-                            else:
-                                no_match += 1
-                        no_match = no_match - match
-                        if (match >= no_match):
-                            if (self.debug):
-                                print ('boosting : ' + result)
-                            for x in range(pos, pos + self.dict_analysis[result]['max_tokens']):
-                                if (x < len(pre_results)):
-                                    if (pre_results[x] == ''):
-                                        pre_results[x] = result
+    def get_boosted_results(self, pre_results, word_pos):
+        if (pre_results == None):
+            return
+        word_count_assumption = len(word_pos)
+        word_count = { }
+        fill_word = ''
+        for word in pre_results:
+            if (word != ''):
+                if (fill_word == ''):
+                    fill_word = word
+                if (word not in word_count):
+                    word_count[word] = 0
+                word_count[word] += 1
+        word_count = sorted(word_count.items(), key=operator.itemgetter(1), reverse=True)
+        words_to_eliminate = [ ]
+        for i, o in enumerate(word_count):
+            word, _ = o
+            if (i >= word_count_assumption):
+                words_to_eliminate.append(word)
+        for eliminate in words_to_eliminate:
+            for i, word in enumerate(pre_results):
+                if (word == eliminate):
+                    pre_results[i] = ''
+                    if (self.debug):
+                        print ('get_boosted_results eliminates '+eliminate)
+        for i, result in enumerate(pre_results):
+            if (result == ''):
+                pre_results[i] = fill_word
+            if (result != ''):
+                fill_word = result
+
+        word_count = { }
+        for word in pre_results:
+             if (word not in word_count):
+                 word_count[word] = 0
+             word_count[word] += 1
+        for eliminate in word_count:
+            if (word_count[eliminate] * 1.0 / self.dict_analysis[eliminate]['min_tokens'] < 0.4): # TODO: Make configurable
+                for i, word in enumerate(pre_results):
+                    if (eliminate == word):
+                        if (i+1 < len(pre_results)):
+                            pre_results[i] = pre_results[i+1]                            
         return pre_results
 
+    def nix():
+        sorted_weighted_results = [ ]
+
+        for result in weighted_results:
+            pos_arr = weighted_results[result]['results']
+            for pos in pos_arr:
+                sorted_weighted_results.append((result, pos))
+        sorted_weighted_results = sorted(sorted_weighted_results, key=lambda x: x[1])
+
+        for i, cleaned_sorted_results in enumerate(sorted_weighted_results):
+            result, pos = cleaned_sorted_results
+            until = len(pre_results)
+            if (i+1 < len(sorted_weighted_results)):
+                _, until = sorted_weighted_results[i+1]
+            for x in range(pos, until):
+                if (pre_results[x] == ''):
+                    if (self.debug):
+                        print('boosting '+result+' at pos '+str(x))
+                    pre_results[x] = result
+        return pre_results
+            
     def get_readable_results(self, pre_results, data):
         readable_results = [ ] 
         if (pre_results == None):
@@ -222,21 +308,23 @@ class analyze():
             return [ '' ] * ll
         return validated_results
 
-    def word_shape_check(self, word, start, count, word_tendency, data):
-        if (word not in self.dict_analysis):
-            return False
+    def word_shaper(self, start, count, data):
         ll = len(data)
         word_shape = [ ]
-        counter = 0
         for x in range(start, start + count):
             if (x < ll):
                 d = data[x]
                 characteristic, meta = d
                 if (characteristic != None):
-                    counter += 1
                     for m in meta:
                         if ('token_peaks' in m):
                             word_shape.extend(m['token_peaks'])
+        return word_shape
+
+    def word_shape_check(self, word, start, count, word_tendency, data):
+        if (word not in self.dict_analysis):
+            return False
+        word_shape = self.word_shaper(start, count, data)
         max_shape_similarity = 0
         max_shape_length_similarity = 0
         for shape in self.dict_analysis[word]['shape']:
@@ -263,24 +351,35 @@ class analyze():
                 d = data[pos]
                 characteristic, meta = d
                 fft_similarity = 0
+                fft_distance = 0
                 if (characteristic != None):
                     count = 0
                     for dcharacteristic in analysis_object['first_token']:
                         cfft = characteristic['fft_max']
                         dfft = dcharacteristic['fft_max']
-                        fft_similarity += self.util.approach_similarity(cfft, dfft)
-                        count += 1.0
-                    first_token_weighting.append([id, pos, round(fft_similarity/count,2)])
-        
+                        temp = self.util.approach_similarity(cfft, dfft)
+                        if (temp > fft_similarity):
+                            fft_similarity = temp
+                        temp = self.util.approach_distance(cfft, dfft)
+                        if (temp > fft_distance):
+                            fft_distance = temp
+                    first_token_weighting.append([id, pos, round(fft_similarity,2), round(fft_distance,2)])
         return first_token_weighting
 
-    def weight_first_token(self, first_token_weighting, word_tendency, data):
+    def weight_first_token(self, first_token_weighting, startpos):
         weighted_results = { }
         for arr in first_token_weighting:
             if (arr[0] not in weighted_results):
                 weighted_results[arr[0]] = { 'results': [ ], 'lmin': self.dict_analysis[arr[0]]['min_tokens'], 'lmax': self.dict_analysis[arr[0]]['max_tokens'] }
-            # TODO: Write a real weight check algorithm
-            weighted_results[arr[0]]['results'].append(arr[1])
+            if (arr[3] >= config.MIN_DISTANCE):
+                if (arr[1] + self.dict_analysis[arr[0]]['min_tokens'] <= len(startpos)):
+                    weighted_results[arr[0]]['results'].append(arr[1])
+                else:
+                    if (self.debug):
+                        print ('weight_first_token: kicking '+arr[0]+ ' at pos '+str(arr[1])+' from results as length does not match = '+str(arr[1] + self.dict_analysis[arr[0]]['min_tokens']))
+            else:
+                if (self.debug):
+                    print ('weight_first_token: kicking '+arr[0]+ ' at pos '+str(arr[1])+' from results as distance = '+str(arr[3]))
         return weighted_results
 
     def deep_scan(self, first_guess, data):
@@ -332,10 +431,10 @@ class analyze():
         d = data[start]
         characteristic, meta = d
         if (characteristic != None):
-            fft = characteristic['fft_max']
+            fft = characteristic['fft_highest']
             analysis_object = self.dict_analysis[id]
             for dcharacteristic in analysis_object['first_token']:
-                dfft = dcharacteristic['fft_max']
+                dfft = dcharacteristic['fft_highest']
                 similarity_fft = self.util.approach_similarity(fft, dfft)
                 if (similarity_fft >= config.FAST_HIGH_COMPARE_MARGINAL_VALUE and ((start + analysis_object['min_tokens'])/2) <= token_length): # TODO: Check if 1/2 is feasible
                     return 1
@@ -370,6 +469,8 @@ class analyze():
             point = fft_similarity_avg * config.FFT_SIMILARITY
             point += distance_avg * config.FFT_DISTANCE
             point += tendency_similarity_avg * config.TENDENCY_SIMILARITY
+            if (point > 1):
+                print ('warning: calculate_points for '+id+' at pos '+str(start)+' revealed a total point sum > 1:'+str(point))           
             points.append([round(point,2), weighting])
         return points
 
@@ -468,11 +569,10 @@ class analyze():
                 tendency = characteristic['tendency']
                 fft_max = characteristic['fft_max']
                 fft_freq = characteristic['fft_freq']
-
                 dict_tendency = dict_entries['characteristic'][pos]['tendency']
                 dict_fft_max = dict_entries['characteristic'][pos]['fft_max']
                 dict_fft_freq = dict_entries['characteristic'][pos]['fft_freq']
-                tendency_similarity = self.util.approach_length_similarity(
+                tendency_similarity = self.util.approach_similarity(
                  [fft_freq, tendency['len'], tendency['avg'], tendency['delta'], tendency['deg'] ],
                  [dict_fft_freq, dict_tendency['len'], dict_tendency['avg'],  dict_tendency['delta'], dict_tendency['deg']]
                 )

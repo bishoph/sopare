@@ -39,6 +39,7 @@ class worker(multiprocessing.Process):
         self.characteristic = characteristics.characteristic(debug)
         self.running = True
         self.counter = 0
+        self.plot_counter = 0
         self.reset_counter = 0
         self.rawbuf = [ ]
         self.reset()
@@ -87,7 +88,9 @@ class worker(multiprocessing.Process):
                     if (self.wave):
                         self.util.savefilteredwave('token'+str(self.counter)+self.uid, raw_token)
                     if (self.plot):
-                        self.visual.create_sample(characteristic['fft_max'], 'fft'+str(self.counter)+'.png')
+                        self.visual.create_sample(characteristic['fft_max'], 'fft_max'+str(self.plot_counter)+'.png')
+                        self.visual.create_sample(fft, 'fft'+str(self.plot_counter)+'.png')
+                    self.plot_counter += 1
                 self.counter += 1
             elif (obj['action'] == 'reset' and self.dict == None):
                 self.reset()

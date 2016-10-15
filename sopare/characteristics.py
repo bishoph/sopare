@@ -21,6 +21,7 @@ import config
 import math
 import heapq
 import util
+import numpy
 
 class characteristic:
 
@@ -36,42 +37,36 @@ class characteristic:
                     return None
 
         fft = fft[config.LOW_FREQ:config.HIGH_FREQ]
-        fft = [abs(i) for i in fft]
+        fft = numpy.abs(fft)
         fft_len = 0
         chunked_fft_max = [ ]
         last = 0
         progessive = 1
-        i = 0
-        while (i < len(fft)):
-            if (hasattr(config, 'START_PROGRESSIVE_FACTOR')  and i >= config.START_PROGRESSIVE_FACTOR):
-                progessive += progessive*config.PROGRESSIVE_FACTOR
-            else:
-                progessive = config.MIN_PROGRESSIVE_STEP
-            if (progessive < config.MIN_PROGRESSIVE_STEP):
-                progessive = config.MIN_PROGRESSIVE_STEP
-            if (progessive > config.MAX_PROGRESSIVE_STEP):
-                progessive = config.MAX_PROGRESSIVE_STEP
-            last = i
-            i += int(progessive)
-            chunked_fft_max.append(int(sum(fft[last:i])))
-            
+        i = config.MIN_PROGRESSIVE_STEP
+
+        for x in range(0, len(fft), i):
+            if (hasattr(config, 'START_PROGRESSIVE_FACTOR')  and x >= config.START_PROGRESSIVE_FACTOR):
+                progessive += progessive * config.PROGRESSIVE_FACTOR
+                i += int(progessive)
+                if (i > config.MAX_PROGRESSIVE_STEP):
+                    i = config.MAX_PROGRESSIVE_STEP
+            chunked_fft_max.append(int(sum(fft[x:x+i])))    
         fft_len = len(chunked_fft_max)
-        max_max = max(chunked_fft_max)
 
         # return None for useless stuff
-        if (fft_len <= config.MIN_FFT_LEN or max_max < config.MIN_FFT_MAX):
+        if (fft_len <= config.MIN_FFT_LEN):
             if (self.debug):
                 print ('returning None for useless stuff')
             return None
 
-        fft_max, fft_outline = self.get_outline(chunked_fft_max, len(chunked_fft_max))
+        fft_highest, fft_outline = self.get_outline(chunked_fft_max[0:], len(chunked_fft_max))
         token_peaks = self.get_token_peaks(meta)
         tendency_characteristic = self.get_tendency(token_peaks)
         if (tendency_characteristic == None):
             if (self.debug):
                  print ('tendency_characteristic was None')
             return None
-        model_characteristic = {'fft_freq': fft_len , 'fft_max': fft_max, 'fft_outline': fft_outline, 'tendency': tendency_characteristic, 'token_peaks': token_peaks }
+        model_characteristic = {'fft_freq': fft_len , 'fft_max': chunked_fft_max, 'fft_highest': fft_highest, 'fft_outline': fft_outline, 'tendency': tendency_characteristic, 'token_peaks': token_peaks }
         return model_characteristic
 
     def get_token_peaks(self, meta):
