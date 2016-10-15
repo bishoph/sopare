@@ -214,9 +214,10 @@ class analyze():
 
         word_count = { }
         for word in pre_results:
-             if (word not in word_count):
-                 word_count[word] = 0
-             word_count[word] += 1
+             if (word != ''):
+                 if (word not in word_count):
+                     word_count[word] = 0
+                 word_count[word] += 1
         for eliminate in word_count:
             if (word_count[eliminate] * 1.0 / self.dict_analysis[eliminate]['min_tokens'] < 0.4): # TODO: Make configurable
                 for i, word in enumerate(pre_results):
@@ -225,27 +226,6 @@ class analyze():
                             pre_results[i] = pre_results[i+1]                            
         return pre_results
 
-    def nix():
-        sorted_weighted_results = [ ]
-
-        for result in weighted_results:
-            pos_arr = weighted_results[result]['results']
-            for pos in pos_arr:
-                sorted_weighted_results.append((result, pos))
-        sorted_weighted_results = sorted(sorted_weighted_results, key=lambda x: x[1])
-
-        for i, cleaned_sorted_results in enumerate(sorted_weighted_results):
-            result, pos = cleaned_sorted_results
-            until = len(pre_results)
-            if (i+1 < len(sorted_weighted_results)):
-                _, until = sorted_weighted_results[i+1]
-            for x in range(pos, until):
-                if (pre_results[x] == ''):
-                    if (self.debug):
-                        print('boosting '+result+' at pos '+str(x))
-                    pre_results[x] = result
-        return pre_results
-            
     def get_readable_results(self, pre_results, data):
         readable_results = [ ] 
         if (pre_results == None):
