@@ -72,8 +72,8 @@ MIN_ADAPTING = 5000
 #########################################################
 
 # SIMILARITY calculation basis
-FFT_SIMILARITY = 0.7
-FFT_DISTANCE = 0.3
+FFT_SIMILARITY = 0.8
+FFT_DISTANCE = 0.2
 TENDENCY_SIMILARITY = 0
 
 # First scan for candidates.
@@ -81,17 +81,17 @@ TENDENCY_SIMILARITY = 0
 # overlap quite a bit. LEFT scans negative from a potential
 # position, RIGHT positve. 
 # Defaults: -3, 3
-SEARCH_POTENTIAL_POSITION_LEFT = -3
+SEARCH_POTENTIAL_POSITION_LEFT = -1
 SEARCH_POTENTIAL_POSITION_RIGHT = 3
 
 # This value defines the marginal value that is needed
 # for consideration if the analyzed result is added to
 # "first_guess"
-FAST_HIGH_COMPARE_MARGINAL_VALUE = 0.7
+FAST_HIGH_COMPARE_MARGINAL_VALUE = 0.9
 
 # Min. distance for consideration to keep "first_guess"
 # potentials
-MIN_DISTANCE = 0.7
+MIN_DISTANCE = 0.5
 
 # This values define the upper percentage for consideration
 # if the analyzed result becomes a best_match value
@@ -111,9 +111,9 @@ MIN_READABLE_RESULT_VALUE = 0.8
 # compare the shapes of dict data against or analyzed
 # data and the filled percentage of the results
 # Last line of defense
-SHAPE_SIMILARITY = 0.8
-SHAPE_LENGTH_SIMILARITY = 0.7
-RESULT_PERCENTAGE = 0.8
+SHAPE_SIMILARITY = 0.85
+SHAPE_LENGTH_SIMILARITY = 0.4
+RESULT_PERCENTAGE = 0.9
 
 # Ignore MIN-/MAX token length check in get_readable results
 SOFT_IGNORE_MIN_MAX = True

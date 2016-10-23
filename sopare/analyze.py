@@ -352,7 +352,7 @@ class analyze():
             if (arr[0] not in weighted_results):
                 weighted_results[arr[0]] = { 'results': [ ], 'lmin': self.dict_analysis[arr[0]]['min_tokens'], 'lmax': self.dict_analysis[arr[0]]['max_tokens'] }
             if (arr[3] >= config.MIN_DISTANCE):
-                if (arr[1] + self.dict_analysis[arr[0]]['min_tokens'] <= len(startpos)):
+                if (arr[1] + (self.dict_analysis[arr[0]]['min_tokens']/2) <= len(startpos)):
                     weighted_results[arr[0]]['results'].append(arr[1])
                 else:
                     if (self.debug):
@@ -411,13 +411,21 @@ class analyze():
         d = data[start]
         characteristic, meta = d
         if (characteristic != None):
-            fft = characteristic['fft_highest']
             analysis_object = self.dict_analysis[id]
-            for dcharacteristic in analysis_object['first_token']:
-                dfft = dcharacteristic['fft_highest']
-                similarity_fft = self.util.approach_similarity(fft, dfft)
-                if (similarity_fft >= config.FAST_HIGH_COMPARE_MARGINAL_VALUE and ((start + analysis_object['min_tokens'])/2) <= token_length): # TODO: Check if 1/2 is feasible
-                    return 1
+            fft_sum, fft_len = self.util.get_sum_len(characteristic['fft_max'])
+            fft_sqr = self.util.sqr(characteristic['fft_max'])
+            for cal_fft_arr in analysis_object['cal_fft']:
+                for x in range(0,2): # TODO: Make configurable
+                    if (x < len(cal_fft_arr)):
+                         cal_fft = cal_fft_arr[x]
+                         cal_fft_sum = cal_fft[0]
+                         cal_fft_len = cal_fft[1]
+                         cal_fft_sqr = cal_fft[2]
+                         similarity_fft_sum = self.util.approach_fast_similarity(fft_sum, cal_fft_sum)
+                         similarity_fft_sqr = self.util.approach_fast_similarity(fft_sqr, cal_fft_sqr)
+                         similarity_fft = (similarity_fft_sum + similarity_fft_sum) / 2
+                         if (similarity_fft >= config.FAST_HIGH_COMPARE_MARGINAL_VALUE and ((start + analysis_object['min_tokens'])/2) <= token_length): # TODO: Check if 1/2 is feasible
+                             return 1
         return 0
 
     def word_compare(self, id, start, lmin, lmax, data):

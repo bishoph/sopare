@@ -59,14 +59,13 @@ class characteristic:
                 print ('returning None for useless stuff')
             return None
 
-        fft_highest, fft_outline = self.get_outline(chunked_fft_max[0:], len(chunked_fft_max))
         token_peaks = self.get_token_peaks(meta)
         tendency_characteristic = self.get_tendency(token_peaks)
         if (tendency_characteristic == None):
             if (self.debug):
                  print ('tendency_characteristic was None')
             return None
-        model_characteristic = {'fft_freq': fft_len , 'fft_max': chunked_fft_max, 'fft_highest': fft_highest, 'fft_outline': fft_outline, 'tendency': tendency_characteristic, 'token_peaks': token_peaks }
+        model_characteristic = {'fft_freq': fft_len , 'fft_max': chunked_fft_max, 'tendency': tendency_characteristic, 'token_peaks': token_peaks }
         return model_characteristic
 
     def get_token_peaks(self, meta):
@@ -75,26 +74,6 @@ class characteristic:
             if ('token_peaks' in m):
                 return m['token_peaks']
         return token_peaks
-
-    def get_highest(self, arr, n):
-        return heapq.nlargest(n, arr)
-
-    def get_outline(self, arr, n):
-        high5 = self.get_highest(arr, n)
-        high5i = [ ]
-        highoutline = [ ]
-        highv = high5[0] / config.GET_HIGH_THRESHOLD
-        for h in high5:
-            if (h >= highv):
-                i = arr.index(h)
-                high5i.append(i)
-                alpha = math.degrees(math.atan( h / ((i+1.0) * (i+1)*512) ))
-                highoutline.append(alpha)
-            else:
-                i = arr.index(h)
-                high5i.append(i)
-                arr[i] = 0
-        return arr, highoutline
 
     def get_tendency(self, data):
         ll = len(data)

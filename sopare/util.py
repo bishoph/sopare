@@ -59,7 +59,7 @@ class util:
         for dict_entries in json_data['dict']:
             if ('word_tendency' in dict_entries and dict_entries['word_tendency'] != None):
                 if (dict_entries['id'] not in analysis):
-                    analysis[dict_entries['id']] = { 'min_tokens': 0, 'max_tokens': 0, 'min_peaks': 0, 'max_peaks': 0, 'min_peak_length': [ ], 'max_peak_length': [ ], 'min_fft_len': 0, 'max_fft_len': 0, 'min_delta': 0, 'max_delta': 0, 'min_length': 0, 'max_length': 0, 'first_token': [ ], 'shape': [ ], 'fft_shape': [ ] }
+                    analysis[dict_entries['id']] = { 'min_tokens': 0, 'max_tokens': 0, 'min_peaks': 0, 'max_peaks': 0, 'first_token': [ ], 'shape': [ ], 'fft_shape': [ ], 'cal_fft': [ ] }
                 l = len(dict_entries['characteristic'])
                 if (l < 2):
                     print ('the following characteristic is < 2!')
@@ -75,6 +75,12 @@ class util:
                 analysis[dict_entries['id']]['shape'].append(dict_entries['word_tendency']['shape'])
                 analysis[dict_entries['id']]['fft_shape'].append(dict_entries['word_tendency']['fft_shape'])
                 analysis[dict_entries['id']]['first_token'].append(dict_entries['characteristic'][0])
+                cal_fft = [ ]
+                for characteristic in dict_entries['characteristic']:
+                    fft_sum, fft_len = self.get_sum_len(characteristic['fft_max'])
+                    fft_srq = self.sqr(characteristic['fft_max'])
+                    cal_fft.append([fft_sum, fft_len, fft_srq])
+                analysis[dict_entries['id']]['cal_fft'].append(cal_fft)
         return analysis
 
     def store_raw_dict_entry(self, dict_id, raw_characteristics, word_tendency):
@@ -242,6 +248,11 @@ class util:
         distance = ((sum_distance + len_distance) / 2)
         return round(distance, 2)
 
+    def get_sum_len(self, arr):
+        arr_sum = sum((a/1000.0) for a in arr)
+        arr_len = len(arr)
+        return arr_sum, arr_len
+
     def sqr(self, arr):
         return round(math.sqrt(sum([((a/1000.0) * (a/1000.0)) for a in arr])), 2)
 
@@ -251,6 +262,11 @@ class util:
         if (d > 0):
             return round(n / float(d), 2)
         return 0
+
+    def approach_fast_similarity(self, a, b):
+        if (a < b):
+            return round(a / b, 2)
+        return round(b / a, 2)
 
     def approach_length_similarity(self, arr1, arr2):
         larr1 = sum(arr1)
