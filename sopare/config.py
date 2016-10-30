@@ -35,10 +35,10 @@ LONG_SILENCE = 60
 # normally more learned entries in the dictionary.
 # Progressive value is used if you want to pack not
 # so relevant frequencies
-PROGRESSIVE_FACTOR = .01
-#START_PROGRESSIVE_FACTOR = 3000
+PROGRESSIVE_FACTOR = .1
+START_PROGRESSIVE_FACTOR = 2000
 MIN_PROGRESSIVE_STEP = 20
-MAX_PROGRESSIVE_STEP = 100
+MAX_PROGRESSIVE_STEP = 400
 
 # Specifies freq ranges that are kept for further
 # analysis. Freq outside of the ranges are set to zero.
@@ -56,10 +56,6 @@ MIN_FFT_LEN = 12
 # Minimal FFT max. value for consideration
 # Default: 5000
 MIN_FFT_MAX = 5000
-
-# This number calculates the threshold for consideration
-# for the first comparison.
-GET_HIGH_THRESHOLD = 4
 
 # Min. adaptive value to create a characteristic
 # Default: TDB
@@ -81,8 +77,8 @@ TENDENCY_SIMILARITY = 0
 # overlap quite a bit. LEFT scans negative from a potential
 # position, RIGHT positve. 
 # Defaults: -3, 3
-SEARCH_POTENTIAL_POSITION_LEFT = -1
-SEARCH_POTENTIAL_POSITION_RIGHT = 3
+SEARCH_POTENTIAL_POSITION_LEFT = -3
+SEARCH_POTENTIAL_POSITION_RIGHT = 4
 
 # This value defines the marginal value that is needed
 # for consideration if the analyzed result is added to
@@ -91,11 +87,11 @@ FAST_HIGH_COMPARE_MARGINAL_VALUE = 0.9
 
 # Min. distance for consideration to keep "first_guess"
 # potentials
-MIN_DISTANCE = 0.5
+MIN_DISTANCE = 0.6
 
 # This values define the upper percentage for consideration
 # if the analyzed result becomes a best_match value
-MARGINAL_VALUE = 0.6
+MARGINAL_VALUE = 0.65
 BEST_MATCH_VALUE = 0.7
 
 # Set to True if you want to dilute results from 0-n in
@@ -111,9 +107,9 @@ MIN_READABLE_RESULT_VALUE = 0.8
 # compare the shapes of dict data against or analyzed
 # data and the filled percentage of the results
 # Last line of defense
-SHAPE_SIMILARITY = 0.85
+SHAPE_SIMILARITY = 0.7
 SHAPE_LENGTH_SIMILARITY = 0.4
-RESULT_PERCENTAGE = 0.9
+RESULT_PERCENTAGE = 0.7
 
 # Ignore MIN-/MAX token length check in get_readable results
 SOFT_IGNORE_MIN_MAX = True

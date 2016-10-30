@@ -41,42 +41,54 @@ class analyze():
         self.reset()
 
     def do_analysis(self, data, word_tendency, rawbuf):
+        debug_info = ''
         pre_results, startpos = self.pre_scan(data, word_tendency)
+        debug_info += 'pre_results : ' + str(pre_results) + '\n'
+        debug_info += 'startpos : ' + str(startpos) + '\n'
         if (self.debug):
             print ('pre_results : ' + str(pre_results))
         if (pre_results == None):
             return
         first_guess = self.first_scan(pre_results, startpos, word_tendency, data)
+        debug_info += 'first_guess : ' + str(first_guess) + '\n'
         if (self.debug):
             print ('first_guess : ' + str(first_guess))
         first_token_weighting = self.analyze_first_token(first_guess, data)
+        debug_info += 'first_token_weighting : ' + str(first_token_weighting) + '\n'	
         if (self.debug):
             print ('first_token_weighting : ' + str(first_token_weighting))
         weighted_results = self.weight_first_token(first_token_weighting, startpos)
+        debug_info += 'weighted_results : ' + str(weighted_results) + '\n'
         if (self.debug):
             print ('weighted_results : ' + str(weighted_results))
         deep_guess = self.deep_scan(weighted_results, data)
+        debug_info += 'deep_guess : ' + str(deep_guess) + '\n'
         if (self.debug):
             print ('deep_guess : ' + str(deep_guess))
         if (deep_guess != None):
             best_match = self.get_best_match(deep_guess, startpos)
+            debug_info += 'best_match : ' + str(best_match) + '\n'
             if (self.debug):
                 print ('best_match : ' + str(best_match))
             pre_readable_results = self.prepare_readable_results(best_match, weighted_results)
+            debug_info += 'pre_readable_results : ' + str(pre_readable_results) + '\n'
             if (self.debug):
                 print ('pre_readable_results : ' + str(pre_readable_results))
             boosted_results = self.get_boosted_results(pre_readable_results, pre_results)
+            debug_info += 'boosted_results : ' + str(boosted_results) + '\n'
             if (self.debug):
                 print ('boosted_results : ' + str(boosted_results))
             validated_results =  self.validate_results(boosted_results, word_tendency, data)
+            debug_info += 'validated_results : ' + str(validated_results) + '\n'
             if (self.debug):
                 print ('validated_result : ' + str(validated_results))
             readable_results = self.get_readable_results(validated_results, data)
+            debug_info += 'readable_results : ' + str(readable_results) + '\n'
             if (self.debug):
                 print ('readable_results : ' + str(readable_results))
             if (len(readable_results) > 0):
                 for p in self.plugins:
-                    p.run(readable_results, best_match, data, word_tendency, rawbuf)
+                    p.run(readable_results, debug_info, word_tendency, rawbuf)
 
     def reset(self):
         self.first_approach = { }
