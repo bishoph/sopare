@@ -86,7 +86,7 @@ def main(argv):
 
 def recreate_dict(debug):
     print ("recreating dictionary from raw input files...")
-    utilities = util.util(debug, False)
+    utilities = util.util(debug)
     utilities.recreate_dict_from_raw_files()
 
 def delete_word(dict, debug):
@@ -100,12 +100,12 @@ def delete_word(dict, debug):
 def show_word_entries(dict, debug):
     print (dict+" entries in dictionary:")
     print
-    utilities = util.util(debug, False)
+    utilities = util.util(debug)
     utilities.showdictentry(dict)
 
 def show_dict_ids(debug):
     print ("current entries in dictionary:")
-    utilities = util.util(debug, False)
+    utilities = util.util(debug)
     utilities.showdictentriesbyid()
 
 def usage():
