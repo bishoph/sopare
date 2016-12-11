@@ -20,6 +20,7 @@ under the License.
 import pyaudio
 import multiprocessing
 import buffering
+import time
 import sys
 import io
 import config
@@ -32,12 +33,12 @@ class recorder:
         self.wave = wave
         self.outfile = outfile
         self.dict = dict
-        self.CHUNK = 512
         self.FORMAT = pyaudio.paInt16
         # mono
         self.CHANNELS = 1
         self.pa = pyaudio.PyAudio()
-        self.queue = multiprocessing.Queue()
+        self.queue = multiprocessing.JoinableQueue()
+        self.running = True
   
         if (debug):
             defaultCapability = self.pa.get_default_host_api_info()
@@ -48,51 +49,55 @@ class recorder:
                 rate=config.SAMPLE_RATE,
                 input=True,
                 output=False,
-                frames_per_buffer=self.CHUNK)
+                frames_per_buffer=config.CHUNK)
 
+        self.buffering = buffering.buffering(self.queue, endless_loop, self.debug, self.plot, self.wave, self.outfile, self.dict)
         if (infile == None):
-            self.buffering = buffering.buffering(self.queue, endless_loop, self.debug, self.plot, self.wave, self.outfile, self.dict)
-            self.recording(endless_loop)
+            self.recording()
         else:
             self.readfromfile(infile)
 
     def readfromfile(self, infile):
         print("* reading file "+infile)
-        import processing
-        proc = processing.processor(False, self.debug, self.plot, self.wave, None, self.dict, None)
-        file = io.open(infile, 'rb', buffering=self.CHUNK*2)
+        file = io.open(infile, 'rb', buffering=config.CHUNK)
         while True:
-            buf = file.read(self.CHUNK*2)
+            buf = file.read(config.CHUNK*2)
             if buf:
-                proc.check_silence(buf)
+                self.queue.put(buf)
             else:
+                self.queue.close()
                 break
-        file.close
-        proc.stop("end of file")
+        file.close()
+        while (self.queue.qsize() > 0):
+            if (self.debug):
+                print ('waiting for queue...')
+            time.sleep(3) # wait for all threads to finish their work
+        self.buffering.flush('end of file')
         print("* done ")
         self.stop()
         sys.exit()
 
-    def recording(self, endless_loop):
+    def recording(self):
         print("start endless recording")
-        while True:
+        while self.running:
             try:
                 if (self.buffering.is_alive()):
-                    buf = self.stream.read(self.CHUNK)
-                    self.queue.put(buf) 
+                    buf = self.stream.read(config.CHUNK)
+                    self.queue.put(buf)
                 else:
                     print ("Buffering not alive, stop recording")
+                    self.queue.close()
                     break
             except IOError as e:
                 print ("stream read error "+str(e))
-                pass
         self.stop()
         sys.exit()
 
     def stop(self):
         print("stop endless recording")
+        self.running = False
         try:
-            self.queue.cancel_join_thread()
+            self.queue.join_thread()
             self.buffering.terminate()
         except:
             pass

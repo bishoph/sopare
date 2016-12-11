@@ -28,22 +28,26 @@ class buffering(multiprocessing.Process):
         self.endless_loop = endless_loop
         self.debug = debug
         self.plot = plot
+        self.outfile = outfile
         self.proc = processing.processor(endless_loop, debug, plot, wave, outfile, dict, self)
         self.PROCESS_ROUND_DONE = False
+        self.test_counter = 0
         self.start()
   
     def run(self):
         if (self.debug):
             print ("buffering queue runner")
         while True:
-            if (self.endless_loop == False and self.PROCESS_ROUND_DONE):
-                break
             buf = self.queue.get()
+            if ((self.endless_loop == False or self.outfile != None) and self.PROCESS_ROUND_DONE):
+                break
             self.proc.check_silence(buf)
         if (self.debug):
             print ("terminating queue runner")
-            self.queue.close()
 
+    def flush(self, message):
+        self.proc.stop(message)
+ 
     def stop(self):
         if (self.debug):
             print ("stop buffering")

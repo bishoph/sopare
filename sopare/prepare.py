@@ -31,11 +31,22 @@ class preparing():
         self.wave = wave
         self.dict = dict
         self.visual = visual.visual()
-        self.util = util.util(debug, wave)
+        self.util = util.util(debug)
         self.filter = filter.filtering(debug, plot, dict, wave)
         self.silence = 0
-        self.reset()
+        self.force = False
+        self.counter = 0
+        self.token_start = False
+        self.new_token = False
+        self.new_word = False
+        self.token_counter = 0
+        self.buffer = [ ]
+        self.peaks = [ ]
+        self.token_peaks = [ ]
+        self.last_low_pos = 0
+        self.force = False
         self.plot_buffer = [ ]
+        self.entered_silence = False
 
     def tokenize(self, meta):
         if (self.valid_token(meta)):
@@ -97,9 +108,9 @@ class preparing():
 
         if (volume < config.TOKEN_HIGH):
             self.silence += 1
-	    if (self.silence == config.SILENCE):
+            if (self.silence == config.SILENCE):
                 self.new_token = True
-                meta.append({ 'token': 'token', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'token_peaks': self.token_peaks })
+                meta.append({ 'token': 'silence', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'token_peaks': self.token_peaks })
             elif (self.silence == config.LONG_SILENCE):
                 self.new_word = True
                 self.entered_silence = True
