@@ -33,11 +33,14 @@ class filtering():
 
     def stop(self):
         self.queue.put({ 'action': 'stop' })
+        self.queue.close()
+        self.queue.join_thread()
 
     def reset(self):
         self.queue.put({ 'action': 'reset' })
 
-    def check_for_windowing(self, meta):
+    @staticmethod
+    def check_for_windowing(meta):
         for m in meta:
             if (m['token'] == 'start analysis' or m['token'] == 'silence'):
                 return True

@@ -48,7 +48,7 @@ try:
 except:
     print ('An error occured while initializing the Twitter API. Continue anyway without tweeting!')
 
-def run(readable_results, data, word_tendency, rawbuf):
+def run(readable_results, data, rawbuf):
     status = None
     if (len(readable_results) == 2 and readable_results[0] == 'licht'  and ('aus' in readable_results or 'an' in readable_results)):
         if ('an' in readable_results and 'aus' in readable_results):
@@ -59,16 +59,16 @@ def run(readable_results, data, word_tendency, rawbuf):
         if ('aus' in readable_results):
             status += ".0"
     if (status != None):
-        debug_output(status, readable_results, data, word_tendency, rawbuf)
+        debug_output(status, readable_results, data, rawbuf)
         tweet(status)
 
 def tweet(status):
     if (api != None):
         api.update_status(status)
 
-def debug_output(status, readable_results, data, word_tendency, rawbuf):
+def debug_output(status, readable_results, data, rawbuf):
         scaled = numpy.int16(rawbuf/numpy.max(numpy.abs(rawbuf)) * 32767)
         write('/home/pi/dev/sopare/tokens/'+status+'.wav', 44100, scaled)
         text_file = open('/home/pi/dev/sopare/tokens/'+status+'.txt', 'w')
-        text_file.write(str(data) + '\n\n' + str(word_tendency) + '\n\n' + str(readable_results))
+        text_file.write(str(data) + '\n\n' + '\n\n' + str(readable_results))
         text_file.close()

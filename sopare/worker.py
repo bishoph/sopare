@@ -23,6 +23,7 @@ import visual
 import analyze
 import characteristics
 import uuid
+import comparator
 
 class worker(multiprocessing.Process):
 
@@ -34,16 +35,22 @@ class worker(multiprocessing.Process):
         self.dict = dict
         self.wave = wave
         self.visual = visual.visual()
-        self.util = util.util(debug, None)
+        self.util = util.util(debug)
         self.analyze = analyze.analyze(debug)
         self.characteristic = characteristics.characteristic(debug)
+        self.compare = comparator.compare(debug, self.util)
         self.running = True
         self.counter = 0
         self.plot_counter = 0
         self.reset_counter = 0
         self.rawbuf = [ ]
-        self.reset()
-        self.DICT = self.util.getDICT()
+        self.rawfft = [ ]
+        self.raw = [ ]
+        self.fft = [ ]
+        self.word_tendency = None
+        self.character = [ ]
+        self.raw_character = [ ]
+        self.uid = str(uuid.uuid4())
         self.start()
 
     def reset(self):
@@ -60,6 +67,7 @@ class worker(multiprocessing.Process):
         self.uid = str(uuid.uuid4())
         self.analyze.reset()
         self.reset_counter += 1
+        self.compare.reset()
 
     def save_wave_buf(self):
         self.util.savefilteredwave('filtered_results'+str(self.reset_counter), self.rawbuf)
@@ -79,6 +87,7 @@ class worker(multiprocessing.Process):
                 meta = obj['meta']
                 characteristic = self.characteristic.getcharacteristic(fft, meta)
                 self.character.append((characteristic, meta))
+                self.compare.word(self.character)
                 if (self.dict != None):
                     self.raw_character.append({ 'fft': fft, 'meta': meta })
                 if (characteristic != None):
@@ -100,12 +109,10 @@ class worker(multiprocessing.Process):
             if (self.counter > 0 and meta != None):
                 for m in meta:
                     if (m['token'] == 'start analysis'):
-                        self.word_tendency = self.characteristic.get_word_tendency(m['peaks'], self.character)
-                        if (self.word_tendency != None):
-                            if (self.dict == None):
-                                self.analyze.do_analysis(self.character, self.word_tendency, self.rawbuf)
-                            else:
-                                self.util.store_raw_dict_entry(self.dict, self.raw_character, self.word_tendency)
+                        if (self.dict == None):
+                            self.analyze.do_analysis(self.compare.get_results(), self.character, self.rawbuf)
+                        else:
+                            self.util.store_raw_dict_entry(self.dict, self.raw_character)
                         self.reset()
 
         if (self.wave and len(self.rawbuf) > 0):

@@ -94,7 +94,7 @@ def delete_word(dict, debug):
         print ("deleting "+dict+" from dictionary")
     else:
         print ("deleting all enttries from dictionary")
-    utilities = util.util(debug, False)
+    utilities = util.util(debug)
     utilities.deletefromdict(dict)
 
 def show_word_entries(dict, debug):
