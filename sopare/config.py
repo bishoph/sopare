@@ -34,7 +34,7 @@ LONG_SILENCE = 60
 #########################################################
 
 # Steps boil down the data into smaller chunks of data.
-# Smaller steps means more precision but require
+# Smaller steps mean more precision but require
 # normally more learned entries in the dictionary.
 # Progressive value is used if you want to pack not
 # so relevant frequencies
@@ -72,11 +72,17 @@ MIN_ADAPTING = 5000
 PEAK_FACTOR = 3
 
 #########################################################
-# Compare  configuration options ########################
+# Compare configuration options #########################
 #########################################################
 
-# Single margin
-MARGINAL_VALUE = 0.3
+# Number of tokens to identify the beginning of a word
+COMPARE_START_TOKENS = 2
 
-# Minimal similarity across all comparisons
+# Single margin
+MARGINAL_VALUE = 0.6
+
+# Minimal similarity across all comparison
 MIN_CROSS_SIMILARITY = 0.4
+
+# Minimal non empty findings within results in percent
+MIN_RESULT_PERCENTAGE = 0.5
