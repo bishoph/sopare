@@ -38,10 +38,10 @@ LONG_SILENCE = 60
 # normally more learned entries in the dictionary.
 # Progressive value is used if you want to pack not
 # so relevant frequencies
-PROGRESSIVE_FACTOR = .1
-START_PROGRESSIVE_FACTOR = 2000
-MIN_PROGRESSIVE_STEP = 20
-MAX_PROGRESSIVE_STEP = 400
+PROGRESSIVE_FACTOR = 0
+START_PROGRESSIVE_FACTOR = 8000
+MIN_PROGRESSIVE_STEP = 100
+MAX_PROGRESSIVE_STEP = 100
 
 # Specifies freq ranges that are kept for further
 # analysis. Freq outside of the ranges are set to zero.
@@ -82,7 +82,9 @@ COMPARE_START_TOKENS = 2
 MARGINAL_VALUE = 0.6
 
 # Minimal similarity across all comparison
-MIN_CROSS_SIMILARITY = 0.4
+MIN_CROSS_SIMILARITY = 0.5
 
-# Minimal non empty findings within results in percent
-MIN_RESULT_PERCENTAGE = 0.5
+# Caclulation basis
+SIMILARITY_PEAKS = 0.1
+SIMILARITY_HEIGHT = 0.5
+SIMILARITY_DOMINANT_FREQUENCY = 0.4

@@ -52,11 +52,10 @@ class util:
 
     @staticmethod
     def compile_analysis(json_data):
-        # TODO: Cleanup
         analysis = { }
         for dict_entries in json_data['dict']:
             if (dict_entries['id'] not in analysis):
-                analysis[dict_entries['id']] = { 'min_tokens': 0, 'max_tokens': 0 }
+                analysis[dict_entries['id']] = { 'min_tokens': 0, 'max_tokens': 0, 'peaks': [ ] }
             l = len(dict_entries['characteristic'])
             if (l < 2):
                 print ('the following characteristic is < 2!')
@@ -65,6 +64,15 @@ class util:
                 analysis[dict_entries['id']]['max_tokens'] = l
             if (l < analysis[dict_entries['id']]['min_tokens'] or analysis[dict_entries['id']]['min_tokens'] == 0):
                 analysis[dict_entries['id']]['min_tokens'] = l
+            for i, entry in enumerate(dict_entries['characteristic']):
+                if (i == len(analysis[dict_entries['id']]['peaks'])):
+                    analysis[dict_entries['id']]['peaks'].append(entry['peaks'])
+                else:
+                    for miss in entry['peaks']:
+                        if (miss not in analysis[dict_entries['id']]['peaks'][i]):
+                            analysis[dict_entries['id']]['peaks'][i].append(miss)
+                    op = sorted(analysis[dict_entries['id']]['peaks'][i])
+                    analysis[dict_entries['id']]['peaks'][i] = op
         return analysis
 
     @staticmethod
