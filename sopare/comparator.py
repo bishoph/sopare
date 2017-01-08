@@ -48,6 +48,8 @@ class compare():
             id = dict_entries['id']
             dict_characteristic = dict_entries['characteristic']
             for i, dcharacteristic in enumerate(dict_characteristic):
+                if (i > config.COMPARE_START_TOKENS):
+                    break
                 fft_sim = self.util.similarity(characteristic['peaks'], dcharacteristic['peaks'])
                 fft_sim += self.util.similarity(characteristic['token_peaks'], dcharacteristic['token_peaks'])
                 fft_sim += self.util.single_similarity(characteristic['df'], dcharacteristic['df'])

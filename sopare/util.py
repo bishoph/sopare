@@ -52,11 +52,10 @@ class util:
 
     @staticmethod
     def compile_analysis(json_data):
-        # TODO: Cleanup
         analysis = { }
         for dict_entries in json_data['dict']:
             if (dict_entries['id'] not in analysis):
-                analysis[dict_entries['id']] = { 'min_tokens': 0, 'max_tokens': 0 }
+                analysis[dict_entries['id']] = { 'min_tokens': 0, 'max_tokens': 0, 'peaks': [ ], 'df': [ ], 'minp': [ ], 'maxp': [ ], 'cp': [ ], 'mincp': [ ], 'maxcp': [ ] }
             l = len(dict_entries['characteristic'])
             if (l < 2):
                 print ('the following characteristic is < 2!')
@@ -65,6 +64,34 @@ class util:
                 analysis[dict_entries['id']]['max_tokens'] = l
             if (l < analysis[dict_entries['id']]['min_tokens'] or analysis[dict_entries['id']]['min_tokens'] == 0):
                 analysis[dict_entries['id']]['min_tokens'] = l
+            for i, entry in enumerate(dict_entries['characteristic']):
+                if (i == len(analysis[dict_entries['id']]['cp'])):
+                    analysis[dict_entries['id']]['cp'].append([len(entry['peaks'])])
+                else:
+                    ll = len(entry['peaks'])
+                    if (ll not in analysis[dict_entries['id']]['cp'][i]):
+                        analysis[dict_entries['id']]['cp'][i].append(ll)
+                if (i == len(analysis[dict_entries['id']]['peaks'])):
+                    analysis[dict_entries['id']]['peaks'].append(entry['peaks'])
+                else:
+                    for miss in entry['peaks']:
+                        if (miss not in analysis[dict_entries['id']]['peaks'][i]):
+                            analysis[dict_entries['id']]['peaks'][i].append(miss)
+                    op = sorted(analysis[dict_entries['id']]['peaks'][i])
+                    analysis[dict_entries['id']]['peaks'][i] = op
+                if (i == len(analysis[dict_entries['id']]['df'])):
+                    analysis[dict_entries['id']]['df'].append([])
+                if (entry['df'] not in analysis[dict_entries['id']]['df'][i]):
+                    analysis[dict_entries['id']]['df'][i].append(entry['df'])
+                    op = sorted(analysis[dict_entries['id']]['df'][i])
+                    analysis[dict_entries['id']]['df'][i] = op
+        for id in analysis:
+            for p in analysis[id]['peaks']:
+                 analysis[id]['minp'].append(min(p))
+                 analysis[id]['maxp'].append(max(p))
+            for cp in analysis[id]['cp']:
+                analysis[id]['mincp'].append(min(cp))
+                analysis[id]['maxcp'].append(max(cp))
         return analysis
 
     @staticmethod
@@ -200,5 +227,5 @@ class util:
         if (a == 0 or b == 0):
             return 0
         if (a < b):
-            return round(float(a) / float(b), 2)
+            return float(a) / float(b)
         return float(b) / float(a)

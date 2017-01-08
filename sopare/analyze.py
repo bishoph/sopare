@@ -37,8 +37,8 @@ class analyze():
         self.last_results = None
 
     def do_analysis(self, results, data, rawbuf):
-        self.debug_info = str(data)+'\n\n'
-        self.debug_info = str(results)+'\n\n'
+        self.debug_info = str(data) + '\n\n'
+        self.debug_info += str(results) + '\n\n'
         framing = self.framing(results)
         matches = self.deep_search(framing, data)
         readable_results = self.get_match(matches)
@@ -55,8 +55,8 @@ class analyze():
             sorted_results = sorted(results[id], key=lambda x: x[1])
             framing[id] = [ ]
             for result in sorted_results:
-                if (result[1] not in framing[id]):
-                    framing[id].append(result[1])
+                if (result[0] not in framing[id]):
+                    framing[id].append(result[0])
         return framing
 
     def deep_search(self, framing, data):
@@ -65,52 +65,106 @@ class analyze():
         high_results = [ 0 ] * len(data)
         for id in framing:
             for startpos in framing[id]:
-                xsim = self.deep_inspection(id, startpos, data)
-                framing_match.append([id, startpos, xsim])
-        for x in range(0, len(data)):
-            for frame in framing_match:
-                if (x == frame[1]):
-                    if (frame[2] > high_results[x]):
-                        high_results[x] = frame[2]
-                        match_results[x] = frame[0]
-
-        # check if the results make sense
+                xsim, xtsim, word_length = self.deep_inspection(id, startpos, data)
+                framing_match.append([id, startpos, xsim, xtsim, word_length])
+        for frame in framing_match:
+            xpos = 0
+            for x in range(frame[1], frame[1] + frame[4]):
+                if (x < len(high_results) and frame[2] > high_results[x]):
+                    high_results[x] = frame[2]
+                    match_results[x] = frame[0]
+                xpos += 1
+        result_set = set(match_results)
+        self.debug_info += str(framing) + '\n'
         self.debug_info += str(framing_match) + '\n'
         self.debug_info += str(match_results) + '\n'
-        self.debug_info += str(high_results) + '\n' 
+        self.debug_info += str(high_results) + '\n'
+        check_length = 0
+        for result in result_set:
+            if (result != ''):
+                check_length += self.dict_analysis[id]['max_tokens'] + 4 # TODO: Cross check and eventually make configurable
+        if (check_length < len(match_results)):
+            if (self.debug):
+                print ('length check failed :'+str(check_length) + '/' + str(len(match_results)))
+            return [ '' ] * len(data)
         return match_results
 
     def deep_inspection(self, id, startpos, data):
-        if (startpos + (self.dict_analysis[id]['min_tokens']/2) > len(data)):
-            return 0
+        if (startpos + (self.dict_analysis[id]['min_tokens']) > len(data)):
+            if (self.debug):
+                print ('deep_inspection failed for '+id+'/'+str(startpos))
+            return 0, 0, 0
         high_sim = 0
+        high_token_sim = [ ]
+        word_length = 0
         for dict_entries in self.learned_dict['dict']:
             if (id == dict_entries['id']):
                 dict_characteristic = dict_entries['characteristic']
                 word_sim = 0
+                token_sim = [ 0 ] * len(dict_characteristic)
                 c = 0.0
                 for i, dcharacteristic in enumerate(dict_characteristic):
                     currentpos = startpos + i
                     if (currentpos < len(data)):
                         do = data[currentpos]
                         characteristic, _ = do
-                        sim = self.util.similarity(characteristic['peaks'], dcharacteristic['peaks'])
-                        sim += self.util.similarity(characteristic['token_peaks'], dcharacteristic['token_peaks'])
-                        sim += self.util.single_similarity(characteristic['df'], dcharacteristic['df'])
-                        sim = sim / 3.0
+                        sim = 0
+                        ll = len(characteristic['peaks'])
+                        if (ll > 0):
+                            sim_peaks = self.util.similarity(characteristic['peaks'], dcharacteristic['peaks']) * config.SIMILARITY_PEAKS
+                            sim_token_peaks = self.util.similarity(characteristic['token_peaks'], dcharacteristic['token_peaks']) * config.SIMILARITY_HEIGHT
+                            if (characteristic['df'] in self.dict_analysis[id]['df'][i]):
+                                sim_df = config.SIMILARITY_DOMINANT_FREQUENCY
+                            else:
+                                sim_df = self.util.single_similarity(characteristic['df'], dcharacteristic['df']) * config.SIMILARITY_DOMINANT_FREQUENCY
+                            sim = sim_peaks + sim_token_peaks + sim_df
+
+                            # TDB: Check if the following boost is helpful/necessary and x-check for bias/negative values as well
+                            diff = list(set(characteristic['peaks']) - set(self.dict_analysis[id]['peaks'][i]))
+                            if (len(diff) < 10):
+                                sim = sim + 0.1
+                            xmin = min(characteristic['peaks'])
+                            xmax = max(characteristic['peaks'])
+                            if (xmin >= self.dict_analysis[id]['minp'][i] and xmax <= self.dict_analysis[id]['maxp'][i]):
+                                sim = sim + 0.1
+                            if (ll >= self.dict_analysis[id]['mincp'][i] and ll <= self.dict_analysis[id]['maxcp'][i]):
+                                sim = sim + 0.1
+                        token_sim[i] = sim    
                         word_sim += sim
                     c += 1
                 word_sim = word_sim / c
+                if (word_sim > 1):
+                    word_sim = 1
                 if (word_sim > high_sim and word_sim > config.MIN_CROSS_SIMILARITY):
                     high_sim = word_sim
-        return high_sim
+                    word_length = int(c)
+                    high_token_sim.append(token_sim)
+        consolidated_high_token_sim = [ ]
+        for hts in high_token_sim:
+            for i, ts in enumerate(hts):
+                if (i == len(consolidated_high_token_sim)):
+                    consolidated_high_token_sim.append(ts)
+                elif (ts > consolidated_high_token_sim[i]):
+                    consolidated_high_token_sim[i] = ts
+        if (len(consolidated_high_token_sim) > 0):
+            consolidated_high_sim = sum(consolidated_high_token_sim) / len(consolidated_high_token_sim)
+            return consolidated_high_sim, consolidated_high_token_sim, word_length
+        else:
+            return high_sim, high_token_sim, word_length
 
-    @staticmethod
-    def get_match(framing):
+    def get_match(self, framing):
         match_results = [ ]
+        removes = [ ]
         for result in framing:
             if (result != '' and result not in match_results):
                 match_results.append(result)
+        for result in match_results:
+            if (framing.count(result) < (self.dict_analysis[result]['min_tokens'])-1 or framing.count(result) > self.dict_analysis[result]['max_tokens']):
+                removes.append(result)
+        for remove in removes:
+            if (self.debug):
+                print ('removing ' + remove + ' due to min_length check :' + str(framing.count(remove)) +  ' / ' + str((self.dict_analysis[remove]['min_tokens'])-1))
+            match_results.remove(remove)
         return match_results
 
     def load_plugins(self):

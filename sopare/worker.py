@@ -24,6 +24,7 @@ import analyze
 import characteristics
 import uuid
 import comparator
+import config
 
 class worker(multiprocessing.Process):
 
@@ -72,6 +73,15 @@ class worker(multiprocessing.Process):
     def save_wave_buf(self):
         self.util.savefilteredwave('filtered_results'+str(self.reset_counter), self.rawbuf)
 
+    def remove_silence(self, m):
+        silence = ((config.LONG_SILENCE * config.CHUNK) / 4096) - 2   # TODO: Make configurable
+        for x in range(len(self.character) - 1, len(self.character) - silence, -1):
+            if (x > len(self.character)):
+                del self.character[x]
+        if (len(self.raw_character) > 0):
+            for x in range(len(self.raw_character) - 1, len(self.raw_character) - silence , -1):
+                del self.raw_character[x]
+
     def run(self):
         if (self.debug):
             print ("worker queue runner started")
@@ -109,6 +119,7 @@ class worker(multiprocessing.Process):
             if (self.counter > 0 and meta != None):
                 for m in meta:
                     if (m['token'] == 'start analysis'):
+                        self.remove_silence(m)
                         if (self.dict == None):
                             self.analyze.do_analysis(self.compare.get_results(), self.character, self.rawbuf)
                         else:

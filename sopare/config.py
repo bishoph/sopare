@@ -34,14 +34,14 @@ LONG_SILENCE = 60
 #########################################################
 
 # Steps boil down the data into smaller chunks of data.
-# Smaller steps means more precision but require
+# Smaller steps mean more precision but require
 # normally more learned entries in the dictionary.
 # Progressive value is used if you want to pack not
 # so relevant frequencies
-PROGRESSIVE_FACTOR = .1
-START_PROGRESSIVE_FACTOR = 2000
-MIN_PROGRESSIVE_STEP = 20
-MAX_PROGRESSIVE_STEP = 400
+PROGRESSIVE_FACTOR = 0
+START_PROGRESSIVE_FACTOR = 8000
+MIN_PROGRESSIVE_STEP = 100
+MAX_PROGRESSIVE_STEP = 100
 
 # Specifies freq ranges that are kept for further
 # analysis. Freq outside of the ranges are set to zero.
@@ -72,11 +72,20 @@ MIN_ADAPTING = 5000
 PEAK_FACTOR = 3
 
 #########################################################
-# Compare  configuration options ########################
+# Compare configuration options #########################
 #########################################################
 
-# Single margin
+# Number of tokens to identify the beginning of a word
+COMPARE_START_TOKENS = 2
+
+# Min. value for potential beginning of a word
 MARGINAL_VALUE = 0.3
 
-# Minimal similarity across all comparisons
-MIN_CROSS_SIMILARITY = 0.4
+# Minimal similarity across all comparison to
+# identify a complete word across all tokens
+MIN_CROSS_SIMILARITY = 0.6
+
+# Calculation basis for token/word comparison
+SIMILARITY_PEAKS = 0.3
+SIMILARITY_HEIGHT = 0.6
+SIMILARITY_DOMINANT_FREQUENCY = 0.1
