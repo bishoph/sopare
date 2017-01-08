@@ -37,8 +37,8 @@ def main(argv):
 
     if (len(argv) > 0):
         try:                                
-            opts, args = getopt.getopt(argv, "helpv~cos:w:r:t:d:",
-             ["help", "error", "loop", "plot", "verbose", "wave", "create", "overview",
+            opts, args = getopt.getopt(argv, "ahelpv~cos:w:r:t:d:",
+             ["analysis", "help", "error", "loop", "plot", "verbose", "wave", "create", "overview",
               "show=", "write=", "read=", "train=", "delete="
              ])
         except getopt.GetoptError:
@@ -68,7 +68,9 @@ def main(argv):
             if opt in ("-o", "--overview"):
                 show_dict_ids(debug)
                 sys.exit(0)
-
+            if opt in ("-a", "--analysis"):
+                show_dict_analysis(debug)
+                sys.exit(0)
             if opt in ("-s", "--show"):
                 show_word_entries(arg, debug)
                 sys.exit(0)
@@ -108,6 +110,11 @@ def show_dict_ids(debug):
     utilities = util.util(debug)
     utilities.showdictentriesbyid()
 
+def show_dict_analysis(debug):
+    print ("dictionary analysis:")
+    utilities = util.util(debug)
+    print (utilities.compile_analysis(utilities.getDICT()))
+
 def usage():
     print ("usage:\n")
     print (" -h --help           : this help\n")
@@ -126,5 +133,7 @@ def usage():
     print (" -t --train  [word]  : add raw data to raw dictionary file\n")
     print (" -d --delete [word]  : delete [word] from dictionary and exit.")
     print ("                       '*' deletes everyting!\n")
+    print (" -a --analysis       : show dictionary analysis and exit.\n")
+
 
 main(sys.argv[1:])

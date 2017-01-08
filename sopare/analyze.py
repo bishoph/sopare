@@ -37,8 +37,8 @@ class analyze():
         self.last_results = None
 
     def do_analysis(self, results, data, rawbuf):
-        self.debug_info = str(data)+'\n\n'
-        self.debug_info = str(results)+'\n\n'
+        self.debug_info = str(data) + '\n\n'
+        self.debug_info += str(results) + '\n\n'
         framing = self.framing(results)
         matches = self.deep_search(framing, data)
         readable_results = self.get_match(matches)
@@ -65,13 +65,15 @@ class analyze():
         high_results = [ 0 ] * len(data)
         for id in framing:
             for startpos in framing[id]:
-                xsim, word_length = self.deep_inspection(id, startpos, data)
-                framing_match.append([id, startpos, xsim, word_length])
+                xsim, xtsim, word_length = self.deep_inspection(id, startpos, data)
+                framing_match.append([id, startpos, xsim, xtsim, word_length])
         for frame in framing_match:
-            for x in range(frame[1], frame[1] + frame[3]):
+            xpos = 0
+            for x in range(frame[1], frame[1] + frame[4]):
                 if (x < len(high_results) and frame[2] > high_results[x]):
                     high_results[x] = frame[2]
                     match_results[x] = frame[0]
+                xpos += 1
         result_set = set(match_results)
         self.debug_info += str(framing) + '\n'
         self.debug_info += str(framing_match) + '\n'
@@ -91,13 +93,15 @@ class analyze():
         if (startpos + (self.dict_analysis[id]['min_tokens']) > len(data)):
             if (self.debug):
                 print ('deep_inspection failed for '+id+'/'+str(startpos))
-            return 0, 0
+            return 0, 0, 0
         high_sim = 0
+        high_token_sim = [ ]
         word_length = 0
         for dict_entries in self.learned_dict['dict']:
             if (id == dict_entries['id']):
                 dict_characteristic = dict_entries['characteristic']
                 word_sim = 0
+                token_sim = [ 0 ] * len(dict_characteristic)
                 c = 0.0
                 for i, dcharacteristic in enumerate(dict_characteristic):
                     currentpos = startpos + i
@@ -105,16 +109,27 @@ class analyze():
                         do = data[currentpos]
                         characteristic, _ = do
                         sim = 0
-                        if (len(characteristic['peaks']) > 0):
-                            diff = list(set(characteristic['peaks']) - set(self.dict_analysis[id]['peaks'][i]))
-                            sim_peaks = self.util.similarity(characteristic['peaks'], self.dict_analysis[id]['peaks'][i]) * config.SIMILARITY_PEAKS
+                        ll = len(characteristic['peaks'])
+                        if (ll > 0):
+                            sim_peaks = self.util.similarity(characteristic['peaks'], dcharacteristic['peaks']) * config.SIMILARITY_PEAKS
                             sim_token_peaks = self.util.similarity(characteristic['token_peaks'], dcharacteristic['token_peaks']) * config.SIMILARITY_HEIGHT
-                            sim_df = self.util.single_similarity(characteristic['df'], dcharacteristic['df']) * config.SIMILARITY_DOMINANT_FREQUENCY
+                            if (characteristic['df'] in self.dict_analysis[id]['df'][i]):
+                                sim_df = config.SIMILARITY_DOMINANT_FREQUENCY
+                            else:
+                                sim_df = self.util.single_similarity(characteristic['df'], dcharacteristic['df']) * config.SIMILARITY_DOMINANT_FREQUENCY
                             sim = sim_peaks + sim_token_peaks + sim_df
+
+                            # TDB: Check if the following boost is helpful/necessary and x-check for bias/negative values as well
+                            diff = list(set(characteristic['peaks']) - set(self.dict_analysis[id]['peaks'][i]))
+                            if (len(diff) < 10):
+                                sim = sim + 0.1
                             xmin = min(characteristic['peaks'])
                             xmax = max(characteristic['peaks'])
-                            if (xmin >= min(self.dict_analysis[id]['peaks'][i]) and xmax <= max(self.dict_analysis[id]['peaks'][i])):
+                            if (xmin >= self.dict_analysis[id]['minp'][i] and xmax <= self.dict_analysis[id]['maxp'][i]):
                                 sim = sim + 0.1
+                            if (ll >= self.dict_analysis[id]['mincp'][i] and ll <= self.dict_analysis[id]['maxcp'][i]):
+                                sim = sim + 0.1
+                        token_sim[i] = sim    
                         word_sim += sim
                     c += 1
                 word_sim = word_sim / c
@@ -123,7 +138,19 @@ class analyze():
                 if (word_sim > high_sim and word_sim > config.MIN_CROSS_SIMILARITY):
                     high_sim = word_sim
                     word_length = int(c)
-        return high_sim, word_length
+                    high_token_sim.append(token_sim)
+        consolidated_high_token_sim = [ ]
+        for hts in high_token_sim:
+            for i, ts in enumerate(hts):
+                if (i == len(consolidated_high_token_sim)):
+                    consolidated_high_token_sim.append(ts)
+                elif (ts > consolidated_high_token_sim[i]):
+                    consolidated_high_token_sim[i] = ts
+        if (len(consolidated_high_token_sim) > 0):
+            consolidated_high_sim = sum(consolidated_high_token_sim) / len(consolidated_high_token_sim)
+            return consolidated_high_sim, consolidated_high_token_sim, word_length
+        else:
+            return high_sim, high_token_sim, word_length
 
     def get_match(self, framing):
         match_results = [ ]

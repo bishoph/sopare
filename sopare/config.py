@@ -78,13 +78,14 @@ PEAK_FACTOR = 3
 # Number of tokens to identify the beginning of a word
 COMPARE_START_TOKENS = 2
 
-# Single margin
-MARGINAL_VALUE = 0.6
+# Min. value for potential beginning of a word
+MARGINAL_VALUE = 0.3
 
-# Minimal similarity across all comparison
-MIN_CROSS_SIMILARITY = 0.5
+# Minimal similarity across all comparison to
+# identify a complete word across all tokens
+MIN_CROSS_SIMILARITY = 0.6
 
-# Caclulation basis
-SIMILARITY_PEAKS = 0.1
-SIMILARITY_HEIGHT = 0.5
-SIMILARITY_DOMINANT_FREQUENCY = 0.4
+# Calculation basis for token/word comparison
+SIMILARITY_PEAKS = 0.3
+SIMILARITY_HEIGHT = 0.6
+SIMILARITY_DOMINANT_FREQUENCY = 0.1
