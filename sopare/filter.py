@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright (C) 2015, 2016 Martin Kauss (yo@bishoph.org)
+Copyright (C) 2015 - 2017 Martin Kauss (yo@bishoph.org)
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may
 not use this file except in compliance with the License. You may obtain
@@ -46,6 +46,14 @@ class filtering():
                 return True
         return False
 
+    @staticmethod
+    def normalize(fft):
+        na = numpy.copy(fft)
+        norm = numpy.linalg.norm(na)
+        if (norm > 0):
+            return list(na/norm)
+        return []
+
     def filter(self, data, meta):
         if (self.first == False or config.HANNING == False or len(data) < 3):
             fft = numpy.fft.rfft(data)
@@ -60,5 +68,8 @@ class filtering():
         fft[config.HIGH_FREQ:] = 0
         fft[:config.LOW_FREQ] = 0
         data = numpy.fft.irfft(fft)
-        obj = { 'action': 'data', 'token': data, 'fft': fft, 'meta': meta }
+        fft = fft[config.LOW_FREQ:config.HIGH_FREQ]
+        fft = numpy.abs(fft)
+        normalized = self.normalize(fft)
+        obj = { 'action': 'data', 'token': data, 'fft': fft, 'norm': normalized, 'meta': meta }
         self.queue.put(obj)

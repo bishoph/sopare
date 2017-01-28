@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright (C) 2015, 2016 Martin Kauss (yo@bishoph.org)
+Copyright (C) 2015 - 2017 Martin Kauss (yo@bishoph.org)
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may
 not use this file except in compliance with the License. You may obtain
@@ -61,7 +61,7 @@ class recorder:
         print("* reading file "+infile)
         file = io.open(infile, 'rb', buffering=config.CHUNK)
         while True:
-            buf = file.read(config.CHUNK*2)
+            buf = file.read(config.CHUNK * 2)
             if buf:
                 self.queue.put(buf)
             else:

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright (C) 2015, 2016 Martin Kauss (yo@bishoph.org)
+Copyright (C) 2015 - 2017 Martin Kauss (yo@bishoph.org)
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may
 not use this file except in compliance with the License. You may obtain
@@ -95,11 +95,12 @@ class worker(multiprocessing.Process):
                 if (self.plot):
                     self.rawfft.extend(fft)
                 meta = obj['meta']
-                characteristic = self.characteristic.getcharacteristic(fft, meta)
+                norm = obj['norm']
+                characteristic = self.characteristic.getcharacteristic(fft, norm, meta)
                 self.character.append((characteristic, meta))
                 self.compare.word(self.character)
                 if (self.dict != None):
-                    self.raw_character.append({ 'fft': fft, 'meta': meta })
+                    self.raw_character.append({ 'fft': fft, 'norm': norm, 'meta': meta })
                 if (characteristic != None):
                     if (self.debug):
                         print ('characteristic = ' + str(self.counter) + ' ' + str(characteristic))

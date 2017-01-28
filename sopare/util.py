@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright (C) 2015, 2016 Martin Kauss (yo@bishoph.org)
+Copyright (C) 2015 - 2017 Martin Kauss (yo@bishoph.org)
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may
 not use this file except in compliance with the License. You may obtain
@@ -47,7 +47,7 @@ class util:
             if ((dict_entries['id'] == sid or sid == "*") and dict_entries['id'] not in ids):
                 print (dict_entries['id'] + ' - ' + dict_entries['uuid'])
                 for i, entry in enumerate(dict_entries['characteristic']):
-                    output = str(entry['peaks'])
+                    output = str(entry['norm'])
                     print (str(i)+ ', ' + output[1:len(output)-1])
 
     @staticmethod
@@ -150,7 +150,8 @@ class util:
                     for raw_obj in json_obj['characteristic']:
                         meta = raw_obj['meta']
                         fft = raw_obj['fft']
-                        characteristic = self.characteristic.getcharacteristic(fft, meta)
+                        norm = raw_obj['norm']
+                        characteristic = self.characteristic.getcharacteristic(fft, norm, meta)
                         if (characteristic != None):
                             for m in meta:
                                 if (m['token'] != 'stop'):

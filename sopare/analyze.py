@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright (C) 2015, 2016 Martin Kauss (yo@bishoph.org)
+Copyright (C) 2015 - 2017 Martin Kauss (yo@bishoph.org)
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may
 not use this file except in compliance with the License. You may obtain
@@ -96,49 +96,60 @@ class analyze():
             return 0, 0, 0
         high_sim = 0
         high_token_sim = [ ]
+        bias = [ ]
         word_length = 0
         for dict_entries in self.learned_dict['dict']:
             if (id == dict_entries['id']):
                 dict_characteristic = dict_entries['characteristic']
                 word_sim = 0
+                bias_tokens = [ ]
                 token_sim = [ 0 ] * len(dict_characteristic)
                 c = 0.0
                 for i, dcharacteristic in enumerate(dict_characteristic):
+                    bias_obj = { }
                     currentpos = startpos + i
                     if (currentpos < len(data)):
                         do = data[currentpos]
                         characteristic, _ = do
                         sim = 0
                         ll = len(characteristic['peaks'])
+                        bias_obj['i'] = i
                         if (ll > 0):
-                            sim_peaks = self.util.similarity(characteristic['peaks'], dcharacteristic['peaks']) * config.SIMILARITY_PEAKS
+                            sim_peaks = self.util.similarity(characteristic['norm'], dcharacteristic['norm']) * config.SIMILARITY_PEAKS
                             sim_token_peaks = self.util.similarity(characteristic['token_peaks'], dcharacteristic['token_peaks']) * config.SIMILARITY_HEIGHT
-                            if (characteristic['df'] in self.dict_analysis[id]['df'][i]):
-                                sim_df = config.SIMILARITY_DOMINANT_FREQUENCY
-                            else:
-                                sim_df = self.util.single_similarity(characteristic['df'], dcharacteristic['df']) * config.SIMILARITY_DOMINANT_FREQUENCY
+                            sim_df = self.util.single_similarity(characteristic['df'], dcharacteristic['df']) * config.SIMILARITY_DOMINANT_FREQUENCY
                             sim = sim_peaks + sim_token_peaks + sim_df
-
-                            # TDB: Check if the following boost is helpful/necessary and x-check for bias/negative values as well
-                            diff = list(set(characteristic['peaks']) - set(self.dict_analysis[id]['peaks'][i]))
-                            if (len(diff) < 10):
-                                sim = sim + 0.1
-                            xmin = min(characteristic['peaks'])
-                            xmax = max(characteristic['peaks'])
-                            if (xmin >= self.dict_analysis[id]['minp'][i] and xmax <= self.dict_analysis[id]['maxp'][i]):
-                                sim = sim + 0.1
-                            if (ll >= self.dict_analysis[id]['mincp'][i] and ll <= self.dict_analysis[id]['maxcp'][i]):
-                                sim = sim + 0.1
+                            if (config.BIAS > 0):
+                                if (characteristic['df'] in self.dict_analysis[id]['df'][i]):
+                                    bias_obj['df'] = 1
+                                else:
+                                    bias_obj['df'] = 0
+                                xmin = min(characteristic['peaks'])
+                                xmax = max(characteristic['peaks'])
+                                if (xmin >= self.dict_analysis[id]['minp'][i] and xmax <= self.dict_analysis[id]['maxp'][i]):
+                                    sim = sim + 0.1
+                                    bias_obj['sr'] = 1
+                                else:
+                                    bias_obj['sr'] = 0
+                                if (ll >= self.dict_analysis[id]['mincp'][i] and ll <= self.dict_analysis[id]['maxcp'][i]):
+                                    sim = sim + 0.1
+                                    bias_obj['sl'] = 1
+                                else:
+                                    bias_obj['sl'] = 0
                         token_sim[i] = sim    
                         word_sim += sim
+                        bias_tokens.append(bias_obj)
                     c += 1
                 word_sim = word_sim / c
+                bias.append(bias_tokens)
                 if (word_sim > 1):
                     word_sim = 1
                 if (word_sim > high_sim and word_sim > config.MIN_CROSS_SIMILARITY):
-                    high_sim = word_sim
-                    word_length = int(c)
-                    high_token_sim.append(token_sim)
+                    bc = self.calculate_bias(bias)
+                    if (bc >= config.BIAS): 
+                        high_sim = word_sim
+                        word_length = int(c)
+                        high_token_sim.append(token_sim)
         consolidated_high_token_sim = [ ]
         for hts in high_token_sim:
             for i, ts in enumerate(hts):
@@ -151,6 +162,19 @@ class analyze():
             return consolidated_high_sim, consolidated_high_token_sim, word_length
         else:
             return high_sim, high_token_sim, word_length
+
+    @staticmethod
+    def calculate_bias(bias):
+        bc = 0
+        cc = 0
+        for b in bias:
+            for e in b:
+                if (len(e) == 4):
+                    bc += e['df'] + e['sr'] + e['sl']
+                    cc += 3.0
+        if (cc > 0):
+            return bc/cc
+        return 0
 
     def get_match(self, framing):
         match_results = [ ]

@@ -8,24 +8,21 @@ CHUNK = 512
 # Sample rate
 SAMPLE_RATE = 44100
 
-# Volume threshold when audio processing starts
+# Volume threshold when audio processing starts / silence 
 THRESHOLD = 300
 
 # Silence time in seconds when analysis is called
 MAX_SILENCE_AFTER_START = 3
 
 # Time in seconds after the analysis is forced
-MAX_TIME = 5
+MAX_TIME = 4
 
 # Counter to stop processing and prepare more data
 # Should be > LONG_SILENCE
-SILENCE_COUNTER = 100
+SILENCE_COUNTER = 40
 
-# Tokenizer values to detect a new token
-TOKEN_HIGH = 440
-SILENCE = 5
 # Start the analysis after reaching LONG_SILENCE
-LONG_SILENCE = 60
+LONG_SILENCE = 30
 
 
 
@@ -52,40 +49,29 @@ HIGH_FREQ = 5000
 # Make use of Hann window function
 HANNING = True
 
-# Minimal FFT length for consideration
-# Default: 12
-MIN_FFT_LEN = 12
-
-# Minimal PEAKS length for consideration
-# Default: 15
-MIN_PEAKS_LEN = 15
-
-# Minimal FFT max. value for consideration
-# Default: 5000
-MIN_FFT_MAX = 5000
-
-# Min. adaptive value to create a characteristic
-# Default: TDB
-MIN_ADAPTING = 5000
-
 # Range factor for peaks
 PEAK_FACTOR = 3
+
+
 
 #########################################################
 # Compare configuration options #########################
 #########################################################
 
 # Number of tokens to identify the beginning of a word
-COMPARE_START_TOKENS = 2
+COMPARE_START_TOKENS = 1
 
 # Min. value for potential beginning of a word
-MARGINAL_VALUE = 0.3
+MARGINAL_VALUE = 0.4
 
 # Minimal similarity across all comparison to
 # identify a complete word across all tokens
 MIN_CROSS_SIMILARITY = 0.6
 
+# Min. post bias result for result consideration
+BIAS = 0.5
+
 # Calculation basis for token/word comparison
-SIMILARITY_PEAKS = 0.3
-SIMILARITY_HEIGHT = 0.6
-SIMILARITY_DOMINANT_FREQUENCY = 0.1
+SIMILARITY_PEAKS = 1
+SIMILARITY_HEIGHT = 0
+SIMILARITY_DOMINANT_FREQUENCY = 0
