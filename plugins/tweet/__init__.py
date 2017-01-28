@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright (C) 2015, 2016 Martin Kauss (yo@bishoph.org)
+Copyright (C) 2015 - 2017 Martin Kauss (yo@bishoph.org)
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may
 not use this file except in compliance with the License. You may obtain
@@ -28,10 +28,8 @@ under the License.
 # sudo apt-get install libffi-dev
 # sudo pip install pyopenssl ndg-httpsclient pyasn1
 
-
 from scipy.io.wavfile import write
 import numpy
-
 import tweepy
 import imp
 import uuid

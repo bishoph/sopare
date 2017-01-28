@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright (C) 2015, 2016 Martin Kauss (yo@bishoph.org)
+Copyright (C) 2015 - 2017 Martin Kauss (yo@bishoph.org)
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may
 not use this file except in compliance with the License. You may obtain
@@ -106,12 +106,9 @@ class preparing():
         self.token_peaks.append(adaptive)
         meta = [ ]
 
-        if (volume < config.TOKEN_HIGH):
+        if (volume < config.THRESHOLD):
             self.silence += 1
-            if (self.silence == config.SILENCE):
-                self.new_token = True
-                meta.append({ 'token': 'silence', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'token_peaks': self.token_peaks })
-            elif (self.silence == config.LONG_SILENCE):
+            if (self.silence == config.LONG_SILENCE):
                 self.new_word = True
                 self.entered_silence = True
                 self.peaks.extend(self.token_peaks)
