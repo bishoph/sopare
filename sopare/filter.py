@@ -21,6 +21,7 @@ import numpy
 import multiprocessing
 import worker
 import config
+import characteristics
 
 class filtering():
 
@@ -29,6 +30,7 @@ class filtering():
         self.plot = plot
         self.first = True
         self.queue = multiprocessing.Queue()
+        self.characteristic = characteristics.characteristic(debug)
         self.worker = worker.worker(self.queue, debug, plot, dict, wave)
 
     def stop(self):
@@ -71,5 +73,6 @@ class filtering():
         fft = fft[config.LOW_FREQ:config.HIGH_FREQ]
         fft = numpy.abs(fft)
         normalized = self.normalize(fft)
-        obj = { 'action': 'data', 'token': data, 'fft': fft, 'norm': normalized, 'meta': meta }
+        characteristic = self.characteristic.getcharacteristic(fft, normalized, meta)
+        obj = { 'action': 'data', 'token': data, 'fft': fft, 'norm': normalized, 'meta': meta, 'characteristic': characteristic }
         self.queue.put(obj)

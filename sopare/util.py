@@ -48,7 +48,7 @@ class util:
                 print (dict_entries['id'] + ' - ' + dict_entries['uuid'])
                 for i, entry in enumerate(dict_entries['characteristic']):
                     output = str(entry['norm'])
-                    print (str(i)+ ', ' + output[1:len(output)-1])
+                    print (str(i)+ ', ' + str(entry['fc']) + ', ' + output[1:len(output)-1])
 
     @staticmethod
     def compile_analysis(json_data):
@@ -225,8 +225,10 @@ class util:
 
     @staticmethod
     def single_similarity(a, b):
-        if (a == 0 or b == 0):
+        if (a == 0 and b == 0):
+            return 1
+        elif (a == 0 or b == 0):
             return 0
-        if (a < b):
+        elif (a < b):
             return float(a) / float(b)
         return float(b) / float(a)

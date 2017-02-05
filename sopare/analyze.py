@@ -39,7 +39,7 @@ class analyze():
     def do_analysis(self, results, data, rawbuf):
         self.debug_info = str(data) + '\n\n'
         self.debug_info += str(results) + '\n\n'
-        framing = self.framing(results)
+        framing = self.framing(results, len(data))
         matches = self.deep_search(framing, data)
         readable_results = self.get_match(matches)
         if (self.debug):
@@ -48,16 +48,21 @@ class analyze():
             for p in self.plugins:
                 p.run(readable_results, self.debug_info, rawbuf)
 
-    @staticmethod
-    def framing(results):
+    def framing(self, results, data_length):
         framing = { }
         for id in results:
-            sorted_results = sorted(results[id], key=lambda x: x[1])
             framing[id] = [ ]
-            for result in sorted_results:
-                if (result[0] not in framing[id]):
-                    framing[id].append(result[0])
+            for i, row in enumerate(results[id]):
+                row = self.row_validation(row, id)
+                row_result = sum(row[0:len(row)]) / self.dict_analysis[id]['min_tokens']
+                if (row_result >= config.MARGINAL_VALUE):
+                    framing[id].append(i)
         return framing
+
+    def row_validation(self, row, id):
+        if (row[0] == 0 or len(row) <= config.MIN_START_TOKENS):
+            return [ 0 ] * len(row)
+        return row
 
     def deep_search(self, framing, data):
         framing_match = [ ]
@@ -146,7 +151,7 @@ class analyze():
                     word_sim = 1
                 if (word_sim > high_sim and word_sim > config.MIN_CROSS_SIMILARITY):
                     bc = self.calculate_bias(bias)
-                    if (bc >= config.BIAS): 
+                    if (bc >= config.BIAS):
                         high_sim = word_sim
                         word_length = int(c)
                         high_token_sim.append(token_sim)

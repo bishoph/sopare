@@ -38,17 +38,16 @@ class characteristic:
             chunked_norm.append(round(sum(norm[x:x+i]), 2))
         df = numpy.argmax(fft)
         dfm = int(numpy.amax(fft))
-        where_range = dfm / config.PEAK_FACTOR
-        npeaks = numpy.array(numpy.where(fft > where_range))
-        peaks = [ ]
-        peaksm = [ ]
-        if (npeaks.size > 0):
-            for peak in numpy.nditer(npeaks):
-                peaks.append(int(peak))
-                peaksm.append(int(fft[peak]))
+        fc = 0
+        where_range = numpy.mean(fft) / config.PEAK_FACTOR
+        peaks = list(numpy.array(numpy.where(fft > where_range))[0])
+        if (len(chunked_norm) > 0):
+            where_range = numpy.mean(chunked_norm)
+            npeaks = numpy.array(numpy.where(chunked_norm > where_range))
+            fc = round(numpy.sum(numpy.sqrt(npeaks)), 1)
         token_peaks = self.get_token_peaks(meta)
         volume = self.get_volume(meta)
-        model_characteristic = {'df': df, 'dfm': dfm, 'peaks': peaks, 'fft_max': peaksm, 'token_peaks': token_peaks, 'volume': volume, 'norm': chunked_norm }
+        model_characteristic = {'df': df, 'dfm': dfm, 'fc': fc, 'peaks': peaks, 'token_peaks': token_peaks, 'volume': volume, 'norm': chunked_norm }
         return model_characteristic
 
     @staticmethod

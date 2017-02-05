@@ -38,7 +38,6 @@ class worker(multiprocessing.Process):
         self.visual = visual.visual()
         self.util = util.util(debug)
         self.analyze = analyze.analyze(debug)
-        self.characteristic = characteristics.characteristic(debug)
         self.compare = comparator.compare(debug, self.util)
         self.running = True
         self.counter = 0
@@ -96,7 +95,7 @@ class worker(multiprocessing.Process):
                     self.rawfft.extend(fft)
                 meta = obj['meta']
                 norm = obj['norm']
-                characteristic = self.characteristic.getcharacteristic(fft, norm, meta)
+                characteristic = obj['characteristic']
                 self.character.append((characteristic, meta))
                 self.compare.word(self.character)
                 if (self.dict != None):
@@ -108,7 +107,7 @@ class worker(multiprocessing.Process):
                     if (self.wave):
                         self.util.savefilteredwave('token'+str(self.counter)+self.uid, raw_token)
                     if (self.plot):
-                        self.visual.create_sample(characteristic['fft_max'], 'fft_max'+str(self.plot_counter)+'.png')
+                        self.visual.create_sample(characteristic['norm'], 'norm'+str(self.plot_counter)+'.png')
                         self.visual.create_sample(fft, 'fft'+str(self.plot_counter)+'.png')
                     self.plot_counter += 1
                 self.counter += 1
