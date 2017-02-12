@@ -37,9 +37,11 @@ class analyze():
         self.last_results = None
 
     def do_analysis(self, results, data, rawbuf):
-        self.debug_info = str(data) + '\n\n'
-        self.debug_info += str(results) + '\n\n'
         framing = self.framing(results, len(data))
+        self.debug_info = '************************************************\n\n'
+        if (self.debug):
+            self.debug_info += ''.join([str(data), '\n\n'])
+            self.debug_info += ''.join([str(results), '\n\n'])
         matches = self.deep_search(framing, data)
         readable_results = self.get_match(matches)
         if (self.debug):
@@ -79,11 +81,11 @@ class analyze():
                     high_results[x] = frame[2]
                     match_results[x] = frame[0]
                 xpos += 1
-        result_set = set(match_results)
-        self.debug_info += str(framing) + '\n'
-        self.debug_info += str(framing_match) + '\n'
-        self.debug_info += str(match_results) + '\n'
-        self.debug_info += str(high_results) + '\n'
+        result_set = set(match_results)        
+        self.debug_info += ''.join([str(framing), '\n'])
+        self.debug_info += ''.join([str(framing_match), '\n'])
+        self.debug_info += ''.join([str(match_results), '\n'])
+        self.debug_info += ''.join([str(high_results), '\n'])
         check_length = 0
         for result in result_set:
             if (result != ''):
@@ -183,17 +185,24 @@ class analyze():
 
     def get_match(self, framing):
         match_results = [ ]
-        removes = [ ]
-        for result in framing:
-            if (result != '' and result not in match_results):
-                match_results.append(result)
-        for result in match_results:
-            if (framing.count(result) < (self.dict_analysis[result]['min_tokens'])-1 or framing.count(result) > self.dict_analysis[result]['max_tokens']):
-                removes.append(result)
-        for remove in removes:
-            if (self.debug):
-                print ('removing ' + remove + ' due to min_length check :' + str(framing.count(remove)) +  ' / ' + str((self.dict_analysis[remove]['min_tokens'])-1))
-            match_results.remove(remove)
+        counter = 0
+        last = ''
+        for check in framing:
+            if (check == last):
+                counter += 1
+            else:
+                if (last != ''):
+                    if (counter >= self.dict_analysis[last]['min_tokens']-1 and counter <= self.dict_analysis[last]['max_tokens']+1): # TODO: x-check
+                        match_results.append(last)
+                    elif (self.debug):
+                        print ('length check failed for :'+last+' from results. ' + str(self.dict_analysis[last]['min_tokens']-1) + ' ' + str(counter) + ' ' + str(self.dict_analysis[last]['max_tokens']+1))
+                counter = 1
+            last = check
+        if (last != ''):
+            if (counter >= self.dict_analysis[last]['min_tokens']-1 and counter <= self.dict_analysis[last]['max_tokens']+1): # TODO: x-check
+                match_results.append(last)
+            elif  (self.debug):
+                print ('length check failed for :'+last+' from results. ' + str(self.dict_analysis[last]['min_tokens']-1) + ' ' + str(counter) + ' ' + str(self.dict_analysis[last]['max_tokens']+1))
         return match_results
 
     def load_plugins(self):

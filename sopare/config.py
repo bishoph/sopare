@@ -36,15 +36,15 @@ LONG_SILENCE = 40
 # Progressive value is used if you want to pack not
 # so relevant frequencies
 PROGRESSIVE_FACTOR = 0
-START_PROGRESSIVE_FACTOR = 8000
-MIN_PROGRESSIVE_STEP = 100
-MAX_PROGRESSIVE_STEP = 100
+START_PROGRESSIVE_FACTOR = 600
+MIN_PROGRESSIVE_STEP = 50
+MAX_PROGRESSIVE_STEP = 50
 
 # Specifies freq ranges that are kept for further
 # analysis. Freq outside of the ranges are set to zero.
 # Human language can be found between 20 and 5000.
 LOW_FREQ = 20
-HIGH_FREQ = 1000
+HIGH_FREQ = 600
 
 # Make use of Hann window function
 HANNING = True
@@ -62,16 +62,16 @@ PEAK_FACTOR = 3
 MIN_START_TOKENS = 3
 
 # Min. value for potential beginning of a word
-MARGINAL_VALUE = 0.5
+MARGINAL_VALUE = 0.7
 
 # Minimal similarity across all comparison to
 # identify a complete word across all tokens
 MIN_CROSS_SIMILARITY = 0.6
 
 # Min. post bias result for result consideration
-BIAS = 0.3
+BIAS = 0
 
 # Calculation basis for token/word comparison
-SIMILARITY_PEAKS = 1
-SIMILARITY_HEIGHT = 0
+SIMILARITY_PEAKS = 0.7
+SIMILARITY_HEIGHT = 0.3
 SIMILARITY_DOMINANT_FREQUENCY = 0

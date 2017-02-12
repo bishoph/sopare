@@ -39,8 +39,8 @@ class characteristic:
         df = numpy.argmax(fft)
         dfm = int(numpy.amax(fft))
         fc = 0
-        where_range = numpy.mean(fft) / config.PEAK_FACTOR
-        peaks = list(numpy.array(numpy.where(fft > where_range))[0])
+        where_range = numpy.mean(chunked_norm) / config.PEAK_FACTOR
+        peaks = list(numpy.array(numpy.where(chunked_norm > where_range))[0])
         if (len(chunked_norm) > 0):
             where_range = numpy.mean(chunked_norm)
             npeaks = numpy.array(numpy.where(chunked_norm > where_range))
