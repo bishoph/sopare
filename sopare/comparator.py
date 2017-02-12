@@ -44,15 +44,16 @@ class compare():
 
     def area(self, characteristic_object, ll):
         characteristic, _ = characteristic_object
+        for id in self.dict_analysis:
+            self.results[id].append([ ])
+            for x in range(0, len(self.results[id])):
+                self.results[id][x].append(0)
         for dict_entries in self.learned_dictionary['dict']:
             id = dict_entries['id']
-            dict_characteristic = dict_entries['characteristic']
-            for i, dcharacteristic in enumerate(dict_characteristic):
-                if (i > config.COMPARE_START_TOKENS):
-                    break
-                fft_sim = self.util.similarity(characteristic['peaks'], dcharacteristic['peaks'])
-                fft_sim += self.util.similarity(characteristic['token_peaks'], dcharacteristic['token_peaks'])
-                fft_sim += self.util.single_similarity(characteristic['df'], dcharacteristic['df'])
-                fft_sim = round(fft_sim / 3.0, 2)
-                if (fft_sim > config.MARGINAL_VALUE):
-                    self.results[id].append([ll, i, fft_sim])
+            for x in range(0, len(self.results[id])):
+                dict_c_pos = len(self.results[id][x])-1
+                if (dict_c_pos < len(dict_entries['characteristic'])):
+                    dcharacteristic = dict_entries['characteristic'][dict_c_pos]
+                    fast_sim = self.util.single_similarity(characteristic['fc'], dcharacteristic['fc'])
+                    if (fast_sim > self.results[id][x][dict_c_pos]):
+                        self.results[id][x][dict_c_pos] = fast_sim

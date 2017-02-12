@@ -9,7 +9,7 @@ CHUNK = 512
 SAMPLE_RATE = 44100
 
 # Volume threshold when audio processing starts / silence 
-THRESHOLD = 300
+THRESHOLD = 400
 
 # Silence time in seconds when analysis is called
 MAX_SILENCE_AFTER_START = 3
@@ -19,10 +19,10 @@ MAX_TIME = 4
 
 # Counter to stop processing and prepare more data
 # Should be > LONG_SILENCE
-SILENCE_COUNTER = 40
+SILENCE_COUNTER = 50
 
 # Start the analysis after reaching LONG_SILENCE
-LONG_SILENCE = 30
+LONG_SILENCE = 40
 
 
 
@@ -36,15 +36,15 @@ LONG_SILENCE = 30
 # Progressive value is used if you want to pack not
 # so relevant frequencies
 PROGRESSIVE_FACTOR = 0
-START_PROGRESSIVE_FACTOR = 8000
-MIN_PROGRESSIVE_STEP = 100
-MAX_PROGRESSIVE_STEP = 100
+START_PROGRESSIVE_FACTOR = 600
+MIN_PROGRESSIVE_STEP = 50
+MAX_PROGRESSIVE_STEP = 50
 
 # Specifies freq ranges that are kept for further
 # analysis. Freq outside of the ranges are set to zero.
 # Human language can be found between 20 and 5000.
 LOW_FREQ = 20
-HIGH_FREQ = 5000
+HIGH_FREQ = 600
 
 # Make use of Hann window function
 HANNING = True
@@ -58,20 +58,20 @@ PEAK_FACTOR = 3
 # Compare configuration options #########################
 #########################################################
 
-# Number of tokens to identify the beginning of a word
-COMPARE_START_TOKENS = 1
+# Min. number of tokens to identify the beginning of a word
+MIN_START_TOKENS = 3
 
 # Min. value for potential beginning of a word
-MARGINAL_VALUE = 0.4
+MARGINAL_VALUE = 0.7
 
 # Minimal similarity across all comparison to
 # identify a complete word across all tokens
 MIN_CROSS_SIMILARITY = 0.6
 
 # Min. post bias result for result consideration
-BIAS = 0.5
+BIAS = 0
 
 # Calculation basis for token/word comparison
-SIMILARITY_PEAKS = 1
-SIMILARITY_HEIGHT = 0
+SIMILARITY_PEAKS = 0.7
+SIMILARITY_HEIGHT = 0.3
 SIMILARITY_DOMINANT_FREQUENCY = 0
