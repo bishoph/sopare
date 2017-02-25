@@ -202,8 +202,11 @@ class util:
         write(__wavedestination__+filename+'.wav', 44100, scaled)  
 
     @staticmethod
-    def sqr(arr):
-        return round(math.sqrt(sum([((a/1.0) * (a/1.0)) for a in arr])), 2)
+    def manhatten_distance(arr1, arr2):
+        ll = int(max(len(arr1), len(arr2))/2)
+        mdl = sum(abs(e - s) for s, e in zip(arr1[0:ll], arr2[0:ll]))
+        mdr = sum(abs(e - s) for s, e in zip(arr1[ll:], arr2[ll:]))
+        return mdl, mdr
 
     @staticmethod
     def similarity(arr1, arr2):

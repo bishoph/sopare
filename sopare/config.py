@@ -19,7 +19,7 @@ MAX_TIME = 4
 
 # Counter to stop processing and prepare more data
 # Should be > LONG_SILENCE
-SILENCE_COUNTER = 50
+SILENCE_COUNTER = 41
 
 # Start the analysis after reaching LONG_SILENCE
 LONG_SILENCE = 40
@@ -62,16 +62,30 @@ PEAK_FACTOR = 3
 MIN_START_TOKENS = 3
 
 # Min. value for potential beginning of a word
-MARGINAL_VALUE = 0.7
+MARGINAL_VALUE = 0.1
 
 # Minimal similarity across all comparison to
 # identify a complete word across all tokens
-MIN_CROSS_SIMILARITY = 0.6
-
-# Min. post bias result for result consideration
-BIAS = 0
+MIN_CROSS_SIMILARITY = 0.1
 
 # Calculation basis for token/word comparison
-SIMILARITY_PEAKS = 0.7
+SIMILARITY_NORM = 0.4
 SIMILARITY_HEIGHT = 0.3
-SIMILARITY_DOMINANT_FREQUENCY = 0
+SIMILARITY_DOMINANT_FREQUENCY = 0.3
+
+# Number of best matches to consider.
+# Value must be > 0
+# If not specified or value < 1 value is set to 1
+NUMBER_OF_BEST_MATCHES = 5
+
+# Min. distance to keep a word
+MIN_LEFT_DISTANCE = 99
+MIN_RIGHT_DISTANCE = 99
+
+# Use given number as results to assembly result
+# 0 for all predictions
+MAX_WORD_START_RESULTS = 5
+MAX_TOP_RESULTS = 5
+
+# Enable or disable strict length check for words
+STRICT_LENGTH_CHECK = False

@@ -25,23 +25,27 @@ class characteristic:
     def __init__(self, debug):
         self.debug = debug
 
-    def getcharacteristic(self, fft, norm, meta):
-        chunked_norm = [ ]
-        progessive = 1
-        i = config.MIN_PROGRESSIVE_STEP
-        for x in range(0, len(norm), i):
-            if (hasattr(config, 'START_PROGRESSIVE_FACTOR')  and x >= config.START_PROGRESSIVE_FACTOR):
-                progessive += progessive * config.PROGRESSIVE_FACTOR
-                i += int(progessive)
-                if (i > config.MAX_PROGRESSIVE_STEP):
-                    i = config.MAX_PROGRESSIVE_STEP
-            chunked_norm.append(round(sum(norm[x:x+i]), 2))
+    def getcharacteristic(self, fft, chunked_norm, meta):
+
+        #chunked_norm = [ ]
+        #progessive = 1
+        #i = config.MIN_PROGRESSIVE_STEP
+        #for x in range(0, len(norm), i):
+        #    if (hasattr(config, 'START_PROGRESSIVE_FACTOR')  and x >= config.START_PROGRESSIVE_FACTOR):
+        #        progessive += progessive * config.PROGRESSIVE_FACTOR
+        #        i += int(progessive)
+        #        if (i > config.MAX_PROGRESSIVE_STEP):
+        #            i = config.MAX_PROGRESSIVE_STEP
+        #    chunked_norm.append(round(sum(norm[x:x+i]), 2))
+
+        fft = numpy.abs(fft)
         df = numpy.argmax(fft)
         dfm = int(numpy.amax(fft))
         fc = 0
-        where_range = numpy.mean(chunked_norm) / config.PEAK_FACTOR
-        peaks = list(numpy.array(numpy.where(chunked_norm > where_range))[0])
+        peaks = [ ]
         if (len(chunked_norm) > 0):
+            where_range = numpy.mean(chunked_norm) / config.PEAK_FACTOR
+            peaks = list(numpy.array(numpy.where(chunked_norm > where_range))[0])
             where_range = numpy.mean(chunked_norm)
             npeaks = numpy.array(numpy.where(chunked_norm > where_range))
             fc = round(numpy.sum(numpy.sqrt(npeaks)), 1)
