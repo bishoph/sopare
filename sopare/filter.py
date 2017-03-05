@@ -88,6 +88,7 @@ class filtering():
         nfft[nfft == 0] = numpy.NaN
         nfft = numpy.log10(nfft)**2
         nfft[numpy.isnan(nfft)] = 0
+        nfft =  numpy.tanh(nfft/numpy.amax(nfft))
         chunked_norm = self.get_chunked_norm(nfft)
         normalized = self.normalize(chunked_norm)
         characteristic = self.characteristic.getcharacteristic(fft, normalized, meta)

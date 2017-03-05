@@ -63,7 +63,7 @@ class analyze():
                     arr.append([row_result, i, id])
         sorted_arr = sorted(arr, key=itemgetter(0), reverse = True)
         for el in sorted_arr:
-            if (el[1] not in framing[el[2]] and (config.MAX_WORD_START_RESULTS > 0 and len(framing[el[2]]) < config.MAX_WORD_START_RESULTS)):
+            if (el[1] not in framing[el[2]] and (config.MAX_WORD_START_RESULTS == 0 or len(framing[el[2]]) < config.MAX_WORD_START_RESULTS)):
                 framing[el[2]].append(el[1])
         return framing
 
