@@ -15,11 +15,11 @@ THRESHOLD = 400
 MAX_SILENCE_AFTER_START = 3
 
 # Time in seconds after the analysis is forced
-MAX_TIME = 4
+MAX_TIME = 3.2
 
 # Counter to stop processing and prepare more data
 # Should be > LONG_SILENCE
-SILENCE_COUNTER = 41
+SILENCE_COUNTER = 42
 
 # Start the analysis after reaching LONG_SILENCE
 LONG_SILENCE = 40
@@ -68,10 +68,10 @@ MARGINAL_VALUE = 0.1
 # identify a complete word across all tokens
 MIN_CROSS_SIMILARITY = 0.1
 
-# Calculation basis for token/word comparison
-SIMILARITY_NORM = 0.4
+# Calculation basis or token/word comparison
+SIMILARITY_NORM = 0.5
 SIMILARITY_HEIGHT = 0.3
-SIMILARITY_DOMINANT_FREQUENCY = 0.3
+SIMILARITY_DOMINANT_FREQUENCY = 0.2
 
 # Number of best matches to consider.
 # Value must be > 0
@@ -79,12 +79,12 @@ SIMILARITY_DOMINANT_FREQUENCY = 0.3
 NUMBER_OF_BEST_MATCHES = 5
 
 # Min. distance to keep a word
-MIN_LEFT_DISTANCE = 99
-MIN_RIGHT_DISTANCE = 99
+MIN_LEFT_DISTANCE = 2
+MIN_RIGHT_DISTANCE = 2
 
 # Use given number as results to assembly result
 # 0 for all predictions
-MAX_WORD_START_RESULTS = 5
+MAX_WORD_START_RESULTS = 3
 MAX_TOP_RESULTS = 5
 
 # Enable or disable strict length check for words

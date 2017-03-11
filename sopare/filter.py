@@ -88,9 +88,11 @@ class filtering():
         nfft[nfft == 0] = numpy.NaN
         nfft = numpy.log10(nfft)**2
         nfft[numpy.isnan(nfft)] = 0
-        nfft =  numpy.tanh(nfft/numpy.amax(nfft))
-        chunked_norm = self.get_chunked_norm(nfft)
-        normalized = self.normalize(chunked_norm)
+        nam = numpy.amax(nfft)
+        if (nam > 0):
+            nfft = numpy.tanh(nfft/nam)
+            chunked_norm = self.get_chunked_norm(nfft)
+            normalized = self.normalize(chunked_norm)
         characteristic = self.characteristic.getcharacteristic(fft, normalized, meta)
         obj = { 'action': 'data', 'token': data, 'fft': fft, 'norm': normalized, 'meta': meta, 'characteristic': characteristic }
         self.queue.put(obj)
