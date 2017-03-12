@@ -66,7 +66,7 @@ MARGINAL_VALUE = 0.1
 
 # Minimal similarity across all comparison to
 # identify a complete word across all tokens
-MIN_CROSS_SIMILARITY = 0.1
+MIN_CROSS_SIMILARITY = 0.73
 
 # Calculation basis for token/word comparison
 SIMILARITY_NORM = 0.4
@@ -79,8 +79,8 @@ SIMILARITY_DOMINANT_FREQUENCY = 0.3
 NUMBER_OF_BEST_MATCHES = 5
 
 # Min. distance to keep a word
-MIN_LEFT_DISTANCE = 99
-MIN_RIGHT_DISTANCE = 99
+MIN_LEFT_DISTANCE = 0.2
+MIN_RIGHT_DISTANCE = 0.15
 
 # Use given number as results to assembly result
 # 0 for all predictions
@@ -88,4 +88,4 @@ MAX_WORD_START_RESULTS = 5
 MAX_TOP_RESULTS = 5
 
 # Enable or disable strict length check for words
-STRICT_LENGTH_CHECK = False
+STRICT_LENGTH_CHECK = True
