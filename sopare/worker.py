@@ -73,7 +73,7 @@ class worker(multiprocessing.Process):
         self.util.savefilteredwave('filtered_results'+str(self.reset_counter), self.rawbuf)
 
     def remove_silence(self, m):
-        silence = ((config.LONG_SILENCE * config.CHUNK) / 4096)-2
+        silence = ((config.LONG_SILENCE * config.CHUNK) / 4096) - 4 # TODO: Find auto value or make configurable
         if (silence < 0):
             silence = 0
         for x in range(len(self.character) - 1, len(self.character) - silence, -1):

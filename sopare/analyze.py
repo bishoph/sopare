@@ -80,8 +80,7 @@ class analyze():
                 word_sim = self.deep_inspection(id, startpos, data)
                 if (len(word_sim) > 0):
                     framing_match.append(word_sim)
-        if (self.debug):
-            self.debug_info += str(framing_match).join(['framing_match: ', '\n\n'])
+        self.debug_info += str(framing_match).join(['framing_match: ', '\n\n'])
         best_match = [ ]
         for match in framing_match:
             sorted_framing_match = sorted(match, key=lambda x: (x[1] + x[2], -x[0]))
@@ -101,8 +100,7 @@ class analyze():
                         match_results[x] = best[5]
             if (config.MAX_TOP_RESULTS > 0 and i > config.MAX_TOP_RESULTS):
                 break
-        if (self.debug):
-            self.debug_info += str(match_results).join(['match_results: ', '\n\n'])
+        self.debug_info += str(match_results).join(['match_results: ', '\n\n'])
         return match_results
 
     def deep_inspection(self, id, startpos, data):
@@ -125,10 +123,11 @@ class analyze():
                         token_sim[1] += sl
                         token_sim[2] += sr
                         c += 1.0
-                token_sim[0] = token_sim[0] / c
-                token_sim[1] = token_sim[1] / c
-                token_sim[2] = token_sim[2] / c
-                token_sim[4] = int(c)
+                if (c > 0):
+                    token_sim[0] = token_sim[0] / c
+                    token_sim[1] = token_sim[1] / c
+                    token_sim[2] = token_sim[2] / c
+                    token_sim[4] = int(c)
                 if ((config.STRICT_LENGTH_CHECK == False and c > 1 ) or c >= self.dict_analysis[id]['min_tokens']):
                     word_sim.append(token_sim)
         return word_sim
@@ -144,6 +143,8 @@ class analyze():
                     match_results = self.validate_match_result(framing[s:], s, x, match_results)
             elif (x == len(framing)-1):
                 match_results = self.validate_match_result(framing[s:], s, x, match_results)
+        if (match_results.count('') > len(match_results) / 2):
+            return [ 0 ] * len(match_results)
         return match_results
 
     def validate_match_result(self, result, start, end, match_results):
