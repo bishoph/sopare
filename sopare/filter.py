@@ -89,6 +89,7 @@ class filtering():
         nfft = numpy.log10(nfft)**2
         nfft[numpy.isnan(nfft)] = 0
         nam = numpy.amax(nfft)
+        normalized = [0]
         if (nam > 0):
             nfft = numpy.tanh(nfft/nam)
             chunked_norm = self.get_chunked_norm(nfft)
