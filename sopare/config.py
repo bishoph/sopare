@@ -15,11 +15,11 @@ THRESHOLD = 400
 MAX_SILENCE_AFTER_START = 3
 
 # Time in seconds after the analysis is forced
-MAX_TIME = 4
+MAX_TIME = 3.2
 
 # Counter to stop processing and prepare more data
 # Should be > LONG_SILENCE
-SILENCE_COUNTER = 50
+SILENCE_COUNTER = 42
 
 # Start the analysis after reaching LONG_SILENCE
 LONG_SILENCE = 40
@@ -37,8 +37,8 @@ LONG_SILENCE = 40
 # so relevant frequencies
 PROGRESSIVE_FACTOR = 0
 START_PROGRESSIVE_FACTOR = 600
-MIN_PROGRESSIVE_STEP = 50
-MAX_PROGRESSIVE_STEP = 50
+MIN_PROGRESSIVE_STEP = 25
+MAX_PROGRESSIVE_STEP = 25
 
 # Specifies freq ranges that are kept for further
 # analysis. Freq outside of the ranges are set to zero.
@@ -62,16 +62,31 @@ PEAK_FACTOR = 3
 MIN_START_TOKENS = 3
 
 # Min. value for potential beginning of a word
-MARGINAL_VALUE = 0.7
+MARGINAL_VALUE = 0.8
 
 # Minimal similarity across all comparison to
 # identify a complete word across all tokens
-MIN_CROSS_SIMILARITY = 0.6
+MIN_CROSS_SIMILARITY = 0.7
 
-# Min. post bias result for result consideration
-BIAS = 0
-
-# Calculation basis for token/word comparison
-SIMILARITY_PEAKS = 0.7
-SIMILARITY_HEIGHT = 0.3
+# Calculation basis or token/word comparison
+SIMILARITY_NORM = 0.6
+SIMILARITY_HEIGHT = 0.4
 SIMILARITY_DOMINANT_FREQUENCY = 0
+
+# Number of best matches to consider.
+# Value must be > 0
+# If not specified or value < 1 value is set to 1
+NUMBER_OF_BEST_MATCHES = 1
+
+# Min. distance to keep a word
+MIN_LEFT_DISTANCE = 0.3
+MIN_RIGHT_DISTANCE = 0.3
+
+
+# Use given number as results to assembly result
+# 0 for all predictions
+MAX_WORD_START_RESULTS = 2
+MAX_TOP_RESULTS = 3
+
+# Enable or disable strict length check for words
+STRICT_LENGTH_CHECK = False

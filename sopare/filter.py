@@ -49,11 +49,24 @@ class filtering():
         return False
 
     @staticmethod
+    def get_chunked_norm(nfft):
+        chunked_norm = [ ]
+        progessive = 1
+        i = config.MIN_PROGRESSIVE_STEP
+        for x in range(0, nfft.size, i):
+            if (hasattr(config, 'START_PROGRESSIVE_FACTOR')  and x >= config.START_PROGRESSIVE_FACTOR):
+                progessive += progessive * config.PROGRESSIVE_FACTOR
+                i += int(progessive)
+                if (i > config.MAX_PROGRESSIVE_STEP):
+                    i = config.MAX_PROGRESSIVE_STEP
+            chunked_norm.append( nfft[x:x+i].sum() )
+        return numpy.array(chunked_norm)
+
+    @staticmethod
     def normalize(fft):
-        na = numpy.copy(fft)
-        norm = numpy.linalg.norm(na)
+        norm = numpy.linalg.norm(fft)
         if (norm > 0):
-            return list(na/norm)
+            return (fft/norm).tolist()
         return []
 
     def filter(self, data, meta):
@@ -70,9 +83,17 @@ class filtering():
         fft[config.HIGH_FREQ:] = 0
         fft[:config.LOW_FREQ] = 0
         data = numpy.fft.irfft(fft)
-        fft = fft[config.LOW_FREQ:config.HIGH_FREQ]
-        fft = numpy.abs(fft)
-        normalized = self.normalize(fft)
+        nfft = fft[config.LOW_FREQ:config.HIGH_FREQ]
+        nfft = numpy.abs(nfft)
+        nfft[nfft == 0] = numpy.NaN
+        nfft = numpy.log10(nfft)**2
+        nfft[numpy.isnan(nfft)] = 0
+        nam = numpy.amax(nfft)
+        normalized = [0]
+        if (nam > 0):
+            nfft = numpy.tanh(nfft/nam)
+            chunked_norm = self.get_chunked_norm(nfft)
+            normalized = self.normalize(chunked_norm)
         characteristic = self.characteristic.getcharacteristic(fft, normalized, meta)
         obj = { 'action': 'data', 'token': data, 'fft': fft, 'norm': normalized, 'meta': meta, 'characteristic': characteristic }
         self.queue.put(obj)
