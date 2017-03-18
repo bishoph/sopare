@@ -62,11 +62,11 @@ PEAK_FACTOR = 3
 MIN_START_TOKENS = 3
 
 # Min. value for potential beginning of a word
-MARGINAL_VALUE = 0.1
+MARGINAL_VALUE = 0.8
 
 # Minimal similarity across all comparison to
 # identify a complete word across all tokens
-MIN_CROSS_SIMILARITY = 0.73
+MIN_CROSS_SIMILARITY = 0.7
 
 # Calculation basis or token/word comparison
 SIMILARITY_NORM = 0.6
@@ -79,8 +79,9 @@ SIMILARITY_DOMINANT_FREQUENCY = 0
 NUMBER_OF_BEST_MATCHES = 1
 
 # Min. distance to keep a word
-MIN_LEFT_DISTANCE = 0.2
-MIN_RIGHT_DISTANCE = 0.15
+MIN_LEFT_DISTANCE = 0.3
+MIN_RIGHT_DISTANCE = 0.3
+
 
 # Use given number as results to assembly result
 # 0 for all predictions
@@ -88,4 +89,4 @@ MAX_WORD_START_RESULTS = 2
 MAX_TOP_RESULTS = 3
 
 # Enable or disable strict length check for words
-STRICT_LENGTH_CHECK = True
+STRICT_LENGTH_CHECK = False
