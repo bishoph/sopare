@@ -68,10 +68,13 @@ class recorder:
                 self.queue.close()
                 break
         file.close()
+        once = False
         while (self.queue.qsize() > 0):
-            if (self.debug):
-                print ('waiting for queue...')
-            time.sleep(3) # wait for all threads to finish their work
+            if (self.debug and once == False):
+                print ('waiting for queue to finish...')
+                once = True
+            time.sleep(.1) # wait for all threads to finish their work
+        self.queue.close()
         self.buffering.flush('end of file')
         print("* done ")
         self.stop()

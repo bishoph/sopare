@@ -91,8 +91,7 @@ class analyze():
                if (x < len(sorted_framing_match)):
                    best_match.append(sorted_framing_match[x])
         sorted_best_match = sorted(best_match, key=lambda x: (x[1] +  x[2], -x[0]))
-        if (self.debug):
-            self.debug_info += str(sorted_best_match).join(['sorted_best_match: ', '\n\n'])
+        self.debug_info += str(sorted_best_match).join(['sorted_best_match: ', '\n\n'])
         for i, best in enumerate(sorted_best_match):
             if (best[0] >= config.MIN_CROSS_SIMILARITY and best[1] <= config.MIN_LEFT_DISTANCE and best[2] <= config.MIN_RIGHT_DISTANCE):
                 for x in range(best[3], best[3] + best[4]):
