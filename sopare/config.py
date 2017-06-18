@@ -24,6 +24,8 @@ SILENCE_COUNTER = 42
 # Start the analysis after reaching LONG_SILENCE
 LONG_SILENCE = 40
 
+# Characteristic length
+CHUNKS = 2048
 
 
 #########################################################
@@ -69,8 +71,8 @@ MARGINAL_VALUE = 0.8
 MIN_CROSS_SIMILARITY = 0.7
 
 # Calculation basis or token/word comparison
-SIMILARITY_NORM = 0.6
-SIMILARITY_HEIGHT = 0.4
+SIMILARITY_NORM = 0.8
+SIMILARITY_HEIGHT = 0.2
 SIMILARITY_DOMINANT_FREQUENCY = 0
 
 # Number of best matches to consider.

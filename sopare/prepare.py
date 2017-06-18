@@ -120,7 +120,7 @@ class preparing():
             self.entered_silence = False
             self.silence = 0
 
-        if (len(self.buffer) == 4096): # TODO: Make configurable
+        if (len(self.buffer) == config.CHUNKS):
             self.new_token = True
             meta.append({ 'token': 'token', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'token_peaks': self.token_peaks })
 
