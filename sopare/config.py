@@ -82,7 +82,7 @@ NUMBER_OF_BEST_MATCHES = 1
 
 # Min. distance to keep a word
 MIN_LEFT_DISTANCE = 0.3
-MIN_RIGHT_DISTANCE = 0.3
+MIN_RIGHT_DISTANCE = 0.25
 
 
 # Use given number as results to assembly result

@@ -22,17 +22,15 @@ import filter
 import visual
 import util
 import config
+import hatch
 
 class preparing():
 
-    def __init__(self, debug, plot, wave, dict):
-        self.debug = debug
-        self.plot = plot
-        self.wave = wave
-        self.dict = dict
+    def __init__(self, hatch):
+        self.hatch = hatch
         self.visual = visual.visual()
-        self.util = util.util(debug)
-        self.filter = filter.filtering(debug, plot, dict, wave)
+        self.util = util.util(self.hatch.get('debug'))
+        self.filter = filter.filtering(self.hatch)
         self.silence = 0
         self.force = False
         self.counter = 0
@@ -45,7 +43,6 @@ class preparing():
         self.token_peaks = [ ]
         self.last_low_pos = 0
         self.force = False
-        self.plot_buffer = [ ]
         self.entered_silence = False
 
     def tokenize(self, meta):
@@ -68,10 +65,10 @@ class preparing():
         return True
 
     def stop(self):
+        if (self.hatch.get('plot') == True):
+            self.visual.create_sample(self.hatch.get_plot_cache(), 'sample.png')
         self.tokenize([{ 'token': 'stop' }])
         self.filter.stop()
-        if (self.plot):
-            self.visual.create_sample(self.plot_buffer, 'sample.png')
         self.filter_reset()
         self.reset()
 
@@ -97,8 +94,8 @@ class preparing():
   
     def prepare(self, buf, volume):
         data = numpy.fromstring(buf, dtype=numpy.int16)
-        if (self.plot):
-            self.plot_buffer.extend(data)
+        if (self.hatch.get('plot') == True and self.hatch.get('endless_loop') == False):
+            self.hatch.extend_plot_cache(data)
         self.buffer.extend(data)
         self.counter += 1
         abs_data = abs(data)

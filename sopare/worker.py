@@ -25,20 +25,18 @@ import characteristics
 import uuid
 import comparator
 import config
+import hatch
 
 class worker(multiprocessing.Process):
 
-    def __init__(self, queue, debug, plot, dict, wave):
+    def __init__(self, hatch, queue):
         multiprocessing.Process.__init__(self, name="worker for filtered data")
+        self.hatch = hatch
         self.queue = queue
-        self.debug = debug
-        self.plot = plot
-        self.dict = dict
-        self.wave = wave
         self.visual = visual.visual()
-        self.util = util.util(debug)
-        self.analyze = analyze.analyze(debug)
-        self.compare = comparator.compare(debug, self.util)
+        self.util = util.util(self.hatch.get('debug'))
+        self.analyze = analyze.analyze(self.hatch.get('debug'))
+        self.compare = comparator.compare(self.hatch.get('debug'), self.util)
         self.running = True
         self.counter = 0
         self.plot_counter = 0
@@ -55,10 +53,10 @@ class worker(multiprocessing.Process):
 
     def reset(self):
         self.counter = 0
-        if (self.wave and len(self.rawbuf) > 0):
+        if (self.hatch.get('wave') == True and len(self.rawbuf) > 0):
             self.save_wave_buf()
         self.rawbuf = [ ]
-        self.rawfft = [ ]
+        #self.rawfft = [ ]
         self.raw = [ ]
         self.fft = [ ]
         self.word_tendency = None
@@ -85,36 +83,36 @@ class worker(multiprocessing.Process):
 
 
     def run(self):
-        if (self.debug):
+        if (self.hatch.get('debug') == True):
             print ("worker queue runner started")
         while self.running:
             obj = self.queue.get()
             if (obj['action'] == 'data'):
                 raw_token = obj['token']
-                if (self.wave or True): # TODO: "or True" is just temporary for testing. Must be removed later on!
+                if (self.hatch.get('wave') == True or True): # TODO: "or True" is just temporary for testing. Must be removed later on!
                     self.rawbuf.extend(raw_token)
                 fft = obj['fft']
-                if (self.plot):
+                if (self.hatch.get('plot') == True):
                     self.rawfft.extend(fft)
                 meta = obj['meta']
                 norm = obj['norm']
                 characteristic = obj['characteristic']
                 self.character.append((characteristic, meta))
                 self.compare.word(self.character)
-                if (self.dict != None):
+                if (self.hatch.get('dict') != None):
                     self.raw_character.append({ 'fft': fft, 'norm': norm, 'meta': meta })
                 if (characteristic != None):
-                    if (self.debug):
+                    if (self.hatch.get('debug') == True):
                         print ('characteristic = ' + str(self.counter) + ' ' + str(characteristic))
                         print ('meta = '+str(meta))
-                    if (self.wave):
+                    if (self.hatch.get('wave') == True):
                         self.util.savefilteredwave('token'+str(self.counter)+self.uid, raw_token)
-                    if (self.plot):
+                    if (self.hatch.get('plot') == True and self.plot_counter < 6):
                         self.visual.create_sample(characteristic['norm'], 'norm'+str(self.plot_counter)+'.png')
                         self.visual.create_sample(fft, 'fft'+str(self.plot_counter)+'.png')
                     self.plot_counter += 1
                 self.counter += 1
-            elif (obj['action'] == 'reset' and self.dict == None):
+            elif (obj['action'] == 'reset' and self.hatch.get('dict') == None):
                 self.reset()
             elif (obj['action'] == 'stop'):
                 self.running = False
@@ -123,17 +121,17 @@ class worker(multiprocessing.Process):
                 for m in meta:
                     if (m['token'] == 'start analysis'):
                         self.remove_silence(m)
-                        if (self.dict == None):
+                        if (self.hatch.get('dict') == None):
                             self.analyze.do_analysis(self.compare.get_results(), self.character, self.rawbuf)
                         else:
                             self.util.store_raw_dict_entry(self.dict, self.raw_character)
                         self.reset()
 
-        if (self.wave and len(self.rawbuf) > 0):
+        if (self.hatch.get('wave') == True and len(self.rawbuf) > 0):
             self.save_wave_buf()
 
         self.queue.close()
 
-        if (self.plot):
+        if (self.hatch.get('plot') == True):
             self.visual.create_sample(self.rawfft, 'fft.png')
 

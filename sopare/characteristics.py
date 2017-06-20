@@ -19,25 +19,14 @@ under the License.
 
 import numpy
 import config
+import hatch
 
 class characteristic:
 
-    def __init__(self, debug):
-        self.debug = debug
+    def __init__(self, hatch):
+        self.hatch = hatch
 
     def getcharacteristic(self, fft, chunked_norm, meta):
-
-        #chunked_norm = [ ]
-        #progessive = 1
-        #i = config.MIN_PROGRESSIVE_STEP
-        #for x in range(0, len(norm), i):
-        #    if (hasattr(config, 'START_PROGRESSIVE_FACTOR')  and x >= config.START_PROGRESSIVE_FACTOR):
-        #        progessive += progessive * config.PROGRESSIVE_FACTOR
-        #        i += int(progessive)
-        #        if (i > config.MAX_PROGRESSIVE_STEP):
-        #            i = config.MAX_PROGRESSIVE_STEP
-        #    chunked_norm.append(round(sum(norm[x:x+i]), 2))
-
         fft = numpy.abs(fft)
         df = numpy.argmax(fft)
         dfm = int(numpy.amax(fft))
