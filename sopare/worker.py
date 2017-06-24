@@ -124,7 +124,7 @@ class worker(multiprocessing.Process):
                         if (self.hatch.get('dict') == None):
                             self.analyze.do_analysis(self.compare.get_results(), self.character, self.rawbuf)
                         else:
-                            self.util.store_raw_dict_entry(self.dict, self.raw_character)
+                            self.util.store_raw_dict_entry(self.hatch.get('dict'), self.raw_character)
                         self.reset()
 
         if (self.hatch.get('wave') == True and len(self.rawbuf) > 0):
