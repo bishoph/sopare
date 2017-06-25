@@ -31,7 +31,7 @@ class processor():
         self.hatch = hatch
         self.out = None
         if (self.hatch.get('outfile') != None):
-            self.out = io.open(outfile, 'wb')
+            self.out = io.open(self.hatch.get('outfile'), 'wb')
         self.buffering = buffering
         self.live = live
         self.timer = 0
