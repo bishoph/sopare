@@ -127,7 +127,7 @@ class analyze():
                     token_sim[1] = token_sim[1] / c
                     token_sim[2] = token_sim[2] / c
                     token_sim[4] = int(c)
-                if ((config.STRICT_LENGTH_CHECK == False and c > 1 ) or c >= self.dict_analysis[id]['min_tokens']):
+                if ((config.STRICT_LENGTH_CHECK == False and c > 1 ) or c >= self.dict_analysis[id]['min_tokens'] - config.STRICT_LENGTH_UNDERMINING):
                     word_sim.append(token_sim)
         return word_sim
 
@@ -149,7 +149,7 @@ class analyze():
     def validate_match_result(self, result, start, end, match_results):
         if (len(result) == 0 or result[0] == '' or end-start < 2):
             return match_results
-        if (config.STRICT_LENGTH_CHECK == True and (len(result) < self.dict_analysis[result[0]]['min_tokens'] or len(result) > self.dict_analysis[result[0]]['max_tokens'])):
+        if (config.STRICT_LENGTH_CHECK == True and (len(result) < self.dict_analysis[result[0]]['min_tokens'] - config.STRICT_LENGTH_UNDERMINING or len(result) > self.dict_analysis[result[0]]['max_tokens'])):
             if (self.debug):
                 self.debug_info += 'STRICT_LENGTH_CHECK failed for '+result[0] + ': ' + str(self.dict_analysis[result[0]]['min_tokens']) + ' > ' + str(len(result)) + ' < ' + str(self.dict_analysis[result[0]]['max_tokens']) + '\n'
             return match_results
