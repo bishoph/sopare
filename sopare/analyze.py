@@ -20,6 +20,7 @@ under the License.
 from operator import itemgetter
 import characteristics
 import config
+import stm
 import path
 import util
 import imp
@@ -33,6 +34,7 @@ class analyze():
         self.util = util.util(debug)
         self.learned_dict = self.util.getDICT()
         self.dict_analysis = self.util.compile_analysis(self.learned_dict)
+        self.stm = stm.short_term_memory(debug)
         self.plugins = [ ]
         self.load_plugins()
         self.last_results = None
@@ -45,6 +47,7 @@ class analyze():
             self.debug_info += ''.join([str(results), '\n\n'])
         matches = self.deep_search(framing, data)
         readable_results = self.get_match(matches)
+        readable_results = self.stm.get_results(readable_results)
         if (self.debug):
             print (self.debug_info)
         if (readable_results != None):

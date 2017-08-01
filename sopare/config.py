@@ -12,17 +12,17 @@ SAMPLE_RATE = 44100
 THRESHOLD = 400
 
 # Silence time in seconds when analysis is called
-MAX_SILENCE_AFTER_START = 3
+MAX_SILENCE_AFTER_START = 1
 
 # Time in seconds after the analysis is forced
 MAX_TIME = 3.2
 
 # Counter to stop processing and prepare more data
 # Should be > LONG_SILENCE
-SILENCE_COUNTER = 42
+SILENCE_COUNTER = 256
 
 # Start the analysis after reaching LONG_SILENCE
-LONG_SILENCE = 40
+LONG_SILENCE = 30
 
 # Characteristic length
 CHUNKS = 4096
@@ -61,28 +61,28 @@ PEAK_FACTOR = 3
 #########################################################
 
 # Min. number of tokens to identify the beginning of a word
-MIN_START_TOKENS = 4
+MIN_START_TOKENS = 2
 
 # Min. value for potential beginning of a word
-MARGINAL_VALUE = 0.8
+MARGINAL_VALUE = 0.7
 
 # Minimal similarity across all comparison to
 # identify a complete word across all tokens
-MIN_CROSS_SIMILARITY = 0.6
+MIN_CROSS_SIMILARITY = 0.7
 
 # Calculation basis or token/word comparison
-SIMILARITY_NORM = 0.8
-SIMILARITY_HEIGHT = 0.2
+SIMILARITY_NORM = 0.6
+SIMILARITY_HEIGHT = 0.4
 SIMILARITY_DOMINANT_FREQUENCY = 0
 
 # Number of best matches to consider.
 # Value must be > 0
 # If not specified or value < 1 value is set to 1
-NUMBER_OF_BEST_MATCHES = 1
+NUMBER_OF_BEST_MATCHES = 2
 
 # Min. distance to keep a word
-MIN_LEFT_DISTANCE = 0.8
-MIN_RIGHT_DISTANCE = 0.8
+MIN_LEFT_DISTANCE = 0.5
+MIN_RIGHT_DISTANCE = 0.35
 
 # Use given number as results to assembly result
 # 0 for all predictions
@@ -93,4 +93,7 @@ MAX_TOP_RESULTS = 3
 STRICT_LENGTH_CHECK = True
 # Value to soften the strict length check a bit to still
 # get quite precise results but to be less strict
-STRICT_LENGTH_UNDERMINING = 1
+STRICT_LENGTH_UNDERMINING = 0
+
+# Short term memory retention time in seconds. Zero to disable STM
+STM_RETENTION = 1
