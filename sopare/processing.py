@@ -57,10 +57,10 @@ class processor():
     def check_silence(self, buf):
         volume = audioop.rms(buf, 2)
         if (volume >= config.THRESHOLD):
+            self.silence_timer = time.time()
             if (self.append == False):
                 if (self.hatch.get('debug') == True):
                     print ('starting append mode')
-                self.silence_timer = time.time()
                 self.timer = time.time()
                 for sbuf in self.silence_buffer:
                     self.prepare.prepare(sbuf, volume)
@@ -78,7 +78,7 @@ class processor():
             self.prepare.prepare(buf, volume)
         if (self.append == True and self.silence_timer > 0
         and self.silence_timer + config.MAX_SILENCE_AFTER_START < time.time()
-        and self.live == True and self.hatch.get('endless_loop') == False):
+        and self.live == True):
             self.stop("stop append mode because of silence")
         if (self.append == True and self.timer + config.MAX_TIME < time.time()
         and self.live == True):
