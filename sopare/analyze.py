@@ -147,7 +147,7 @@ class analyze():
                 match_results = self.validate_match_result(framing[s:], s, x, match_results)
         if (framing.count('') > len(framing) / 2):
             if (self.debug):
-                self.debug_info += 'Results contain too many empty tokens. ' + str(framing.count('')) + ' / ' + len(framing) + ' Eliminating results'
+                self.debug_info += 'Results contain too many empty tokens. ' + str(framing.count('')) + ' / ' + str(len(framing)) + ' Eliminating results'
             return [ 0 ] * len(match_results)
         return match_results
 

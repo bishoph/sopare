@@ -96,4 +96,4 @@ STRICT_LENGTH_CHECK = True
 STRICT_LENGTH_UNDERMINING = 0
 
 # Short term memory retention time in seconds. Zero to disable STM
-STM_RETENTION = 1
+STM_RETENTION = 0.8
