@@ -97,3 +97,8 @@ STRICT_LENGTH_UNDERMINING = 0
 
 # Short term memory retention time in seconds. Zero to disable STM
 STM_RETENTION = 0.8
+
+# Fill result percentage
+# 0.5 means that half of the values can by empty to still get valid results
+# A lower value should theoretically avoid false positives
+FILL_RESULT_PERCENTAGE = 0.2
