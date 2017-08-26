@@ -83,7 +83,3 @@ class processor():
         if (self.append == True and self.timer + config.MAX_TIME < time.time()
         and self.live == True):
             self.stop("stop append mode because time is up")
-        if (self.append == True and self.live == True and self.hatch.get('endless_loop') == True
-        and self.silence_counter > config.SILENCE_COUNTER):
-            self.append = False
-            self.stop("endless loop silence detected")
