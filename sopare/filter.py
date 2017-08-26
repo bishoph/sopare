@@ -22,16 +22,16 @@ import multiprocessing
 import worker
 import config
 import characteristics
+import hatch
 
 class filtering():
 
-    def __init__(self, debug, plot, dict, wave):
-        self.debug = debug
-        self.plot = plot
+    def __init__(self, hatch):
+        self.hatch = hatch
         self.first = True
         self.queue = multiprocessing.Queue()
-        self.characteristic = characteristics.characteristic(debug)
-        self.worker = worker.worker(self.queue, debug, plot, dict, wave)
+        self.characteristic = characteristics.characteristic(self.hatch)
+        self.worker = worker.worker(self.hatch, self.queue)
 
     def stop(self):
         self.queue.put({ 'action': 'stop' })

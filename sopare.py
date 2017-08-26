@@ -22,6 +22,7 @@ import getopt
 import sopare.util as util
 import sopare.recorder as recorder
 import sopare.err_logger as err_logger
+import sopare.hatch as hatch
 from sopare.version import __version__
 
 def main(argv):
@@ -83,8 +84,16 @@ def main(argv):
             if opt in ("-d", "--delete"):
                 delete_word(arg, debug)
                 sys.exit(0)
-    recorder.recorder(endless_loop, debug, plot, wave, outfile, 
-                      infile, dict)
+
+    hatched = hatch.hatch()
+    hatched.add("endless_loop", endless_loop)
+    hatched.add("debug", debug)
+    hatched.add("plot", plot)
+    hatched.add("wave", wave)
+    hatched.add("outfile", outfile)
+    hatched.add("infile",infile )
+    hatched.add("dict", dict)
+    recorder.recorder(hatched)
 
 def recreate_dict(debug):
     print ("recreating dictionary from raw input files...")

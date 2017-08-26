@@ -24,23 +24,23 @@ import time
 import sys
 import io
 import config
+import hatch
+import numpy
+import visual
 
-class recorder:
+class recorder():
 
-    def __init__(self, endless_loop, debug, plot, wave, outfile, infile, dict):
-        self.debug = debug
-        self.plot = plot
-        self.wave = wave
-        self.outfile = outfile
-        self.dict = dict
+    def __init__(self, hatch):
+        self.hatch = hatch
         self.FORMAT = pyaudio.paInt16
         # mono
         self.CHANNELS = 1
         self.pa = pyaudio.PyAudio()
         self.queue = multiprocessing.JoinableQueue()
         self.running = True
+        self.visual = visual.visual()
   
-        if (debug):
+        if (self.hatch.get('debug') == True):
             defaultCapability = self.pa.get_default_host_api_info()
             print defaultCapability
 
@@ -51,27 +51,35 @@ class recorder:
                 output=False,
                 frames_per_buffer=config.CHUNK)
 
-        self.buffering = buffering.buffering(self.queue, endless_loop, self.debug, self.plot, self.wave, self.outfile, self.dict)
-        if (infile == None):
+        self.buffering = buffering.buffering(self.hatch, self.queue)
+        if (hatch.get('infile') == None):
             self.recording()
         else:
-            self.readfromfile(infile)
+            self.readfromfile()
 
-    def readfromfile(self, infile):
-        print("* reading file "+infile)
-        file = io.open(infile, 'rb', buffering=config.CHUNK)
+    def readfromfile(self):
+        print("* reading file " + self.hatch.get('infile'))
+        file = io.open(self.hatch.get('infile'), 'rb', buffering=config.CHUNK)
         while True:
             buf = file.read(config.CHUNK * 2)
             if buf:
                 self.queue.put(buf)
+                if (self.hatch.get('plot') == True):
+                    data = numpy.fromstring(buf, dtype=numpy.int16)
+                    self.hatch.extend_plot_cache(data)
             else:
                 self.queue.close()
                 break
         file.close()
+        once = False
+        if (self.hatch.get('plot') == True):
+            self.visual.create_sample(self.hatch.get_plot_cache(), 'sample.png')
         while (self.queue.qsize() > 0):
-            if (self.debug):
-                print ('waiting for queue...')
-            time.sleep(3) # wait for all threads to finish their work
+            if (self.hatch.get('debug') == True and once == False):
+                print ('waiting for queue to finish...')
+                once = True
+            time.sleep(.1) # wait for all threads to finish their work
+        self.queue.close()
         self.buffering.flush('end of file')
         print("* done ")
         self.stop()
@@ -90,6 +98,7 @@ class recorder:
                     break
             except IOError as e:
                 print ("stream read error "+str(e))
+
         self.stop()
         sys.exit()
 

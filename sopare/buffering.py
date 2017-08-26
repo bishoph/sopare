@@ -19,41 +19,35 @@ under the License.
 
 import multiprocessing
 import processing
+import hatch
 
 class buffering(multiprocessing.Process):
 
-    def __init__(self, queue, endless_loop, debug, plot, wave, outfile, dict):
+    def __init__(self, hatch, queue):
         multiprocessing.Process.__init__(self, name="buffering queue")
+        self.hatch = hatch
         self.queue = queue
-        self.endless_loop = endless_loop
-        self.debug = debug
-        self.plot = plot
-        self.outfile = outfile
-        self.proc = processing.processor(endless_loop, debug, plot, wave, outfile, dict, self)
+        self.proc = processing.processor(hatch, self)
         self.PROCESS_ROUND_DONE = False
         self.test_counter = 0
         self.start()
   
     def run(self):
-        if (self.debug):
+        if (self.hatch.get('debug') == True):
             print ("buffering queue runner")
         while True:
             buf = self.queue.get()
-            if ((self.endless_loop == False or self.outfile != None) and self.PROCESS_ROUND_DONE):
+            if ((self.hatch.get('endless_loop') == False or self.hatch.get('outfile') != None) and self.PROCESS_ROUND_DONE):
                 break
             self.proc.check_silence(buf)
-        if (self.debug):
+        if (self.hatch.get('debug') == True):
             print ("terminating queue runner")
 
     def flush(self, message):
         self.proc.stop(message)
  
     def stop(self):
-        if (self.debug):
+        if (self.hatch.get('debug') == True):
             print ("stop buffering")
         self.PROCESS_ROUND_DONE = True
-
-  
-
-
 

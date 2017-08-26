@@ -20,6 +20,7 @@ under the License.
 from operator import itemgetter
 import characteristics
 import config
+import stm
 import path
 import util
 import imp
@@ -33,6 +34,7 @@ class analyze():
         self.util = util.util(debug)
         self.learned_dict = self.util.getDICT()
         self.dict_analysis = self.util.compile_analysis(self.learned_dict)
+        self.stm = stm.short_term_memory(debug)
         self.plugins = [ ]
         self.load_plugins()
         self.last_results = None
@@ -45,6 +47,7 @@ class analyze():
             self.debug_info += ''.join([str(results), '\n\n'])
         matches = self.deep_search(framing, data)
         readable_results = self.get_match(matches)
+        readable_results = self.stm.get_results(readable_results)
         if (self.debug):
             print (self.debug_info)
         if (readable_results != None):
@@ -91,8 +94,7 @@ class analyze():
                if (x < len(sorted_framing_match)):
                    best_match.append(sorted_framing_match[x])
         sorted_best_match = sorted(best_match, key=lambda x: (x[1] +  x[2], -x[0]))
-        if (self.debug):
-            self.debug_info += str(sorted_best_match).join(['sorted_best_match: ', '\n\n'])
+        self.debug_info += str(sorted_best_match).join(['sorted_best_match: ', '\n\n'])
         for i, best in enumerate(sorted_best_match):
             if (best[0] >= config.MIN_CROSS_SIMILARITY and best[1] <= config.MIN_LEFT_DISTANCE and best[2] <= config.MIN_RIGHT_DISTANCE):
                 for x in range(best[3], best[3] + best[4]):
@@ -128,7 +130,7 @@ class analyze():
                     token_sim[1] = token_sim[1] / c
                     token_sim[2] = token_sim[2] / c
                     token_sim[4] = int(c)
-                if ((config.STRICT_LENGTH_CHECK == False and c > 1 ) or c >= self.dict_analysis[id]['min_tokens']):
+                if ((config.STRICT_LENGTH_CHECK == False and c > 1 ) or c >= self.dict_analysis[id]['min_tokens'] - config.STRICT_LENGTH_UNDERMINING):
                     word_sim.append(token_sim)
         return word_sim
 
@@ -143,14 +145,16 @@ class analyze():
                     match_results = self.validate_match_result(framing[s:], s, x, match_results)
             elif (x == len(framing)-1):
                 match_results = self.validate_match_result(framing[s:], s, x, match_results)
-        if (match_results.count('') > len(match_results) / 2):
-            return [ 0 ] * len(match_results)
+        if (framing.count('') > len(framing) * config.FILL_RESULT_PERCENTAGE):
+            if (self.debug):
+                self.debug_info += 'Results contain too many empty tokens. ' + str(framing.count('')) + ' / ' + str(len(framing)) + ' Eliminating results'
+            return [ ] * len(match_results)
         return match_results
 
     def validate_match_result(self, result, start, end, match_results):
         if (len(result) == 0 or result[0] == '' or end-start < 2):
             return match_results
-        if (config.STRICT_LENGTH_CHECK == True and (len(result) < self.dict_analysis[result[0]]['min_tokens'] or len(result) > self.dict_analysis[result[0]]['max_tokens'])):
+        if (config.STRICT_LENGTH_CHECK == True and (len(result) < self.dict_analysis[result[0]]['min_tokens'] - config.STRICT_LENGTH_UNDERMINING or len(result) > self.dict_analysis[result[0]]['max_tokens'])):
             if (self.debug):
                 self.debug_info += 'STRICT_LENGTH_CHECK failed for '+result[0] + ': ' + str(self.dict_analysis[result[0]]['min_tokens']) + ' > ' + str(len(result)) + ' < ' + str(self.dict_analysis[result[0]]['max_tokens']) + '\n'
             return match_results
