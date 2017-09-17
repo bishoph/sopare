@@ -40,20 +40,28 @@ class compare():
             self.results = { }
             for id in self.dict_analysis:
                 self.results[id] = [ ]
-        self.area(characteristics[ll], ll)
-
-    def area(self, characteristic_object, ll):
-        characteristic, _ = characteristic_object
+        self.create_structure()
+        self.fill_structure(characteristics[ll])
+            
+    def create_structure(self):
         for id in self.dict_analysis:
             self.results[id].append([ ])
             for x in range(0, len(self.results[id])):
                 self.results[id][x].append(0)
+
+    def fill_structure(self, characteristic_object):
+        characteristic, meta = characteristic_object
         for dict_entries in self.learned_dictionary['dict']:
             id = dict_entries['id']
             for x in range(0, len(self.results[id])):
                 dict_c_pos = len(self.results[id][x])-1
                 if (dict_c_pos < len(dict_entries['characteristic'])):
                     dcharacteristic = dict_entries['characteristic'][dict_c_pos]
-                    fast_sim = self.util.single_similarity(characteristic['fc'], dcharacteristic['fc'])
+                    fc_sim = self.util.single_similarity(characteristic['fc'], dcharacteristic['fc'])
+                    dfm_sim = self.util.single_similarity(characteristic['dfm'], dcharacteristic['dfm'])
+                    volume_sim = 0
+                    if (len(meta) > 0 and 'volume' in meta[0]):
+                        volume_sim = self.util.single_similarity(meta[0]['volume'], dcharacteristic['volume'])
+                    fast_sim = (fc_sim + dfm_sim + volume_sim) / 3.0
                     if (fast_sim > self.results[id][x][dict_c_pos]):
                         self.results[id][x][dict_c_pos] = fast_sim

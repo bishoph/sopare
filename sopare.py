@@ -23,6 +23,7 @@ import sopare.util as util
 import sopare.recorder as recorder
 import sopare.err_logger as err_logger
 import sopare.hatch as hatch
+import test.unit_tests as tests
 from sopare.version import __version__
 
 def main(argv):
@@ -38,8 +39,8 @@ def main(argv):
 
     if (len(argv) > 0):
         try:                                
-            opts, args = getopt.getopt(argv, "ahelpv~cos:w:r:t:d:",
-             ["analysis", "help", "error", "loop", "plot", "verbose", "wave", "create", "overview",
+            opts, args = getopt.getopt(argv, "ahelpv~cous:w:r:t:d:",
+             ["analysis", "help", "error", "loop", "plot", "verbose", "wave", "create", "overview", "unit",
               "show=", "write=", "read=", "train=", "delete="
              ])
         except getopt.GetoptError:
@@ -84,6 +85,10 @@ def main(argv):
             if opt in ("-d", "--delete"):
                 delete_word(arg, debug)
                 sys.exit(0)
+            if opt in ("-u", "--unit"):
+                unit_tests(debug)
+                sys.exit(0)
+
 
     hatched = hatch.hatch()
     hatched.add("endless_loop", endless_loop)
@@ -124,6 +129,13 @@ def show_dict_analysis(debug):
     utilities = util.util(debug)
     print (utilities.compile_analysis(utilities.getDICT()))
 
+def unit_tests(debug):
+    print ("starting unit tests...")
+    utilities = util.util(debug)
+    tests.unit_tests(debug)
+    print ("done.")
+
+
 def usage():
     print ("usage:\n")
     print (" -h --help           : this help\n")
@@ -143,6 +155,6 @@ def usage():
     print (" -d --delete [word]  : delete [word] from dictionary and exit.")
     print ("                       '*' deletes everyting!\n")
     print (" -a --analysis       : show dictionary analysis and exit.\n")
-
+    print (" -u --unit           : run unit tests\n")
 
 main(sys.argv[1:])

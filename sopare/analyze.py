@@ -39,6 +39,11 @@ class analyze():
         self.load_plugins()
         self.last_results = None
 
+    def prepare_test_analysis(self, test_dict):
+        self.learned_dict = test_dict
+        self.dict_analysis = self.util.compile_analysis(self.learned_dict)
+        return self.dict_analysis
+
     def do_analysis(self, results, data, rawbuf):
         framing = self.framing(results, len(data))
         self.debug_info = '************************************************\n\n'
@@ -64,6 +69,8 @@ class analyze():
                 row_result = sum(row[0:len(row)]) / self.dict_analysis[id]['min_tokens']
                 if (row_result >= config.MARGINAL_VALUE):
                     arr.append([row_result, i, id])
+                elif (self.debug):
+                    print ('removing '+id + ' from potential start possition '+str(i) + ' bc MARGINAL_VALUE > ' +str(row_result))
         sorted_arr = sorted(arr, key=itemgetter(0), reverse = True)
         for el in sorted_arr:
             if (el[1] not in framing[el[2]] and (config.MAX_WORD_START_RESULTS == 0 or len(framing[el[2]]) < config.MAX_WORD_START_RESULTS)):
@@ -157,6 +164,7 @@ class analyze():
         if (config.STRICT_LENGTH_CHECK == True and (len(result) < self.dict_analysis[result[0]]['min_tokens'] - config.STRICT_LENGTH_UNDERMINING or len(result) > self.dict_analysis[result[0]]['max_tokens'])):
             if (self.debug):
                 self.debug_info += 'STRICT_LENGTH_CHECK failed for '+result[0] + ': ' + str(self.dict_analysis[result[0]]['min_tokens']) + ' > ' + str(len(result)) + ' < ' + str(self.dict_analysis[result[0]]['max_tokens']) + '\n'
+            match_results.append('')
             return match_results
         match_results.append(result[0])
         return match_results

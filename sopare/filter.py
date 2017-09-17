@@ -74,6 +74,8 @@ class filtering():
             fft = numpy.fft.rfft(data)
             self.first = self.check_for_windowing(meta)
         elif (self.first == True):
+            if (self.hatch.get('debug')):
+                print ('New window!')
             hl = len(data)
             if (hl % 2 != 0):
                 hl += 1

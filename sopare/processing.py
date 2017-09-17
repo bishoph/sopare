@@ -36,7 +36,6 @@ class processor():
         self.live = live
         self.timer = 0
         self.silence_timer = 0
-        self.silence_counter = 0
         self.silence_buffer = [ ]
         self.prepare = prepare.preparing(self.hatch)
 
@@ -63,12 +62,10 @@ class processor():
                     print ('starting append mode')
                 self.timer = time.time()
                 for sbuf in self.silence_buffer:
-                    self.prepare.prepare(sbuf, volume)
+                    self.prepare.prepare(sbuf, audioop.rms(sbuf, 2))
                 self.silence_buffer = [ ]
             self.append = True
-            self.silence_counter = 0
         else:
-            self.silence_counter += 1
             self.silence_buffer.append(buf)
             if (len(self.silence_buffer) > 3):
                 del self.silence_buffer[0]

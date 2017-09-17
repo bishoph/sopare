@@ -132,8 +132,8 @@ class util:
         json_file.close()
 
     @staticmethod
-    def getDICT():
-        with open("dict/dict.json") as json_file:
+    def getDICT(filename="dict/dict.json"):
+        with open(filename) as json_file:
             json_data = json.load(json_file)
         json_file.close()
         return json_data

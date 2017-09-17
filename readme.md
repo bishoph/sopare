@@ -1,8 +1,8 @@
 This is the **SO**und **PA**ttern **RE**cognition project written in Python.
 In a nutshell the project is able to listen in real time to microphone input
 and detect patterns (like words) in the stream based on simple characteristics.
-The output is an array of potential best guess matches. SoPaRe works offline
-and was tested successfully on a Raspberry Pi 2 and on a Banana Pi. 
+The output is an array of potential best guess matches. SOPARE works offline
+and was tested successfully on a Raspberry Pi 2/3 and on a Banana Pi.
 
 
 Here is an example output for the spoken words 'light off' in German:
@@ -44,7 +44,7 @@ Installation:
 
  Just checkout the project and resolve the dependencies:
 
- git clone https://github.com/bishoph/sopare.git .
+ git clone https://github.com/bishoph/sopare.git
 
  Then you should create the following directories:
 
@@ -58,20 +58,19 @@ Installation:
 
 Abstract:
 
-  * SoPaRe detects words/patterns based on learned results
-  * SoPaRe must be trained to get results
-  * SoPaRe works offline
-  * SoPaRe recognizes words/patterns in real time and requires a multi core processor architecture
-  * SoPaRe is highly configurable for quick and dirty results as well as for more precise recognition
-  * SoPaRe was tested and developed with Python 2.7 on a Raspberry Pi 2
-  * SoPaRe comes with a very simple plugin interface for further processing
+  * SOPARE detects words/patterns based on learned results
+  * SOPARE must be trained to get results
+  * SOPARE works offline
+  * SOPARE recognizes words/patterns in real time and requires a multi core processor architecture
+  * SOPARE is highly configurable for quick and dirty results as well as for more precise recognition
+  * SOPARE was tested and developed with Python 2.7 on a Raspberry Pi 2
+  * SOPARE comes with a very simple plugin interface for further processing
 
 
 Next steps/TODOs:
 
-  * Testing and bugfixing
+  * Optimizations (e.g. word separation)
   * Make use of logging
-  * Refactoring and performance optimizations
   * Python3 compatibility
 
 
@@ -85,8 +84,6 @@ Project status:
 Usage:
 
 ```
-usage:
-
  -h --help           : this help
 
  -l --loop           : loop forever
@@ -115,6 +112,10 @@ usage:
 
  -d --delete [word]  : delete [word] from dictionary and exit.
                        '*' deletes everyting!
+
+ -a --analysis       : show dictionary analysis and exit.
+
+ -u --unit           : run unit tests
 ```
 
 
