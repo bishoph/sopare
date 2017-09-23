@@ -18,10 +18,12 @@ under the License.
 """
 
 import test_analyze
+import test_filter
 
 class unit_tests():
 
     def __init__(self, debug):
         print ('starting analyze tests...')
         test_analyze.test_analyze(debug)
+        test_filter.test_filter(debug)
         print ('unit_tests run successful!')

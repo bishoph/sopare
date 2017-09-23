@@ -63,7 +63,7 @@ class analyze():
         framing = { }
         arr = [ ]
         for id in results:
-            framing[id] = [ ]
+            framing[id] = [ ] 
             for i, row in enumerate(results[id]):
                 row = self.row_validation(row, id)
                 row_result = sum(row[0:len(row)]) / self.dict_analysis[id]['min_tokens']
@@ -112,6 +112,14 @@ class analyze():
         self.debug_info += str(match_results).join(['match_results: ', '\n\n'])
         return match_results
 
+    def token_sim(self, characteristic, dcharacteristic):
+        sim_norm = self.util.similarity(characteristic['norm'], dcharacteristic['norm']) * config.SIMILARITY_NORM
+        sim_token_peaks = self.util.similarity(characteristic['token_peaks'], dcharacteristic['token_peaks']) * config.SIMILARITY_HEIGHT
+        sim_df = self.util.single_similarity(characteristic['df'], dcharacteristic['df']) * config.SIMILARITY_DOMINANT_FREQUENCY
+        sim = sim_norm + sim_token_peaks + sim_df
+        sl, sr = self.util.manhatten_distance(characteristic['norm'], dcharacteristic['norm'])
+        return sim, sl, sr
+
     def deep_inspection(self, id, startpos, data):
         word_sim = [ ]
         for dict_entries in self.learned_dict['dict']:
@@ -123,11 +131,15 @@ class analyze():
                     if (startpos + i < len(data)):
                         do = data[startpos + i]
                         characteristic, _ = do
-                        sim_norm = self.util.similarity(characteristic['norm'], dcharacteristic['norm']) * config.SIMILARITY_NORM
-                        sim_token_peaks = self.util.similarity(characteristic['token_peaks'], dcharacteristic['token_peaks']) * config.SIMILARITY_HEIGHT
-                        sim_df = self.util.single_similarity(characteristic['df'], dcharacteristic['df']) * config.SIMILARITY_DOMINANT_FREQUENCY
-                        sim = sim_norm + sim_token_peaks + sim_df
-                        sl, sr = self.util.manhatten_distance(characteristic['norm'], dcharacteristic['norm'])
+                        sim, sl, sr = self.token_sim(characteristic, dcharacteristic)
+                        if ('shift' in characteristic):
+                            ssim, ssl, ssr = self.token_sim(characteristic['shift'], dcharacteristic)
+                            if (ssim > sim):
+                                ssim = sim
+                            if  (ssr < sr):
+                                sr = ssr
+                            if (ssl < sl):
+                                sl = ssl                         
                         token_sim[0] += sim
                         token_sim[1] += sl
                         token_sim[2] += sr
@@ -137,7 +149,7 @@ class analyze():
                     token_sim[1] = token_sim[1] / c
                     token_sim[2] = token_sim[2] / c
                     token_sim[4] = int(c)
-                if ((config.STRICT_LENGTH_CHECK == False and c > 1 ) or c >= self.dict_analysis[id]['min_tokens'] - config.STRICT_LENGTH_UNDERMINING):
+                if ((config.STRICT_LENGTH_CHECK == False and c >= config.MIN_START_TOKENS ) or c >= self.dict_analysis[id]['min_tokens'] - config.STRICT_LENGTH_UNDERMINING):
                     word_sim.append(token_sim)
         return word_sim
 

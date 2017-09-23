@@ -69,7 +69,7 @@ Abstract:
 
 Next steps/TODOs:
 
-  * Optimizations (e.g. word separation)
+  * Optimizations (e.g. word separation, performance)
   * Make use of logging
   * Python3 compatibility
 
@@ -110,10 +110,10 @@ Usage:
 
  -t --train  [word]  : add raw data to raw dictionary file
 
- -d --delete [word]  : delete [word] from dictionary and exit.
+ -d --delete [word]  : delete [word] from dictionary and exits.
                        '*' deletes everyting!
 
- -a --analysis       : show dictionary analysis and exit.
+ -a --analysis       : show dictionary analysis and exits.
 
  -u --unit           : run unit tests
 ```

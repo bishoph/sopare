@@ -48,7 +48,7 @@ HIGH_FREQ = 600
 HANNING = True
 
 # Range factor for peaks
-PEAK_FACTOR = 3
+PEAK_FACTOR = 0.8
 
 
 
@@ -67,8 +67,8 @@ MARGINAL_VALUE = 0.7
 MIN_CROSS_SIMILARITY = 0.8
 
 # Calculation basis or token/word comparison
-SIMILARITY_NORM = 1
-SIMILARITY_HEIGHT = 0
+SIMILARITY_NORM = 0.6
+SIMILARITY_HEIGHT = 0.4
 SIMILARITY_DOMINANT_FREQUENCY = 0
 
 # Number of best matches to consider.
@@ -78,7 +78,7 @@ NUMBER_OF_BEST_MATCHES = 2
 
 # Min. distance to keep a word
 MIN_LEFT_DISTANCE = 0.5
-MIN_RIGHT_DISTANCE = 0.5
+MIN_RIGHT_DISTANCE = 0.4
 
 # Use given number as results to assembly result
 # 0 for all predictions
@@ -98,3 +98,12 @@ STM_RETENTION = 0.8
 # 0.5 means that half of the values can by empty to still get valid results
 # A lower value should theoretically avoid false positives
 FILL_RESULT_PERCENTAGE = 0.1
+
+
+
+#########################################################
+# Experimental configuration options ####################
+#########################################################
+
+# Additional FFT analysis and comparison for CHUNKS/2 length
+FFT_SHIFT = True

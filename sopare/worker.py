@@ -56,7 +56,6 @@ class worker(multiprocessing.Process):
         if (self.hatch.get('wave') == True and len(self.rawbuf) > 0):
             self.save_wave_buf()
         self.rawbuf = [ ]
-        #self.rawfft = [ ]
         self.raw = [ ]
         self.fft = [ ]
         self.word_tendency = None

@@ -152,9 +152,9 @@ def usage():
     print (" -w --write  [file]  : write raw to [dir/filename]\n")
     print (" -r --read   [file]  : read raw from [dir/filename]\n")
     print (" -t --train  [word]  : add raw data to raw dictionary file\n")
-    print (" -d --delete [word]  : delete [word] from dictionary and exit.")
+    print (" -d --delete [word]  : delete [word] from dictionary and exits.")
     print ("                       '*' deletes everyting!\n")
-    print (" -a --analysis       : show dictionary analysis and exit.\n")
+    print (" -a --analysis       : show dictionary analysis and exits.\n")
     print (" -u --unit           : run unit tests\n")
 
 main(sys.argv[1:])

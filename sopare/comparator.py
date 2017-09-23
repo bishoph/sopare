@@ -65,3 +65,11 @@ class compare():
                     fast_sim = (fc_sim + dfm_sim + volume_sim) / 3.0
                     if (fast_sim > self.results[id][x][dict_c_pos]):
                         self.results[id][x][dict_c_pos] = fast_sim
+                    if ('shift' in characteristic):
+                        shift = characteristic['shift']
+                        fc_sim = self.util.single_similarity(shift['fc'], dcharacteristic['fc'])
+                        dfm_sim = self.util.single_similarity(shift['dfm'], dcharacteristic['dfm'])
+                        fast_sim = (fc_sim + dfm_sim) / 2.0
+                        if (fast_sim > self.results[id][x][dict_c_pos]):
+                            self.results[id][x][dict_c_pos] = fast_sim
+

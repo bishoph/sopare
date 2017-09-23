@@ -34,6 +34,7 @@ class util:
     def __init__(self, debug):
         self.debug = debug
         self.characteristic = characteristics.characteristic(debug)
+        self.cache = { }
 
     def showdictentriesbyid(self):
         json_data = self.getDICT()
@@ -87,8 +88,14 @@ class util:
                     analysis[dict_entries['id']]['df'][i] = op
         for id in analysis:
             for p in analysis[id]['peaks']:
-                 analysis[id]['minp'].append(min(p))
-                 analysis[id]['maxp'].append(max(p))
+                 if (len(p) > 0):
+                     analysis[id]['minp'].append(min(p))
+                 else:
+                     analysis[id]['minp'].append(0)
+                 if (len(p) > 0):
+                     analysis[id]['maxp'].append(max(p))
+                 else:
+                     analysis[id]['maxp'].append(0)
             for cp in analysis[id]['cp']:
                 analysis[id]['mincp'].append(min(cp))
                 analysis[id]['maxcp'].append(max(cp))
@@ -208,8 +215,9 @@ class util:
         mdr = sum(abs(e - s) for s, e in zip(arr1[ll:], arr2[ll:]))
         return mdl, mdr
 
-    @staticmethod
-    def similarity(arr1, arr2):
+    @staticmethod 
+    # TODO: Remove
+    def similarity_old(arr1, arr2):
         ll = len(arr1)
         ll2 = len(arr2)
         rl = max(ll, ll2)
@@ -225,6 +233,30 @@ class util:
                 sim += min(v1, v2) / float(max(v1, v2))
         sim = sim / float(rl)
         return sim
+
+    def similarity(self, arr1, arr2):
+        lena = len(arr1)
+        lenb = len(arr2)
+        arr1 = numpy.array(arr1)
+        arr1 = numpy.array(arr1/1000.0)
+        arr2_id = id(arr2)
+        if (arr2_id not in self.cache):
+            arr2 = numpy.array(arr2)
+            arr2 = numpy.array(arr2/1000.0)
+            self.cache[arr2_id] = arr2
+        else:
+            arr2 = self.cache[arr2_id]
+        if (lena < lenb):
+            arr1 = numpy.resize(arr1, lenb)
+            arr1[lena:lenb] = 0
+        elif (lenb < lena):
+            arr2 = numpy.resize(arr2, lena)
+            arr2[lenb:lena] = 0
+        np = (numpy.linalg.norm(arr1) * numpy.linalg.norm(arr2))
+        if (np > 0):
+            return numpy.dot(arr1, arr2) / np
+        else:
+            return 0
 
     @staticmethod
     def single_similarity(a, b):
