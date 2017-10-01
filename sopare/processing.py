@@ -23,6 +23,7 @@ import prepare
 import io
 import config
 import hatch
+import logging
 
 class processor():
 
@@ -38,10 +39,11 @@ class processor():
         self.silence_timer = 0
         self.silence_buffer = [ ]
         self.prepare = prepare.preparing(self.hatch)
+        self.logger = self.hatch.get('logger').getlog()
+        self.logger = logging.getLogger(__name__)
 
     def stop(self, message):
-        if (self.hatch.get('debug') == True):
-            print (message)
+        self.logger.info(message)
         if (self.out != None):
             self.out.close()
         self.append = False
@@ -58,8 +60,7 @@ class processor():
         if (volume >= config.THRESHOLD):
             self.silence_timer = time.time()
             if (self.append == False):
-                if (self.hatch.get('debug') == True):
-                    print ('starting append mode')
+                self.logger.info('starting append mode')
                 self.timer = time.time()
                 for sbuf in self.silence_buffer:
                     self.prepare.prepare(sbuf, audioop.rms(sbuf, 2))

@@ -21,8 +21,8 @@ import sys
 import getopt
 import sopare.util as util
 import sopare.recorder as recorder
-import sopare.err_logger as err_logger
 import sopare.hatch as hatch
+import sopare.log as log
 import test.unit_tests as tests
 from sopare.version import __version__
 
@@ -34,6 +34,7 @@ def main(argv):
     dict = None
     plot = False
     wave = False
+    error = False
 
     print ("sopare "+__version__)
 
@@ -51,7 +52,7 @@ def main(argv):
                 usage()
                 sys.exit(0)
             if (opt in ("-e", "--error")):
-                errlog = err_logger.err_logger()
+                error = True
             if (opt in ("-l", "--loop")):
                 endless_loop = True
             if (opt in ("-p", "--plot")):
@@ -98,6 +99,8 @@ def main(argv):
     hatched.add("outfile", outfile)
     hatched.add("infile",infile )
     hatched.add("dict", dict)
+    logger = log.log(debug, error) 
+    hatched.add("logger", logger)
     recorder.recorder(hatched)
 
 def recreate_dict(debug):
@@ -134,7 +137,6 @@ def unit_tests(debug):
     utilities = util.util(debug)
     tests.unit_tests(debug)
     print ("done.")
-
 
 def usage():
     print ("usage:\n")

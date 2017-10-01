@@ -102,8 +102,18 @@ FILL_RESULT_PERCENTAGE = 0.1
 
 
 #########################################################
+# Misc configuration options ############################
+#########################################################
+
+# Loglevel
+import logging
+LOGLEVEL = logging.ERROR
+
+
+#########################################################
 # Experimental configuration options ####################
 #########################################################
 
 # Additional FFT analysis and comparison for CHUNKS/2 length
 FFT_SHIFT = True
+

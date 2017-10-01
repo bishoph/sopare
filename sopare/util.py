@@ -215,25 +215,6 @@ class util:
         mdr = sum(abs(e - s) for s, e in zip(arr1[ll:], arr2[ll:]))
         return mdl, mdr
 
-    @staticmethod 
-    # TODO: Remove
-    def similarity_old(arr1, arr2):
-        ll = len(arr1)
-        ll2 = len(arr2)
-        rl = max(ll, ll2)
-        sim = 0
-        for x in range(0, rl):
-            v1 = 0
-            v2 = 0
-            if (x < ll):
-                v1 = arr1[x]
-            if (x < ll2):
-                v2 = arr2[x]
-            if (v1 != 0 and v2 != 0):
-                sim += min(v1, v2) / float(max(v1, v2))
-        sim = sim / float(rl)
-        return sim
-
     def similarity(self, arr1, arr2):
         lena = len(arr1)
         lenb = len(arr2)

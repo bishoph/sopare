@@ -19,6 +19,7 @@ under the License.
 
 import multiprocessing
 import processing
+import logging
 import hatch
 
 class buffering(multiprocessing.Process):
@@ -30,24 +31,23 @@ class buffering(multiprocessing.Process):
         self.proc = processing.processor(hatch, self)
         self.PROCESS_ROUND_DONE = False
         self.test_counter = 0
+        self.logger = self.hatch.get('logger').getlog()
+        self.logger = logging.getLogger(__name__)
         self.start()
   
     def run(self):
-        if (self.hatch.get('debug') == True):
-            print ("buffering queue runner")
+        self.logger.info("buffering queue runner")
         while True:
             buf = self.queue.get()
             if ((self.hatch.get('endless_loop') == False or self.hatch.get('outfile') != None) and self.PROCESS_ROUND_DONE):
                 break
             self.proc.check_silence(buf)
-        if (self.hatch.get('debug') == True):
-            print ("terminating queue runner")
+        self.logger("terminating queue runner")
 
     def flush(self, message):
         self.proc.stop(message)
  
     def stop(self):
-        if (self.hatch.get('debug') == True):
-            print ("stop buffering")
+        self.logger.info("stop buffering")
         self.PROCESS_ROUND_DONE = True
 

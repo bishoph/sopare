@@ -27,6 +27,7 @@ import config
 import hatch
 import numpy
 import visual
+import logging
 
 class recorder():
 
@@ -40,9 +41,12 @@ class recorder():
         self.running = True
         self.visual = visual.visual()
   
-        if (self.hatch.get('debug') == True):
-            defaultCapability = self.pa.get_default_host_api_info()
-            print defaultCapability
+        # logging ###################
+        self.logger = self.hatch.get('logger').getlog()
+        self.logger = logging.getLogger(__name__)
+
+        defaultCapability = self.pa.get_default_host_api_info()
+        self.logger.debug(defaultCapability)
 
         self.stream = self.pa.open(format=self.FORMAT,
                 channels=self.CHANNELS,
@@ -58,7 +62,7 @@ class recorder():
             self.readfromfile()
 
     def readfromfile(self):
-        print("* reading file " + self.hatch.get('infile'))
+        self.logger.info("* reading file " + self.hatch.get('infile'))
         file = io.open(self.hatch.get('infile'), 'rb', buffering=config.CHUNK)
         while True:
             buf = file.read(config.CHUNK * 2)
@@ -75,35 +79,35 @@ class recorder():
         if (self.hatch.get('plot') == True):
             self.visual.create_sample(self.hatch.get_plot_cache(), 'sample.png')
         while (self.queue.qsize() > 0):
-            if (self.hatch.get('debug') == True and once == False):
-                print ('waiting for queue to finish...')
+            if (once == False):
+                self.logger.debug('waiting for queue to finish...')
                 once = True
             time.sleep(.1) # wait for all threads to finish their work
         self.queue.close()
         self.buffering.flush('end of file')
-        print("* done ")
+        self.logger.info("* done ")
         self.stop()
         sys.exit()
 
     def recording(self):
-        print("start endless recording")
+        self.logger.info("start endless recording")
         while self.running:
             try:
                 if (self.buffering.is_alive()):
                     buf = self.stream.read(config.CHUNK)
                     self.queue.put(buf)
                 else:
-                    print ("Buffering not alive, stop recording")
+                    self.logger.info("Buffering not alive, stop recording")
                     self.queue.close()
                     break
             except IOError as e:
-                print ("stream read error "+str(e))
+                self.logger.warning("stream read error "+str(e))
 
         self.stop()
         sys.exit()
 
     def stop(self):
-        print("stop endless recording")
+        self.logger.info("stop endless recording")
         self.running = False
         try:
             self.queue.join_thread()

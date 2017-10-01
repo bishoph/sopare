@@ -23,6 +23,7 @@ import worker
 import config
 import characteristics
 import hatch
+import logging
 
 class filtering():
 
@@ -35,6 +36,8 @@ class filtering():
         self.data_shift = [ ]
         self.last_data = None
         self.data_shift_counter = 0
+        self.logger = self.hatch.get('logger').getlog()
+        self.logger = logging.getLogger(__name__)
 
     def stop(self):
         self.queue.put({ 'action': 'stop' })
@@ -98,8 +101,7 @@ class filtering():
                 shift_fft = numpy.fft.rfft(self.data_shift)
             self.first = self.check_for_windowing(meta)
         elif (self.first == True):
-            if (self.hatch.get('debug')):
-                print ('New window!')
+            self.logger.debug('New window!')
             hl = len(data)
             if (hl % 2 != 0):
                 hl += 1

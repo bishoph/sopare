@@ -19,6 +19,7 @@ under the License.
 
 from operator import itemgetter
 import characteristics
+import logging
 import config
 import stm
 import path
@@ -53,8 +54,7 @@ class analyze():
         matches = self.deep_search(framing, data)
         readable_results = self.get_match(matches)
         readable_results = self.stm.get_results(readable_results)
-        if (self.debug):
-            print (self.debug_info)
+        logging.debug(self.debug_info)
         if (readable_results != None):
             for p in self.plugins:
                 p.run(readable_results, self.debug_info, rawbuf)
@@ -69,8 +69,8 @@ class analyze():
                 row_result = sum(row[0:len(row)]) / self.dict_analysis[id]['min_tokens']
                 if (row_result >= config.MARGINAL_VALUE):
                     arr.append([row_result, i, id])
-                elif (self.debug):
-                    print ('removing '+id + ' from potential start possition '+str(i) + ' bc MARGINAL_VALUE > ' +str(row_result))
+                else:
+                    logging.debug('removing '+id + ' from potential start position '+str(i) + ' bc MARGINAL_VALUE > ' +str(row_result))
         sorted_arr = sorted(arr, key=itemgetter(0), reverse = True)
         for el in sorted_arr:
             if (el[1] not in framing[el[2]] and (config.MAX_WORD_START_RESULTS == 0 or len(framing[el[2]]) < config.MAX_WORD_START_RESULTS)):
@@ -171,7 +171,7 @@ class analyze():
         return match_results
 
     def validate_match_result(self, result, start, end, match_results):
-        if (len(result) == 0 or result[0] == '' or end-start < 2):
+        if (len(result) == 0 or result[0] == ''):
             return match_results
         if (config.STRICT_LENGTH_CHECK == True and (len(result) < self.dict_analysis[result[0]]['min_tokens'] - config.STRICT_LENGTH_UNDERMINING or len(result) > self.dict_analysis[result[0]]['max_tokens'])):
             if (self.debug):
@@ -182,18 +182,16 @@ class analyze():
         return match_results
 
     def load_plugins(self):
-        if (self.debug):
-            print ('checking for plugins...')
+        logging.info('checking for plugins...')
         pluginsfound = os.listdir(path.__plugindestination__)
         for plugin in pluginsfound:
             try:
                 pluginpath = os.path.join(path.__plugindestination__, plugin)
-                if (self.debug):
-                    print ('loading and initialzing '+pluginpath)
+                logging.debug('loading and initialzing '+pluginpath)
                 f, filename, description = imp.find_module('__init__', [pluginpath])
                 self.plugins.append(imp.load_module(plugin, f, filename, description))
             except ImportError, err:
-                print 'ImportError:', err
+                logging.error('ImportError: %s', err)
 
     def reset(self):
         self.last_results = None

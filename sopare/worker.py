@@ -26,6 +26,7 @@ import uuid
 import comparator
 import config
 import hatch
+import logging
 
 class worker(multiprocessing.Process):
 
@@ -35,6 +36,8 @@ class worker(multiprocessing.Process):
         self.queue = queue
         self.visual = visual.visual()
         self.util = util.util(self.hatch.get('debug'))
+        self.logger = self.hatch.get('logger').getlog()
+        self.logger = logging.getLogger(__name__)
         self.analyze = analyze.analyze(self.hatch.get('debug'))
         self.compare = comparator.compare(self.hatch.get('debug'), self.util)
         self.running = True
@@ -82,8 +85,7 @@ class worker(multiprocessing.Process):
 
 
     def run(self):
-        if (self.hatch.get('debug') == True):
-            print ("worker queue runner started")
+        self.logger.info("worker queue runner started")
         while self.running:
             obj = self.queue.get()
             if (obj['action'] == 'data'):
@@ -101,9 +103,8 @@ class worker(multiprocessing.Process):
                 if (self.hatch.get('dict') != None):
                     self.raw_character.append({ 'fft': fft, 'norm': norm, 'meta': meta })
                 if (characteristic != None):
-                    if (self.hatch.get('debug') == True):
-                        print ('characteristic = ' + str(self.counter) + ' ' + str(characteristic))
-                        print ('meta = '+str(meta))
+                    self.logger.debug('characteristic = ' + str(self.counter) + ' ' + str(characteristic))
+                    self.logger.debug('meta = '+str(meta))
                     if (self.hatch.get('wave') == True):
                         self.util.savefilteredwave('token'+str(self.counter)+self.uid, raw_token)
                     if (self.hatch.get('plot') == True and self.plot_counter < 6):

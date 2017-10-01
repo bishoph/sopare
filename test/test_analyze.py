@@ -55,10 +55,9 @@ class test_analyze(unittest.TestCase):
         print ('testing leading space '+str(result) + ' == ' + str(correct_object))
         self.assertSequenceEqual(result, correct_object, 'test_analyze_get_match leading results failed!')
 
-        # Testing endinig empty results
+        # Testing ending empty results
         test_framing, correct_object = self.create_test_framing(t)
         test_framing.append('')
-
         result = self.analyze.get_match(test_framing)
         print ('testing ending space '+str(result) + ' == ' + str(correct_object))
         self.assertSequenceEqual(result, correct_object, 'test_analyze_get_match ending results failed!')
@@ -76,6 +75,13 @@ class test_analyze(unittest.TestCase):
         result = self.analyze.get_match(test_framing)
         print ('testing strict length '+str(result) + ' == ' + str(correct_object))
         self.assertSequenceEqual(result, correct_object, 'test_analyze_get_match strict length results failed!')
+
+        # Testing false leading results
+        config.STRICT_LENGTH_CHECK = True
+        test_framing, correct_object = self.create_test_framing_false_leading_results()
+        result = self.analyze.get_match(test_framing)
+        print ('testing false leading results '+str(result) + ' == ' + str(correct_object))
+        self.assertSequenceEqual(result, correct_object, 'test_analyze_get_match false leading results failed!')
         
     def create_test_framing(self, number):
         test_framing = [ ]
@@ -114,4 +120,22 @@ class test_analyze(unittest.TestCase):
         test_framing.extend(too_short)
         test_framing.extend(single_frames[2])
         correct_object.insert(2, '')
+        return test_framing, correct_object
+
+    def create_test_framing_false_leading_results(self):
+        test_framing = [ ]
+        correct_object = [ ]
+        temp = None
+        for i, id in enumerate(self.dict_analysis):
+            len = 1
+            if (i % 2 == 0):
+                len = self.dict_analysis[id]['min_tokens']
+                correct_object.append(id)
+                temp = id
+            else:
+                correct_object.append('')
+            for x in range(0, len):
+                test_framing.append(id)
+        test_framing.insert(0, temp)
+        correct_object.insert(0, '')
         return test_framing, correct_object

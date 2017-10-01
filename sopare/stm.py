@@ -19,6 +19,7 @@ under the License.
 
 import time
 import config
+import logging
 
 class short_term_memory():
 
@@ -36,11 +37,9 @@ class short_term_memory():
         if (results == None or len(results) == 0):
             return results
         if (time.time() < self.last_time):
-            if (self.debug):
-                print ('stm input: ' + str(results) + ' '  + str(self.last_results))
+            logging.debug('stm input: ' + str(results) + ' '  + str(self.last_results))
             results = self.get_stm_results(results)
-            if (self.debug):
-                print ('stm mnodification: ' + str(results))
+            logging.debug('stm mnodification: ' + str(results))
         self.last_results = results
         self.last_time = time.time() + config.STM_RETENTION
         return results

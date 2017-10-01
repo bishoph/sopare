@@ -22,6 +22,7 @@ import sopare.hatch as hatch
 import sopare.util as util
 import sopare.config as config
 import sopare.filter as filter
+import sopare.log as log
 
 class test_filter(unittest.TestCase):
 
@@ -30,6 +31,8 @@ class test_filter(unittest.TestCase):
         self.util = util.util(debug)
         hatched = hatch.hatch()
         hatched.add("debug", debug)
+        logger = log.log(debug, False)
+        hatched.add("logger", logger)       
         self.filter = filter.filtering(hatched)
         config.CHUNKS = 10
         self.test_filter_n_shift()
