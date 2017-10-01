@@ -42,7 +42,7 @@ class buffering(multiprocessing.Process):
             if ((self.hatch.get('endless_loop') == False or self.hatch.get('outfile') != None) and self.PROCESS_ROUND_DONE):
                 break
             self.proc.check_silence(buf)
-        self.logger("terminating queue runner")
+        self.logger.info("terminating queue runner")
 
     def flush(self, message):
         self.proc.stop(message)
