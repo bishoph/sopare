@@ -17,17 +17,17 @@ License for the specific language governing permissions and limitations
 under the License.
 """
 
-import pyaudio
 import multiprocessing
-import buffering
+import pyaudio
+import logging
+import numpy
 import time
 import sys
 import io
-import config
-import hatch
-import numpy
-import visual
-import logging
+import sopare.buffering
+import sopare.config
+import sopare.hatch
+import sopare.visual
 
 class recorder():
 
@@ -39,7 +39,7 @@ class recorder():
         self.pa = pyaudio.PyAudio()
         self.queue = multiprocessing.JoinableQueue()
         self.running = True
-        self.visual = visual.visual()
+        self.visual = sopare.visual.visual()
   
         # logging ###################
         self.logger = self.hatch.get('logger').getlog()
@@ -48,14 +48,14 @@ class recorder():
         defaultCapability = self.pa.get_default_host_api_info()
         self.logger.debug(defaultCapability)
 
-        self.stream = self.pa.open(format=self.FORMAT,
-                channels=self.CHANNELS,
-                rate=config.SAMPLE_RATE,
+        self.stream = self.pa.open(format = self.FORMAT,
+                channels = self.CHANNELS,
+                rate=sopare.config.SAMPLE_RATE,
                 input=True,
                 output=False,
-                frames_per_buffer=config.CHUNK)
+                frames_per_buffer = sopare.config.CHUNK)
 
-        self.buffering = buffering.buffering(self.hatch, self.queue)
+        self.buffering = sopare.buffering.buffering(self.hatch, self.queue)
         if (hatch.get('infile') == None):
             self.recording()
         else:
@@ -63,9 +63,9 @@ class recorder():
 
     def readfromfile(self):
         self.logger.info("* reading file " + self.hatch.get('infile'))
-        file = io.open(self.hatch.get('infile'), 'rb', buffering=config.CHUNK)
+        file = io.open(self.hatch.get('infile'), 'rb', buffering = sopare.config.CHUNK)
         while True:
-            buf = file.read(config.CHUNK * 2)
+            buf = file.read(sopare.config.CHUNK * 2)
             if buf:
                 self.queue.put(buf)
                 if (self.hatch.get('plot') == True):
@@ -94,7 +94,7 @@ class recorder():
         while self.running:
             try:
                 if (self.buffering.is_alive()):
-                    buf = self.stream.read(config.CHUNK)
+                    buf = self.stream.read(sopare.config.CHUNK)
                     self.queue.put(buf)
                 else:
                     self.logger.info("Buffering not alive, stop recording")

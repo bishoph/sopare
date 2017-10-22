@@ -17,13 +17,13 @@ License for the specific language governing permissions and limitations
 under the License.
 """
 
-import audioop
-import time
-import prepare
-import io
-import config
-import hatch
 import logging
+import audioop
+import prepare
+import time
+import io
+import sopare.config
+import sopare.hatch
 
 class processor():
 
@@ -57,7 +57,7 @@ class processor():
 
     def check_silence(self, buf):
         volume = audioop.rms(buf, 2)
-        if (volume >= config.THRESHOLD):
+        if (volume >= sopare.config.THRESHOLD):
             self.silence_timer = time.time()
             if (self.append == False):
                 self.logger.info('starting append mode')
@@ -75,9 +75,9 @@ class processor():
         if (self.append == True):
             self.prepare.prepare(buf, volume)
         if (self.append == True and self.silence_timer > 0
-        and self.silence_timer + config.MAX_SILENCE_AFTER_START < time.time()
+        and self.silence_timer + sopare.config.MAX_SILENCE_AFTER_START < time.time()
         and self.live == True):
             self.stop("stop append mode because of silence")
-        if (self.append == True and self.timer + config.MAX_TIME < time.time()
+        if (self.append == True and self.timer + sopare.config.MAX_TIME < time.time()
         and self.live == True):
             self.stop("stop append mode because time is up")

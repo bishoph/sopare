@@ -17,8 +17,6 @@ License for the specific language governing permissions and limitations
 under the License.
 """
 
-import config
-
 class compare():
 
     def __init__(self, debug, util):

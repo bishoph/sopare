@@ -115,5 +115,5 @@ LOGLEVEL = logging.ERROR
 #########################################################
 
 # Additional FFT analysis and comparison for CHUNKS/2 length
-FFT_SHIFT = True
+FFT_SHIFT = False
 

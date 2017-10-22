@@ -17,8 +17,8 @@ License for the specific language governing permissions and limitations
 under the License.
 """
 
-import characteristics
-import numpyjsonencoder
+import sopare.characteristics
+import sopare.numpyjsonencoder
 import json
 import wave
 import uuid
@@ -26,14 +26,14 @@ import numpy
 import math
 import os
 import datetime
-from scipy.io.wavfile import write
-from path import __wavedestination__
+#from scipy.io.wavfile import write
+from sopare.path import __wavedestination__
 
 class util:
 
     def __init__(self, debug):
         self.debug = debug
-        self.characteristic = characteristics.characteristic(debug)
+        self.characteristic = sopare.characteristics.characteristic(debug)
         self.cache = { }
 
     def showdictentriesbyid(self):

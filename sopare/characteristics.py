@@ -18,8 +18,8 @@ under the License.
 """
 
 import numpy
-import config
-import hatch
+import sopare.config
+import sopare.hatch
 
 class characteristic:
 
@@ -33,7 +33,7 @@ class characteristic:
         fc = 0
         peaks = [ ]
         if (len(chunked_norm) > 0):
-            where_range = numpy.mean(chunked_norm) / config.PEAK_FACTOR
+            where_range = numpy.mean(chunked_norm) / sopare.config.PEAK_FACTOR
             peaks = list(numpy.array(numpy.where(chunked_norm > where_range))[0])
             where_range = numpy.mean(chunked_norm)
             npeaks = numpy.array(numpy.where(chunked_norm > where_range))

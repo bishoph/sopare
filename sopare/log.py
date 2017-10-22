@@ -17,8 +17,8 @@ License for the specific language governing permissions and limitations
 under the License.
 """
 
-import config
 import logging
+import sopare.config
 
 class log():
 
@@ -26,12 +26,12 @@ class log():
         self.logger = logging.getLogger()
         self.logformat = '%(levelname)s: %(message)s'
         self.loglevel = logging.ERROR
-        if (hasattr(config, 'LOGFORMAT')):
-            self.logformat = config.LOGFORMAT
+        if (hasattr(sopare.config, 'LOGFORMAT')):
+            self.logformat = sopare.config.LOGFORMAT
         if (debug == True):
             self.loglevel = logging.DEBUG
-        elif (hasattr(config, 'LOGLEVEL')):
-            self.loglevel = config.LOGLEVEL
+        elif (hasattr(sopare.config, 'LOGLEVEL')):
+            self.loglevel = sopare.config.LOGLEVEL
         self.logger.setLevel(self.loglevel)
         ch = logging.StreamHandler()
         ch.setFormatter(self.logformat)

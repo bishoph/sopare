@@ -155,7 +155,7 @@ def usage():
     print (" -r --read   [file]  : read raw from [dir/filename]\n")
     print (" -t --train  [word]  : add raw data to raw dictionary file\n")
     print (" -d --delete [word]  : delete [word] from dictionary and exits.")
-    print ("                       '*' deletes everyting!\n")
+    print ("                       '*' deletes everything!\n")
     print (" -a --analysis       : show dictionary analysis and exits.\n")
     print (" -u --unit           : run unit tests\n")
 

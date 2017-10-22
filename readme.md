@@ -33,7 +33,7 @@ Examples of use:
 
 Dependencies:
 
-  * python2
+  * python
   * pyaudio (apt-get install python-pyaudio)
   * numpy (apt-get install python-numpy)
   * scipy (apt-get install python-scipy)
@@ -70,15 +70,16 @@ Abstract:
 Next steps/TODOs:
 
   * Optimizations (e.g. word separation, performance)
-  * Make use of logging
-  * Python3 compatibility
+  * Python3 compatibility and testing, install guides
 
 
 Project status:
 
   * The project is able to learn sound patterns and to identify similar sounds even under different circumstances
-  * False positives still occur
   * Word separation is not perfect
+  * Runs on several PIs 24/7 and controls smart home devices, smart mirrors, robots and alike
+  * False positive rate is near zero for two-word recognition
+  * Help needed in terms of python3 (numpy/scipy/pyaudio dependencies, installation, documentation, ...)
 
 
 Usage:
@@ -111,7 +112,7 @@ Usage:
  -t --train  [word]  : add raw data to raw dictionary file
 
  -d --delete [word]  : delete [word] from dictionary and exits.
-                       '*' deletes everyting!
+                       '*' deletes everything!
 
  -a --analysis       : show dictionary analysis and exits.
 

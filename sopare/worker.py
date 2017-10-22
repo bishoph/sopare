@@ -18,15 +18,15 @@ under the License.
 """
 
 import multiprocessing 
-import util
-import visual
-import analyze
-import characteristics
-import uuid
-import comparator
-import config
-import hatch
 import logging
+import uuid
+import sopare.util
+import sopare.visual
+import sopare.analyze
+import sopare.characteristics
+import sopare.comparator
+import sopare.config
+import sopare.hatch
 
 class worker(multiprocessing.Process):
 
@@ -34,12 +34,12 @@ class worker(multiprocessing.Process):
         multiprocessing.Process.__init__(self, name="worker for filtered data")
         self.hatch = hatch
         self.queue = queue
-        self.visual = visual.visual()
-        self.util = util.util(self.hatch.get('debug'))
+        self.visual = sopare.visual.visual()
+        self.util = sopare.util.util(self.hatch.get('debug'))
         self.logger = self.hatch.get('logger').getlog()
         self.logger = logging.getLogger(__name__)
-        self.analyze = analyze.analyze(self.hatch.get('debug'))
-        self.compare = comparator.compare(self.hatch.get('debug'), self.util)
+        self.analyze = sopare.analyze.analyze(self.hatch.get('debug'))
+        self.compare = sopare.comparator.compare(self.hatch.get('debug'), self.util)
         self.running = True
         self.counter = 0
         self.plot_counter = 0
@@ -73,7 +73,7 @@ class worker(multiprocessing.Process):
         self.util.savefilteredwave('filtered_results'+str(self.reset_counter), self.rawbuf)
 
     def remove_silence(self, m):
-        silence = ((config.LONG_SILENCE * config.CHUNK) / 4096) - 4 # TODO: Find auto value or make configurable
+        silence = ((sopare.config.LONG_SILENCE * sopare.config.CHUNK) / 4096) - 4 # TODO: Find auto value or make configurable
         if (silence < 0):
             silence = 0
         for x in range(len(self.character) - 1, len(self.character) - silence, -1):

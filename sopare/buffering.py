@@ -18,9 +18,9 @@ under the License.
 """
 
 import multiprocessing
-import processing
 import logging
-import hatch
+import sopare.processing
+import sopare.hatch
 
 class buffering(multiprocessing.Process):
 
@@ -28,7 +28,7 @@ class buffering(multiprocessing.Process):
         multiprocessing.Process.__init__(self, name="buffering queue")
         self.hatch = hatch
         self.queue = queue
-        self.proc = processing.processor(hatch, self)
+        self.proc = sopare.processing.processor(hatch, self)
         self.PROCESS_ROUND_DONE = False
         self.test_counter = 0
         self.logger = self.hatch.get('logger').getlog()

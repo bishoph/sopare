@@ -20,7 +20,7 @@ under the License.
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as pyplot
-from path import __plotdestination__
+from sopare.path import __plotdestination__
 
 class visual:
 

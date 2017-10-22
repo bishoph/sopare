@@ -19,18 +19,18 @@ under the License.
 
 import numpy
 import filter
-import visual
-import util
-import config
-import hatch
+import sopare.visual
+import sopare.util
+import sopare.config
+import sopare.hatch
 
 class preparing():
 
     def __init__(self, hatch):
         self.hatch = hatch
-        self.visual = visual.visual()
-        self.util = util.util(self.hatch.get('debug'))
-        self.filter = filter.filtering(self.hatch)
+        self.visual = sopare.visual.visual()
+        self.util = sopare.util.util(self.hatch.get('debug'))
+        self.filter = sopare.filter.filtering(self.hatch)
         self.silence = 0
         self.force = False
         self.counter = 0
@@ -103,21 +103,21 @@ class preparing():
         self.token_peaks.append(adaptive)
         meta = [ ]
 
-        if (volume < config.THRESHOLD):
+        if (volume < sopare.config.THRESHOLD):
             self.silence += 1
-            if (self.silence == config.LONG_SILENCE):
+            if (self.silence == sopare.config.LONG_SILENCE):
                 self.new_word = True
                 self.entered_silence = True
                 self.peaks.extend(self.token_peaks)
                 meta.append({ 'token': 'start analysis', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'token_peaks': self.token_peaks, 'peaks': self.peaks })
                 self.peaks = [ ]
-            elif (self.silence > config.LONG_SILENCE):
+            elif (self.silence > sopare.config.LONG_SILENCE):
                 meta.append({ 'token': 'noop', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume })
         else:
             self.entered_silence = False
             self.silence = 0
 
-        if (len(self.buffer) == config.CHUNKS):
+        if (len(self.buffer) == sopare.config.CHUNKS):
             self.new_token = True
             meta.append({ 'token': 'token', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'token_peaks': self.token_peaks })
 

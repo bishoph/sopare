@@ -17,13 +17,13 @@ License for the specific language governing permissions and limitations
 under the License.
 """
 
-import numpy
 import multiprocessing
-import worker
-import config
-import characteristics
-import hatch
 import logging
+import numpy
+import sopare.worker
+import sopare.config
+import sopare.characteristics
+import sopare.hatch
 
 class filtering():
 
@@ -31,8 +31,8 @@ class filtering():
         self.hatch = hatch
         self.first = True
         self.queue = multiprocessing.Queue()
-        self.characteristic = characteristics.characteristic(self.hatch)
-        self.worker = worker.worker(self.hatch, self.queue)
+        self.characteristic = sopare.characteristics.characteristic(self.hatch)
+        self.worker = sopare.worker.worker(self.hatch, self.queue)
         self.data_shift = [ ]
         self.last_data = None
         self.data_shift_counter = 0
@@ -58,13 +58,13 @@ class filtering():
     def get_chunked_norm(nfft):
         chunked_norm = [ ]
         progessive = 1
-        i = config.MIN_PROGRESSIVE_STEP
+        i = sopare.config.MIN_PROGRESSIVE_STEP
         for x in range(0, nfft.size, i):
-            if (hasattr(config, 'START_PROGRESSIVE_FACTOR')  and x >= config.START_PROGRESSIVE_FACTOR):
-                progessive += progessive * config.PROGRESSIVE_FACTOR
+            if (hasattr(sopare.config, 'START_PROGRESSIVE_FACTOR')  and x >= sopare.config.START_PROGRESSIVE_FACTOR):
+                progessive += progessive * soparee.config.PROGRESSIVE_FACTOR
                 i += int(progessive)
-                if (i > config.MAX_PROGRESSIVE_STEP):
-                    i = config.MAX_PROGRESSIVE_STEP
+                if (i > sopare.config.MAX_PROGRESSIVE_STEP):
+                    i = sopare.config.MAX_PROGRESSIVE_STEP
             chunked_norm.append( nfft[x:x+i].sum() )
         return numpy.array(chunked_norm)
 
@@ -80,7 +80,7 @@ class filtering():
             self.data_shift = [ ]
             self.data_shift_counter = 0
         if (self.data_shift_counter == 0):
-            self.data_shift = [ v for v in range(0, config.CHUNKS/2) ]
+            self.data_shift = [ v for v in range(0, sopare.config.CHUNKS/2) ]
             self.data_shift.extend(data[len(data)/2:])
         elif (self.data_shift_counter == 1):
             self.data_shift = self.data_shift[len(self.data_shift)/2:]
@@ -95,9 +95,9 @@ class filtering():
     def filter(self, data, meta):
         self.n_shift(data)
         shift_fft = None
-        if (self.first == False or config.HANNING == False or len(data) < config.CHUNK):
+        if (self.first == False or sopare.config.HANNING == False or len(data) < sopare.config.CHUNK):
             fft = numpy.fft.rfft(data)
-            if (len(self.data_shift) >= config.CHUNKS):
+            if (len(self.data_shift) >= sopare.config.CHUNKS):
                 shift_fft = numpy.fft.rfft(self.data_shift)
             self.first = self.check_for_windowing(meta)
         elif (self.first == True):
@@ -107,17 +107,17 @@ class filtering():
                 hl += 1
             hw = numpy.hanning(hl)
             fft = numpy.fft.rfft(data * hw)
-            if (len(self.data_shift) >= config.CHUNKS):
+            if (len(self.data_shift) >= sopare.config.CHUNKS):
                 hl = len(self.data_shift)
                 if (hl % 2 != 0):
                     hl += 1
                 hw = numpy.hanning(hl)
                 shift_fft = numpy.fft.rfft(self.data_shift * hw)
                 self.first = False
-        fft[config.HIGH_FREQ:] = 0
-        fft[:config.LOW_FREQ] = 0
+        fft[sopare.config.HIGH_FREQ:] = 0
+        fft[:sopare.config.LOW_FREQ] = 0
         data = numpy.fft.irfft(fft)
-        nfft = fft[config.LOW_FREQ:config.HIGH_FREQ]
+        nfft = fft[sopare.config.LOW_FREQ:sopare.config.HIGH_FREQ]
         nfft = numpy.abs(nfft)
         nfft[nfft == 0] = numpy.NaN
         nfft = numpy.log10(nfft)**2
@@ -130,11 +130,11 @@ class filtering():
             normalized = self.normalize(chunked_norm)
         characteristic = self.characteristic.getcharacteristic(fft, normalized, meta)
 
-        if (shift_fft != None and (hasattr(config, 'FFT_SHIFT') and config.FFT_SHIFT == True)):
-            shift_fft[config.HIGH_FREQ:] = 0
-            shift_fft[:config.LOW_FREQ] = 0
+        if (shift_fft != None and (hasattr(sopare.config, 'FFT_SHIFT') and sopare.config.FFT_SHIFT == True)):
+            shift_fft[soopare.config.HIGH_FREQ:] = 0
+            shift_fft[:sopare.config.LOW_FREQ] = 0
             shift_data = numpy.fft.irfft(shift_fft)
-            shift_nfft = fft[config.LOW_FREQ:config.HIGH_FREQ]
+            shift_nfft = fft[sopare.config.LOW_FREQ:sopare.config.HIGH_FREQ]
             shift_nfft = numpy.abs(nfft)
             shift_nfft[nfft == 0] = numpy.NaN
             shift_nfft = numpy.log10(nfft)**2

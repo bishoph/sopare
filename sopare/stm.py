@@ -18,8 +18,8 @@ under the License.
 """
 
 import time
-import config
 import logging
+import sopare.config
 
 class short_term_memory():
 
@@ -41,5 +41,5 @@ class short_term_memory():
             results = self.get_stm_results(results)
             logging.debug('stm mnodification: ' + str(results))
         self.last_results = results
-        self.last_time = time.time() + config.STM_RETENTION
+        self.last_time = time.time() + sopare.config.STM_RETENTION
         return results
