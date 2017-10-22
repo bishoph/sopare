@@ -26,7 +26,7 @@ import numpy
 import math
 import os
 import datetime
-#from scipy.io.wavfile import write
+from scipy.io.wavfile import write
 from sopare.path import __wavedestination__
 
 class util:
@@ -105,7 +105,7 @@ class util:
     def store_raw_dict_entry(dict_id, raw_characteristics):
         json_obj = {'id': dict_id, 'characteristic': raw_characteristics, 'created': datetime.datetime.now().isoformat() }
         with open("dict/"+str(uuid.uuid4())+".raw", 'w') as json_file:
-            json.dump(json_obj, json_file, cls=numpyjsonencoder.numpyjsonencoder)
+            json.dump(json_obj, json_file, cls=sopare.numpyjsonencoder.numpyjsonencoder)
         json_file.close()
 
     def learndict(self, characteristics, word_tendency, id):
@@ -153,7 +153,7 @@ class util:
                 file_uuid = fu[0]
                 tokens = [ ]
                 with open("dict/"+filename) as raw_json_file:
-                    json_obj = json.load(raw_json_file, object_hook=numpyjsonencoder.numpyjsonhook)
+                    json_obj = json.load(raw_json_file, object_hook=sopare.numpyjsonencoder.numpyjsonhook)
                     for raw_obj in json_obj['characteristic']:
                         meta = raw_obj['meta']
                         fft = raw_obj['fft']
