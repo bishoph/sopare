@@ -131,7 +131,7 @@ class filtering():
         characteristic = self.characteristic.getcharacteristic(fft, normalized, meta)
 
         if (shift_fft != None and (hasattr(sopare.config, 'FFT_SHIFT') and sopare.config.FFT_SHIFT == True)):
-            shift_fft[soopare.config.HIGH_FREQ:] = 0
+            shift_fft[sopare.config.HIGH_FREQ:] = 0
             shift_fft[:sopare.config.LOW_FREQ] = 0
             shift_data = numpy.fft.irfft(shift_fft)
             shift_nfft = fft[sopare.config.LOW_FREQ:sopare.config.HIGH_FREQ]
