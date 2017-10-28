@@ -129,7 +129,7 @@ The commands below help also to give you config recommendations
 for your environment:
 
 ./sopare.py -u
-./sopare test/test_audio.py
+python test/test_audio.py
 
 
 Training, compiling and listening endless in debug mode.
