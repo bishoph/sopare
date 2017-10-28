@@ -73,7 +73,7 @@ class test_audio():
     def test_sample_rates(self):
         print ('testing different SAMPLE_RATEs ... this may take a while!\n\n')
         for test_sample_rate in test_audio.SAMPLE_RATES:
-            test_result = ta.open(test_sample_rate, 500)
+            test_result = ta.open(test_sample_rate, test_sample_rate)
             if (test_result == True):
                 self.good_sample_rates.append(test_sample_rate)
             if (self.stream != None):
@@ -87,7 +87,7 @@ class test_audio():
                 if (test_result == True):
                     if (good_sample_rate not in test_audio.TEST_RESULTS):
                         test_audio.TEST_RESULTS[good_sample_rate] = [ ]
-                    read_test_result = ta.read(chunks, 100)
+                    read_test_result = ta.read(chunks, 10)
                     if (read_test_result == True):
                         self.good_chunks.append(chunks)
                         test_audio.TEST_RESULTS[good_sample_rate].append(chunks)
@@ -104,7 +104,7 @@ class test_audio():
                 found = True
         print ('\n\n')
         if (found == True):
-            best = sorted(recommendations, key=recommendations.__getitem__, reverse=True)
+            best = sorted(recommendations, key=recommendations.__getitem__, reverse=False)
             print ('Your sopare/config.py recommendations:\n')
             print ('SAMPLE_RATE = '+str(best[0]))
             print ('CHUNK = '+str(min(test_audio.TEST_RESULTS[best[0]])))
