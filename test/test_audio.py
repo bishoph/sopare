@@ -104,9 +104,9 @@ class test_audio():
                 found = True
         print ('\n\n')
         if (found == True):
-            best = sorted(recommendations, key=recommendations.__getitem__, reverse=False)
+            best = sorted(recommendations, key=recommendations.__getitem__, reverse=True)
             print ('Your sopare/config.py recommendations:\n')
-            print ('SAMPLE_RATE = '+str(best[0]))
+            print ('SAMPLE_RATE = '+str(max(best)))
             print ('CHUNK = '+str(min(test_audio.TEST_RESULTS[best[0]])))
             treshold = int(math.ceil(max(self.silence) / 100.0)) * 100
             print ('THRESHOLD = '+str(treshold))
