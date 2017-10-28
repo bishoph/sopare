@@ -6,7 +6,7 @@
 CHUNK = 512
 
 # Sample rate
-SAMPLE_RATE = 44100
+SAMPLE_RATE = 48000
 
 # Volume threshold when audio processing starts / silence 
 THRESHOLD = 400
@@ -116,4 +116,3 @@ LOGLEVEL = logging.ERROR
 
 # Additional FFT analysis and comparison for CHUNKS/2 length
 FFT_SHIFT = False
-

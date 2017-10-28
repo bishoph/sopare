@@ -120,4 +120,32 @@ Usage:
 ```
 
 
+Quick start, useful commands and usage examples:
+
+```
+Here are some basic testing commands you can fire up to 
+see if there are issues with the code or your environment.
+The commands below help also to give you config recommendations
+for your environment:
+
+./sopare.py -u
+./sopare test/test_audio.py
+
+
+Training, compiling and listening endless in debug mode.
+(CTRL-c to stop):
+
+python sopare.py -t "test"
+python2 sopare.py -c
+./sopare.py -v -l
+
+
+Changing config options and new SOPARE versions requires re-training.
+Delete your training files and the dictionary entries before continue:
+
+./sopare.py -d "*"
+rm dict/*.raw
+```
+
+
 Find more detailed information on http://www.bishoph.org
