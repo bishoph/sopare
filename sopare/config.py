@@ -12,7 +12,7 @@ SAMPLE_RATE = 48000
 THRESHOLD = 400
 
 # Silence time in seconds when analysis is called
-MAX_SILENCE_AFTER_START = 1
+MAX_SILENCE_AFTER_START = 1.4
 
 # Time in seconds after the analysis is forced
 MAX_TIME = 2.4

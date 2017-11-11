@@ -24,7 +24,7 @@ import math
 class test_audio():
 
     SAMPLE_RATES = [ 8000, 11025, 12000, 16000, 22050, 32000, 44100, 48000 ]
-    CHUNKS = [ 500, 1000, 2000, 4000, 8000 ]
+    CHUNKS = [ 512, 1024, 2048, 4096, 8192 ]
     TEST_RESULTS = { }
 
     def __init__(self):
