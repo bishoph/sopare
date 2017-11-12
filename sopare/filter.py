@@ -61,7 +61,7 @@ class filtering():
         i = sopare.config.MIN_PROGRESSIVE_STEP
         for x in range(0, nfft.size, i):
             if (hasattr(sopare.config, 'START_PROGRESSIVE_FACTOR')  and x >= sopare.config.START_PROGRESSIVE_FACTOR):
-                progessive += progessive * soparee.config.PROGRESSIVE_FACTOR
+                progessive += progessive * sopare.config.PROGRESSIVE_FACTOR
                 i += int(progessive)
                 if (i > sopare.config.MAX_PROGRESSIVE_STEP):
                     i = sopare.config.MAX_PROGRESSIVE_STEP
