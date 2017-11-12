@@ -17,11 +17,13 @@ License for the specific language governing permissions and limitations
 under the License.
 """
 
+import multiprocessing
+import unittest
 import pyaudio
 import audioop
 import math
 
-class test_audio():
+class test_audio(unittest.TestCase):
 
     SAMPLE_RATES = [ 8000, 11025, 12000, 16000, 22050, 32000, 44100, 48000 ]
     CHUNKS = [ 512, 1024, 2048, 4096, 8192 ]
@@ -70,6 +72,9 @@ class test_audio():
             print ("Error: "+ str(e))
         return test_result
 
+    def test_environment(self):
+        self.assertGreaterEqual(multiprocessing.cpu_count(), 4, 'SOPARE requires a multiprocessor architecture and was tested with at least 4 cores (e.g. RPi2/3)')
+
     def test_sample_rates(self):
         print ('testing different SAMPLE_RATEs ... this may take a while!\n\n')
         for test_sample_rate in test_audio.SAMPLE_RATES:
@@ -112,8 +117,11 @@ class test_audio():
             print ('THRESHOLD = '+str(treshold))
         else:
             print ('No recommendations, please fix your environment and try again!')
+            print ('However, here are the sucessful tested sample rates:')
+            print (str(test_audio.TEST_RESULTS))
 
 ta = test_audio()
+ta.test_environment()
 ta.test_sample_rates()
 ta.test_chunks()
 ta.test_results()
