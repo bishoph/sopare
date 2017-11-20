@@ -9,7 +9,7 @@ CHUNK = 512
 SAMPLE_RATE = 48000
 
 # Volume threshold when audio processing starts / silence 
-THRESHOLD = 400
+THRESHOLD = 380
 
 # Silence time in seconds when analysis is called
 MAX_SILENCE_AFTER_START = 1.4
@@ -18,10 +18,10 @@ MAX_SILENCE_AFTER_START = 1.4
 MAX_TIME = 2.4
 
 # Start the analysis after reaching LONG_SILENCE
-LONG_SILENCE = 30
+LONG_SILENCE = 20
 
 # Characteristic length
-CHUNKS = 1024*3
+CHUNKS = 1024*4
 
 
 #########################################################
@@ -48,7 +48,7 @@ HIGH_FREQ = 600
 HANNING = True
 
 # Range factor for peaks
-PEAK_FACTOR = 0.8
+PEAK_FACTOR = 0.7
 
 
 
@@ -57,14 +57,14 @@ PEAK_FACTOR = 0.8
 #########################################################
 
 # Min. number of tokens to identify the beginning of a word
-MIN_START_TOKENS = 4
+MIN_START_TOKENS = 3
 
 # Min. value for potential beginning of a word
 MARGINAL_VALUE = 0.7
 
 # Minimal similarity across all comparison to
 # identify a complete word across all tokens
-MIN_CROSS_SIMILARITY = 0.8
+MIN_CROSS_SIMILARITY = 0.75
 
 # Calculation basis or token/word comparison
 SIMILARITY_NORM = 0.6
@@ -77,8 +77,8 @@ SIMILARITY_DOMINANT_FREQUENCY = 0
 NUMBER_OF_BEST_MATCHES = 2
 
 # Min. distance to keep a word
-MIN_LEFT_DISTANCE = 0.5
-MIN_RIGHT_DISTANCE = 0.4
+MIN_LEFT_DISTANCE = 0.7
+MIN_RIGHT_DISTANCE = 0.45
 
 # Use given number as results to assembly result
 # 0 for all predictions
@@ -92,12 +92,12 @@ STRICT_LENGTH_CHECK = True
 STRICT_LENGTH_UNDERMINING = 2
 
 # Short term memory retention time in seconds. Zero to disable STM
-STM_RETENTION = 0.8
+STM_RETENTION = 1.2
 
 # Fill result percentage
 # 0.5 means that half of the values can by empty to still get valid results
 # A lower value should theoretically avoid false positives
-FILL_RESULT_PERCENTAGE = 0.1
+FILL_RESULT_PERCENTAGE = 0.2
 
 
 
@@ -115,4 +115,4 @@ LOGLEVEL = logging.ERROR
 #########################################################
 
 # Additional FFT analysis and comparison for CHUNKS/2 length
-FFT_SHIFT = False
+FFT_SHIFT = True

@@ -53,7 +53,7 @@ class analyze():
             self.debug_info += ''.join([str(results), '\n\n'])
         matches = self.deep_search(framing, data)
         readable_results = self.get_match(matches)
-        readable_results = self.stm.get_results(readable_results)
+        readable_results, self.debug_info = self.stm.get_results(readable_results, self.debug_info)
         logging.debug(self.debug_info)
         if (readable_results != None):
             for p in self.plugins:
@@ -144,8 +144,10 @@ class analyze():
                         token_sim[1] += sl
                         token_sim[2] += sr
                         c += 1.0
-                if (c > 0):
+                if (c > 0):                        
                     token_sim[0] = token_sim[0] / c
+                    if (token_sim[0] > 1.0 and c >= sopare.config.MIN_START_TOKENS and c >= self.dict_analysis[id]['min_tokens']):
+                        logging.warning('Your calculation basis seems to be wrong as we get results > 1.0!')
                     token_sim[1] = token_sim[1] / c
                     token_sim[2] = token_sim[2] / c
                     token_sim[4] = int(c)

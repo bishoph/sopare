@@ -61,7 +61,7 @@ class filtering():
         i = sopare.config.MIN_PROGRESSIVE_STEP
         for x in range(0, nfft.size, i):
             if (hasattr(sopare.config, 'START_PROGRESSIVE_FACTOR')  and x >= sopare.config.START_PROGRESSIVE_FACTOR):
-                progessive += progessive * soparee.config.PROGRESSIVE_FACTOR
+                progessive += progessive * sopare.config.PROGRESSIVE_FACTOR
                 i += int(progessive)
                 if (i > sopare.config.MAX_PROGRESSIVE_STEP):
                     i = sopare.config.MAX_PROGRESSIVE_STEP
@@ -91,7 +91,7 @@ class filtering():
 
         self.last_data = data
         self.data_shift_counter += 1
-                    
+
     def filter(self, data, meta):
         self.n_shift(data)
         shift_fft = None
@@ -130,7 +130,7 @@ class filtering():
             normalized = self.normalize(chunked_norm)
         characteristic = self.characteristic.getcharacteristic(fft, normalized, meta)
 
-        if (shift_fft != None and (hasattr(sopare.config, 'FFT_SHIFT') and sopare.config.FFT_SHIFT == True)):
+        if (shift_fft is not None and (hasattr(sopare.config, 'FFT_SHIFT') and sopare.config.FFT_SHIFT == True)):
             shift_fft[sopare.config.HIGH_FREQ:] = 0
             shift_fft[:sopare.config.LOW_FREQ] = 0
             shift_data = numpy.fft.irfft(shift_fft)

@@ -71,6 +71,7 @@ Next steps/TODOs:
 
   * Optimizations (e.g. word separation, performance)
   * Python3 compatibility and testing, install guides
+  * Individual loglevels per class
 
 
 Project status:
@@ -140,7 +141,7 @@ python2 sopare.py -c
 ./sopare.py -v -l
 
 
-Changing config options and new SOPARE versions requires re-training.
+Changing config options and new SOPARE versions require re-training.
 Delete your training files and the dictionary entries before continue:
 
 ./sopare.py -d "*"

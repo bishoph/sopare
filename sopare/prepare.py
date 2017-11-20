@@ -68,8 +68,8 @@ class preparing():
         if (self.hatch.get('plot') == True):
             self.visual.create_sample(self.hatch.get_plot_cache(), 'sample.png')
         self.tokenize([{ 'token': 'stop' }])
-        self.filter.stop()
         self.filter_reset()
+        self.filter.stop()
         self.reset()
 
     def reset(self):
