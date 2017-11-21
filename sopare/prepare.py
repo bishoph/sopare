@@ -91,7 +91,7 @@ class preparing():
     def force_tokenizer(self):
         self.force = True
         self.tokenize([ { 'token': 'start analysis', 'silence': self.silence, 'pos': self.counter, 'adapting': 0, 'volume': 0, 'peaks': self.peaks } ])
-  
+
     def prepare(self, buf, volume):
         data = numpy.fromstring(buf, dtype=numpy.int16)
         if (self.hatch.get('plot') == True and self.hatch.get('endless_loop') == False):

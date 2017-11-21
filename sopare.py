@@ -39,7 +39,7 @@ def main(argv):
     print ("sopare "+__version__)
 
     if (len(argv) > 0):
-        try:                                
+        try:
             opts, args = getopt.getopt(argv, "ahelpv~cous:w:r:t:d:",
              ["analysis", "help", "error", "loop", "plot", "verbose", "wave", "create", "overview", "unit",
               "show=", "write=", "read=", "train=", "delete="
@@ -99,7 +99,7 @@ def main(argv):
     hatched.add("outfile", outfile)
     hatched.add("infile",infile )
     hatched.add("dict", dict)
-    logger = log.log(debug, error) 
+    logger = log.log(debug, error)
     hatched.add("logger", logger)
     recorder.recorder(hatched)
 

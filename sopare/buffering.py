@@ -34,7 +34,7 @@ class buffering(multiprocessing.Process):
         self.logger = self.hatch.get('logger').getlog()
         self.logger = logging.getLogger(__name__)
         self.start()
-  
+
     def run(self):
         self.logger.info("buffering queue runner")
         while True:
@@ -46,8 +46,7 @@ class buffering(multiprocessing.Process):
 
     def flush(self, message):
         self.proc.stop(message)
- 
+
     def stop(self):
         self.logger.info("stop buffering")
         self.PROCESS_ROUND_DONE = True
-

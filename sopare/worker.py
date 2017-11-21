@@ -17,7 +17,7 @@ License for the specific language governing permissions and limitations
 under the License.
 """
 
-import multiprocessing 
+import multiprocessing
 import logging
 import uuid
 import sopare.util

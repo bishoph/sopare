@@ -31,4 +31,3 @@ class visual:
         pyplot.plot(data)
         pyplot.savefig(__plotdestination__+filename)
         pyplot.clf()
-   

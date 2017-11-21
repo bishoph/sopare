@@ -147,7 +147,7 @@ class filtering():
                 shift_normalized = self.normalize(shift_chunked_norm)
             # TODO: Do some shift meta magic!
             shift_characteristic = self.characteristic.getcharacteristic(shift_fft, shift_normalized, meta)
-            characteristic['shift'] = shift_characteristic 
+            characteristic['shift'] = shift_characteristic
 
         obj = { 'action': 'data', 'token': data, 'fft': fft, 'norm': normalized, 'meta': meta, 'characteristic': characteristic }
         self.queue.put(obj)

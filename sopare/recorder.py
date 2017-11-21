@@ -40,7 +40,7 @@ class recorder():
         self.queue = multiprocessing.JoinableQueue()
         self.running = True
         self.visual = sopare.visual.visual()
-  
+
         # logging ###################
         self.logger = self.hatch.get('logger').getlog()
         self.logger = logging.getLogger(__name__)
@@ -56,11 +56,11 @@ class recorder():
         try:
             self.stream = self.pa.open(format = self.FORMAT,
                 channels = 1,
-                rate=sopare.config.SAMPLE_RATE,
-                input=True,
-                output=False)
+                rate = sopare.config.SAMPLE_RATE,
+                input = True,
+                output = False)
         except IOError as e:
-            self.logger.error("Error: " + str(e))
+            self.logger.error("IOError: " + str(e))
             sys.exit(1)
 
     def debug_info(self):
@@ -113,7 +113,11 @@ class recorder():
                     break
             except IOError as e:
                 self.logger.warning("stream read error "+str(e))
-
+                if (hasattr(sopare.config, 'STREAM_RECREATE') and sopare.config.STREAM_RECREATE == True):
+                    self.logger.info('trying to recreate stream...')
+                    self.stream.close()
+                    self.open()
+                    self.logger.info('...stream recreated.')
         self.stop()
         sys.exit()
 

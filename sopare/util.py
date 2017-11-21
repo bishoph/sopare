@@ -118,7 +118,7 @@ class util:
         for o in characteristics:
             characteristic, meta = o
             for m in meta:
-                token = m['token']            
+                token = m['token']
                 if (token != 'stop'):
                     if (characteristic != None):
                         tokens.append(characteristic)
@@ -200,13 +200,13 @@ class util:
         wf.setnchannels(1)
         wf.setsampwidth(2)
         wf.setframerate(44100)
-        data = raw[start:end] 
+        data = raw[start:end]
         wf.writeframes(b''.join(data))
 
     @staticmethod
     def savefilteredwave(filename, buffer):
         scaled = numpy.int16(buffer/numpy.max(numpy.abs(buffer)) * 32767)
-        write(__wavedestination__+filename+'.wav', 44100, scaled)  
+        write(__wavedestination__+filename+'.wav', 44100, scaled)
 
     @staticmethod
     def manhatten_distance(arr1, arr2):

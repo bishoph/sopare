@@ -63,7 +63,7 @@ class analyze():
         framing = { }
         arr = [ ]
         for id in results:
-            framing[id] = [ ] 
+            framing[id] = [ ]
             for i, row in enumerate(results[id]):
                 row = self.row_validation(row, id)
                 row_result = sum(row[0:len(row)]) / self.dict_analysis[id]['min_tokens']
@@ -139,12 +139,12 @@ class analyze():
                             if  (ssr < sr):
                                 sr = ssr
                             if (ssl < sl):
-                                sl = ssl                         
+                                sl = ssl
                         token_sim[0] += sim
                         token_sim[1] += sl
                         token_sim[2] += sr
                         c += 1.0
-                if (c > 0):                        
+                if (c > 0):
                     token_sim[0] = token_sim[0] / c
                     if (token_sim[0] > 1.0 and c >= sopare.config.MIN_START_TOKENS and c >= self.dict_analysis[id]['min_tokens']):
                         logging.warning('Your calculation basis seems to be wrong as we get results > 1.0!')

@@ -40,7 +40,7 @@ class compare():
                 self.results[id] = [ ]
         self.create_structure()
         self.fill_structure(characteristics[ll])
-            
+
     def create_structure(self):
         for id in self.dict_analysis:
             self.results[id].append([ ])
