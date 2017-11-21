@@ -21,7 +21,7 @@ MAX_TIME = 2.4
 LONG_SILENCE = 20
 
 # Characteristic length
-CHUNKS = 1024*4
+CHUNKS = 1024*3
 
 
 #########################################################
@@ -115,4 +115,4 @@ LOGLEVEL = logging.ERROR
 #########################################################
 
 # Additional FFT analysis and comparison for CHUNKS/2 length
-FFT_SHIFT = True
+FFT_SHIFT = False

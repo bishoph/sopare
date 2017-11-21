@@ -45,26 +45,29 @@ class recorder():
         self.logger = self.hatch.get('logger').getlog()
         self.logger = logging.getLogger(__name__)
 
-        self.stream = self.pa.open(format = self.FORMAT,
-                channels = self.CHANNELS,
-                rate=sopare.config.SAMPLE_RATE,
-                input=True,
-                output=False,
-                frames_per_buffer = sopare.config.CHUNK)
-
         self.buffering = sopare.buffering.buffering(self.hatch, self.queue)
         if (hatch.get('infile') == None):
             self.recording()
         else:
+            self.stream = None
             self.readfromfile()
+
+    def open(self):
+        try:
+            self.stream = self.pa.open(format = self.FORMAT,
+                channels = 1,
+                rate=sopare.config.SAMPLE_RATE,
+                input=True,
+                output=False)
+        except IOError as e:
+            self.logger.error("Error: " + str(e))
+            sys.exit(1)
 
     def debug_info(self):
         defaultCapability = self.pa.get_default_host_api_info()
         self.logger.debug(str(defaultCapability))
         self.logger.debug('SAMPLE_RATE: '+str(sopare.config.SAMPLE_RATE))
         self.logger.debug('CHUNK: '+str(sopare.config.CHUNK))
-        
-
 
     def readfromfile(self):
         self.debug_info()
@@ -96,6 +99,7 @@ class recorder():
         sys.exit()
 
     def recording(self):
+        self.open()
         self.debug_info()
         self.logger.info("start endless recording")
         while self.running:
@@ -121,6 +125,7 @@ class recorder():
             self.buffering.terminate()
         except:
             pass
-        self.stream.stop_stream()
-        self.stream.close()
+        if (self.stream != None):
+            self.stream.stop_stream()
+            self.stream.close()
         self.pa.terminate()

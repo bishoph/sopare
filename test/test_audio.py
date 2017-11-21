@@ -22,6 +22,9 @@ import unittest
 import pyaudio
 import audioop
 import math
+import time
+import sys
+import test_multi
 
 class test_audio(unittest.TestCase):
 
@@ -40,6 +43,8 @@ class test_audio(unittest.TestCase):
         for k, v in self.pa.get_default_input_device_info().iteritems():
             print (str(k) + ': ' + str(v))
         print ('#####################################\n\n')
+        self.queue = multiprocessing.JoinableQueue()
+        self.multi = test_multi.multi(self.queue)
 
     def open(self, sample_rate, chunk):
         test_result = False
@@ -61,6 +66,7 @@ class test_audio(unittest.TestCase):
         try:
             for x in range(loops):
                 buf = self.stream.read(chunks)
+                self.queue.put(buf)
                 current_vol = audioop.rms(buf, 2)
                 if (current_vol > vol):
                     vol = current_vol
@@ -96,7 +102,7 @@ class test_audio(unittest.TestCase):
                     if (read_test_result == True):
                         self.good_chunks.append(chunks)
                         test_audio.TEST_RESULTS[good_sample_rate].append(chunks)
-                        
+
                 if (self.stream != None):
                     self.stream.close()
 
@@ -109,7 +115,7 @@ class test_audio(unittest.TestCase):
                 found = True
         print ('\n\n')
         if (found == True):
-            best = sorted(recommendations, key=recommendations.__getitem__, reverse=True)
+            best = sorted(recommendations, key=recommendations.__getitem__, reverse = True)
             print ('Your sopare/config.py recommendations:\n')
             print ('SAMPLE_RATE = '+str(max(best)))
             print ('CHUNK = '+str(min(test_audio.TEST_RESULTS[best[0]])))
@@ -120,8 +126,17 @@ class test_audio(unittest.TestCase):
             print ('However, here are the sucessful tested sample rates:')
             print (str(test_audio.TEST_RESULTS))
 
+    def stop(self):
+        while (self.queue.qsize() > 0):
+            time.sleep(.1) # wait for all threads to finish their work
+        self.queue.close()
+        self.multi.stop()
+        self.queue.join_thread()
+        sys.exit()
+
 ta = test_audio()
 ta.test_environment()
 ta.test_sample_rates()
 ta.test_chunks()
 ta.test_results()
+ta.stop()
