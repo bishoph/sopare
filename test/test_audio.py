@@ -25,6 +25,10 @@ import math
 import time
 import sys
 import test_multi
+sys.path.append('../sopare')
+import sopare.log
+import sopare.hatch
+import sopare.audio_factory
 
 class test_audio(unittest.TestCase):
 
@@ -38,27 +42,12 @@ class test_audio(unittest.TestCase):
         self.good_chunks = [ ]
         self.silence = [ ]
         self.stream = None
-        self.pa = pyaudio.PyAudio()
-        print ('\n\n##### Default input device info #####')
-        for k, v in self.pa.get_default_input_device_info().iteritems():
-            print (str(k) + ': ' + str(v))
-        print ('#####################################\n\n')
+        hatched = sopare.hatch.hatch()
+        logger = sopare.log.log(True, False)
+        hatched.add("logger", logger)
+        self.audio_factory = sopare.audio_factory.audio_factory(hatched)
         self.queue = multiprocessing.JoinableQueue()
         self.multi = test_multi.multi(self.queue)
-
-    def open(self, sample_rate, chunk):
-        test_result = False
-        try:
-            self.stream = self.pa.open(format = pyaudio.paInt16,
-                channels = 1,
-                rate=sample_rate,
-                input=True,
-                output=False)
-            test_result = True
-        except IOError as e:
-            test_result = False
-            print ("Error: " + str(e))
-        return test_result
 
     def read(self, chunks, loops):
         test_result = False
@@ -84,27 +73,25 @@ class test_audio(unittest.TestCase):
     def test_sample_rates(self):
         print ('testing different SAMPLE_RATEs ... this may take a while!\n\n')
         for test_sample_rate in test_audio.SAMPLE_RATES:
-            test_result = ta.open(test_sample_rate, test_sample_rate)
-            if (test_result == True):
-                self.good_sample_rates.append(test_sample_rate)
+            self.stream = self.audio_factory.open(test_sample_rate)
             if (self.stream != None):
-                self.stream.close()
+                self.good_sample_rates.append(test_sample_rate)
+                self.audio_factory.close()
 
     def test_chunks(self):
         print ('testing different CHUNK sizes ... this may take a while!\n\n')
         for good_sample_rate in self.good_sample_rates:
             for chunks in test_audio.CHUNKS:
-                test_result = ta.open(good_sample_rate, chunks)
-                if (test_result == True):
+                self.stream = self.audio_factory.open(good_sample_rate)
+                if (self.stream != None):
                     if (good_sample_rate not in test_audio.TEST_RESULTS):
                         test_audio.TEST_RESULTS[good_sample_rate] = [ ]
                     read_test_result = ta.read(chunks, 10)
                     if (read_test_result == True):
                         self.good_chunks.append(chunks)
                         test_audio.TEST_RESULTS[good_sample_rate].append(chunks)
-
                 if (self.stream != None):
-                    self.stream.close()
+                    self.audio_factory.close()
 
     def test_results(self):
         recommendations = { }
@@ -132,6 +119,8 @@ class test_audio(unittest.TestCase):
         self.queue.close()
         self.multi.stop()
         self.queue.join_thread()
+        self.audio_factory.close()
+        self.audio_factory.terminate()
         sys.exit()
 
 ta = test_audio()

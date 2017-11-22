@@ -24,6 +24,7 @@ import numpy
 import time
 import sys
 import io
+import sopare.audio_factory
 import sopare.buffering
 import sopare.config
 import sopare.hatch
@@ -33,10 +34,7 @@ class recorder():
 
     def __init__(self, hatch):
         self.hatch = hatch
-        self.FORMAT = pyaudio.paInt16
-        # mono
-        self.CHANNELS = 1
-        self.pa = pyaudio.PyAudio()
+        self.audio_factory = sopare.audio_factory.audio_factory(hatch)
         self.queue = multiprocessing.JoinableQueue()
         self.running = True
         self.visual = sopare.visual.visual()
@@ -49,23 +47,9 @@ class recorder():
         if (hatch.get('infile') == None):
             self.recording()
         else:
-            self.stream = None
             self.readfromfile()
 
-    def open(self):
-        try:
-            self.stream = self.pa.open(format = self.FORMAT,
-                channels = 1,
-                rate = sopare.config.SAMPLE_RATE,
-                input = True,
-                output = False)
-        except IOError as e:
-            self.logger.error("IOError: " + str(e))
-            sys.exit(1)
-
     def debug_info(self):
-        defaultCapability = self.pa.get_default_host_api_info()
-        self.logger.debug(str(defaultCapability))
         self.logger.debug('SAMPLE_RATE: '+str(sopare.config.SAMPLE_RATE))
         self.logger.debug('CHUNK: '+str(sopare.config.CHUNK))
 
@@ -99,7 +83,7 @@ class recorder():
         sys.exit()
 
     def recording(self):
-        self.open()
+        self.stream = self.audio_factory.open(sopare.config.SAMPLE_RATE)
         self.debug_info()
         self.logger.info("start endless recording")
         while self.running:
@@ -115,8 +99,8 @@ class recorder():
                 self.logger.warning("stream read error "+str(e))
                 if (hasattr(sopare.config, 'STREAM_RECREATE') and sopare.config.STREAM_RECREATE == True):
                     self.logger.info('trying to recreate stream...')
-                    self.stream.close()
-                    self.open()
+                    self.audio_factory.close()
+                    self.stream = self.audio_factory.open(sopare.config.SAMPLE_RATE)
                     self.logger.info('...stream recreated.')
         self.stop()
         sys.exit()
@@ -129,7 +113,5 @@ class recorder():
             self.buffering.terminate()
         except:
             pass
-        if (self.stream != None):
-            self.stream.stop_stream()
-            self.stream.close()
-        self.pa.terminate()
+        self.audio_factory.close()
+        self.audio_factory.terminate()

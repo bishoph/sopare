@@ -23,6 +23,7 @@ import sopare.config
 class log():
 
     def __init__(self, debug, error):
+        logging.basicConfig()
         self.logger = logging.getLogger()
         self.logformat = '%(levelname)s: %(message)s'
         self.loglevel = logging.ERROR
