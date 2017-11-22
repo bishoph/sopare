@@ -51,8 +51,11 @@ class audio_factory():
 
     def close(self):
         if (self.stream != None):
-            self.stream.stop_stream()
-            self.stream.close()
+            try:
+                self.stream.stop_stream()
+                self.stream.close()
+            except IOError as e:
+                self.logger.error("Error: " + str(e))
 
     def terminate(self):
         self.pa.terminate()
