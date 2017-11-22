@@ -64,7 +64,7 @@ MARGINAL_VALUE = 0.7
 
 # Minimal similarity across all comparison to
 # identify a complete word across all tokens
-MIN_CROSS_SIMILARITY = 0.75
+MIN_CROSS_SIMILARITY = 0.91
 
 # Calculation basis or token/word comparison
 SIMILARITY_NORM = 0.6
@@ -77,8 +77,8 @@ SIMILARITY_DOMINANT_FREQUENCY = 0
 NUMBER_OF_BEST_MATCHES = 2
 
 # Min. distance to keep a word
-MIN_LEFT_DISTANCE = 0.7
-MIN_RIGHT_DISTANCE = 0.45
+MIN_LEFT_DISTANCE = 0.75
+MIN_RIGHT_DISTANCE = 0.55
 
 # Use given number as results to assembly result
 # 0 for all predictions

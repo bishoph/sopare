@@ -42,8 +42,8 @@ class audio_factory():
                 channels = 1, # mono
                 rate=sample_rate,
                 input=True,
-                output=False)
-            test_result = True
+                output=False,
+                frames_per_buffer = sopare.config.CHUNK)
         except IOError as e:
             self.logger.error("Error: " + str(e))
             return None
