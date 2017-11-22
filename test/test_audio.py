@@ -90,8 +90,7 @@ class test_audio(unittest.TestCase):
                     if (read_test_result == True):
                         self.good_chunks.append(chunks)
                         test_audio.TEST_RESULTS[good_sample_rate].append(chunks)
-                if (self.stream != None):
-                    self.audio_factory.close()
+                self.audio_factory.close()
 
     def test_results(self):
         recommendations = { }

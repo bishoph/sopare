@@ -116,10 +116,3 @@ LOGLEVEL = logging.ERROR
 
 # Additional FFT analysis and comparison for CHUNKS/2 length
 FFT_SHIFT = False
-
-# In some environments all of the sudden a pyaudio error
-# "[Errno Input overflowed] -9981" comes up and the
-# stream is dead and must be re-created to continue
-# listening. If you encounter this issue simple uncomment
-# the below option:
-#STREAM_RECREATE = True
