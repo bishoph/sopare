@@ -19,13 +19,12 @@ under the License.
 
 import pyaudio
 import logging
-import sopare.hatch
 
 class audio_factory():
 
-    def __init__(self, hatch):
-        self.hatch = hatch
-        self.logger = self.hatch.get('logger').getlog()
+    def __init__(self, cfg):
+        self.cfg = cfg
+        self.logger = self.cfg.getlogger().getlog()
         self.logger = logging.getLogger(__name__)
         self.stream = None
         self.pa = pyaudio.PyAudio()
@@ -43,7 +42,7 @@ class audio_factory():
                 rate=sample_rate,
                 input=True,
                 output=False,
-                frames_per_buffer = sopare.config.CHUNK)
+                frames_per_buffer = self.cfg.getintoption('stream', 'CHUNK'))
         except IOError as e:
             self.logger.error("Error: " + str(e))
             return None

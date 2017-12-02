@@ -19,12 +19,12 @@ under the License.
 
 import time
 import logging
-import sopare.config
 
 class short_term_memory():
 
-    def __init__(self, debug):
-        self.debug = debug
+    def __init__(self, cfg):
+        self.cfg = cfg
+        self.debug = self.cfg.getbool('cmdlopt', 'debug')
         self.last_debug_info = ''
         self.last_results = [ ]
         self.last_time = 0
@@ -47,5 +47,5 @@ class short_term_memory():
             logging.debug('stm mnodification: ' + str(results))
         self.last_results = results
         self.last_debug_info = debug_info
-        self.last_time = time.time() + sopare.config.STM_RETENTION
+        self.last_time = time.time() + self.cfg.getfloatoption('compare', 'STM_RETENTION')
         return results, debug_info

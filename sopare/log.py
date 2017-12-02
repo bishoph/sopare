@@ -18,21 +18,20 @@ under the License.
 """
 
 import logging
-import sopare.config
 
 class log():
 
-    def __init__(self, debug, error):
+    def __init__(self, debug, error, cfg = None):
         logging.basicConfig()
         self.logger = logging.getLogger()
         self.logformat = '%(levelname)s: %(message)s'
-        self.loglevel = logging.ERROR
-        if (hasattr(sopare.config, 'LOGFORMAT')):
-            self.logformat = sopare.config.LOGFORMAT
+        self.loglevel = 'ERROR'
+        if (cfg != None and cfg.hasoption('misc', 'LOGLEVEL')):
+            check = cfg.getoption('misc', 'LOGLEVEL')
+            if (check != ''):
+                self.loglevel = check
         if (debug == True):
-            self.loglevel = logging.DEBUG
-        elif (hasattr(sopare.config, 'LOGLEVEL')):
-            self.loglevel = sopare.config.LOGLEVEL
+            self.loglevel = 'DEBUG'
         self.logger.setLevel(self.loglevel)
         ch = logging.StreamHandler()
         ch.setFormatter(self.logformat)

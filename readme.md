@@ -115,6 +115,8 @@ Usage:
  -d --delete [word]  : delete [word] from dictionary and exits.
                        '*' deletes everything!
 
+ -i --ini    [file]  : use alternative configuration file
+
  -a --analysis       : show dictionary analysis and exits.
 
  -u --unit           : run unit tests

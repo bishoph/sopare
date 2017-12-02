@@ -22,24 +22,22 @@ import audioop
 import prepare
 import time
 import io
-import sopare.config
-import sopare.hatch
 
 class processor():
 
-    def __init__(self, hatch, buffering, live = True):
+    def __init__(self, cfg, buffering, live = True):
         self.append = False
-        self.hatch = hatch
+        self.cfg = cfg
         self.out = None
-        if (self.hatch.get('outfile') != None):
-            self.out = io.open(self.hatch.get('outfile'), 'wb')
+        if (self.cfg.getoption('cmdlopt', 'outfile') != None):
+            self.out = io.open(self.cfg.getoption('cmdlopt', 'outfile'), 'wb')
         self.buffering = buffering
         self.live = live
         self.timer = 0
         self.silence_timer = 0
         self.silence_buffer = [ ]
-        self.prepare = prepare.preparing(self.hatch)
-        self.logger = self.hatch.get('logger').getlog()
+        self.prepare = prepare.preparing(self.cfg)
+        self.logger = self.cfg.getlogger().getlog()
         self.logger = logging.getLogger(__name__)
 
     def stop(self, message):
@@ -48,7 +46,7 @@ class processor():
             self.out.close()
         self.append = False
         self.silence_timer = 0
-        if (self.hatch.get('endless_loop') == False):
+        if (self.cfg.getbool('cmdlopt', 'endless_loop') == False):
             self.prepare.stop()
         else:
             self.prepare.force_tokenizer()
@@ -57,7 +55,7 @@ class processor():
 
     def check_silence(self, buf):
         volume = audioop.rms(buf, 2)
-        if (volume >= sopare.config.THRESHOLD):
+        if (volume >= self.cfg.getintoption('stream', 'THRESHOLD')):
             self.silence_timer = time.time()
             if (self.append == False):
                 self.logger.info('starting append mode')
@@ -75,9 +73,9 @@ class processor():
         if (self.append == True):
             self.prepare.prepare(buf, volume)
         if (self.append == True and self.silence_timer > 0
-        and self.silence_timer + sopare.config.MAX_SILENCE_AFTER_START < time.time()
+        and self.silence_timer + self.cfg.getfloatoption('stream', 'MAX_SILENCE_AFTER_START') < time.time()
         and self.live == True):
             self.stop("stop append mode because of silence")
-        if (self.append == True and self.timer + sopare.config.MAX_TIME < time.time()
+        if (self.append == True and self.timer + self.cfg.getfloatoption('stream', 'MAX_TIME') < time.time()
         and self.live == True):
             self.stop("stop append mode because time is up")

@@ -19,7 +19,6 @@ under the License.
 
 from operator import itemgetter
 import sopare.characteristics
-import sopare.config
 import sopare.stm
 import sopare.path
 import sopare.util
@@ -29,13 +28,13 @@ import os
 
 class analyze():
 
-    def __init__(self, debug):
-        self.debug = debug
-        self.characteristic = sopare.characteristics.characteristic(debug)
-        self.util = sopare.util.util(debug)
+    def __init__(self, cfg):
+        self.cfg = cfg
+        self.debug = self.cfg.getbool('cmdlopt', 'debug')
+        self.util = sopare.util.util(self.debug, self.cfg.getfloatoption('characteristic', 'PEAK_FACTOR'))
         self.learned_dict = self.util.getDICT()
         self.dict_analysis = self.util.compile_analysis(self.learned_dict)
-        self.stm = sopare.stm.short_term_memory(debug)
+        self.stm = sopare.stm.short_term_memory(self.cfg)
         self.plugins = [ ]
         self.load_plugins()
         self.last_results = None
@@ -67,18 +66,18 @@ class analyze():
             for i, row in enumerate(results[id]):
                 row = self.row_validation(row, id)
                 row_result = sum(row[0:len(row)]) / self.dict_analysis[id]['min_tokens']
-                if (row_result >= sopare.config.MARGINAL_VALUE):
+                if (row_result >= self.cfg.getfloatoption('compare', 'MARGINAL_VALUE')):
                     arr.append([row_result, i, id])
                 else:
                     logging.debug('removing '+id + ' from potential start position '+str(i) + ' bc MARGINAL_VALUE > ' +str(row_result))
         sorted_arr = sorted(arr, key=itemgetter(0), reverse = True)
         for el in sorted_arr:
-            if (el[1] not in framing[el[2]] and (sopare.config.MAX_WORD_START_RESULTS == 0 or len(framing[el[2]]) < sopare.config.MAX_WORD_START_RESULTS)):
+            if (el[1] not in framing[el[2]] and (self.cfg.getintoption('compare', 'MAX_WORD_START_RESULTS') == 0 or len(framing[el[2]]) < self.cfg.getintoption('compare', 'MAX_WORD_START_RESULTS'))):
                 framing[el[2]].append(el[1])
         return framing
 
     def row_validation(self, row, id):
-        if (row[0] == 0 or len(row) <= sopare.config.MIN_START_TOKENS):
+        if (row[0] == 0 or len(row) <= self.cfg.getintoption('compare', 'MIN_START_TOKENS')):
             return [ 0 ] * len(row)
         return row
 
@@ -95,27 +94,27 @@ class analyze():
         for match in framing_match:
             sorted_framing_match = sorted(match, key=lambda x: (x[1] + x[2], -x[0]))
             nobm = 1
-            if (hasattr(sopare.config, 'NUMBER_OF_BEST_MATCHES') and sopare.config.NUMBER_OF_BEST_MATCHES > 0):
-                nobm = sopare.config.NUMBER_OF_BEST_MATCHES
+            if (self.cfg.hasoption('compare', 'NUMBER_OF_BEST_MATCHES') and self.cfg.getintoption('compare', 'NUMBER_OF_BEST_MATCHES') > 0):
+                nobm = self.cfg.getintoption('compare', 'NUMBER_OF_BEST_MATCHES')
             for x in range(0, nobm):
                if (x < len(sorted_framing_match)):
                    best_match.append(sorted_framing_match[x])
         sorted_best_match = sorted(best_match, key=lambda x: (x[1] +  x[2], -x[0]))
         self.debug_info += str(sorted_best_match).join(['sorted_best_match: ', '\n\n'])
         for i, best in enumerate(sorted_best_match):
-            if (best[0] >= sopare.config.MIN_CROSS_SIMILARITY and best[1] <= sopare.config.MIN_LEFT_DISTANCE and best[2] <= sopare.config.MIN_RIGHT_DISTANCE):
+            if (best[0] >= self.cfg.getfloatoption('compare', 'MIN_CROSS_SIMILARITY') and best[1] <= self.cfg.getfloatoption('compare', 'MIN_LEFT_DISTANCE') and best[2] <= self.cfg.getfloatoption('compare', 'MIN_RIGHT_DISTANCE')):
                 for x in range(best[3], best[3] + best[4]):
                     if (match_results[x] == ''):
                         match_results[x] = best[5]
-            if (sopare.config.MAX_TOP_RESULTS > 0 and i > sopare.config.MAX_TOP_RESULTS):
+            if (self.cfg.getintoption('compare', 'MAX_TOP_RESULTS') > 0 and i > self.cfg.getintoption('compare', 'MAX_TOP_RESULTS')):
                 break
         self.debug_info += str(match_results).join(['match_results: ', '\n\n'])
         return match_results
 
     def token_sim(self, characteristic, dcharacteristic):
-        sim_norm = self.util.similarity(characteristic['norm'], dcharacteristic['norm']) * sopare.config.SIMILARITY_NORM
-        sim_token_peaks = self.util.similarity(characteristic['token_peaks'], dcharacteristic['token_peaks']) * sopare.config.SIMILARITY_HEIGHT
-        sim_df = self.util.single_similarity(characteristic['df'], dcharacteristic['df']) * sopare.config.SIMILARITY_DOMINANT_FREQUENCY
+        sim_norm = self.util.similarity(characteristic['norm'], dcharacteristic['norm']) * self.cfg.getfloatoption('compare', 'SIMILARITY_NORM')
+        sim_token_peaks = self.util.similarity(characteristic['token_peaks'], dcharacteristic['token_peaks']) * self.cfg.getfloatoption('compare', 'SIMILARITY_HEIGHT')
+        sim_df = self.util.single_similarity(characteristic['df'], dcharacteristic['df']) * self.cfg.getfloatoption('compare', 'SIMILARITY_DOMINANT_FREQUENCY')
         sim = sim_norm + sim_token_peaks + sim_df
         sl, sr = self.util.manhatten_distance(characteristic['norm'], dcharacteristic['norm'])
         return sim, sl, sr
@@ -146,12 +145,12 @@ class analyze():
                         c += 1.0
                 if (c > 0):
                     token_sim[0] = token_sim[0] / c
-                    if (token_sim[0] > 1.0 and c >= sopare.config.MIN_START_TOKENS and c >= self.dict_analysis[id]['min_tokens']):
+                    if (token_sim[0] > 1.0 and c >= self.cfg.getintoption('compare', 'MIN_START_TOKENS') and c >= self.dict_analysis[id]['min_tokens']):
                         logging.warning('Your calculation basis seems to be wrong as we get results > 1.0!')
                     token_sim[1] = token_sim[1] / c
                     token_sim[2] = token_sim[2] / c
                     token_sim[4] = int(c)
-                if ((sopare.config.STRICT_LENGTH_CHECK == False and c >= sopare.config.MIN_START_TOKENS ) or c >= self.dict_analysis[id]['min_tokens'] - sopare.config.STRICT_LENGTH_UNDERMINING):
+                if ((self.cfg.getbool('compare', 'STRICT_LENGTH_CHECK') == False and c >= self.cfg.getintoption('compare', 'MIN_START_TOKENS')) or c >= self.dict_analysis[id]['min_tokens'] - self.cfg.getintoption('compare', 'STRICT_LENGTH_UNDERMINING')):
                     word_sim.append(token_sim)
         return word_sim
 
@@ -166,7 +165,7 @@ class analyze():
                     match_results = self.validate_match_result(framing[s:], s, x, match_results)
             elif (x == len(framing)-1):
                 match_results = self.validate_match_result(framing[s:], s, x, match_results)
-        if (framing.count('') > len(framing) * sopare.config.FILL_RESULT_PERCENTAGE):
+        if (framing.count('') > len(framing) * self.cfg.getfloatoption('compare', 'FILL_RESULT_PERCENTAGE')):
             if (self.debug):
                 self.debug_info += 'Results contain too many empty tokens. ' + str(framing.count('')) + ' / ' + str(len(framing)) + ' Eliminating results'
             return [ ] * len(match_results)
@@ -175,7 +174,7 @@ class analyze():
     def validate_match_result(self, result, start, end, match_results):
         if (len(result) == 0 or result[0] == ''):
             return match_results
-        if (sopare.config.STRICT_LENGTH_CHECK == True and (len(result) < self.dict_analysis[result[0]]['min_tokens'] - sopare.config.STRICT_LENGTH_UNDERMINING or len(result) > self.dict_analysis[result[0]]['max_tokens'])):
+        if (self.cfg.getbool('compare', 'STRICT_LENGTH_CHECK') == True and (len(result) < self.dict_analysis[result[0]]['min_tokens'] - self.cfg.getintoption('compare', 'STRICT_LENGTH_UNDERMINING') or len(result) > self.dict_analysis[result[0]]['max_tokens'])):
             if (self.debug):
                 self.debug_info += 'STRICT_LENGTH_CHECK failed for '+result[0] + ': ' + str(self.dict_analysis[result[0]]['min_tokens']) + ' > ' + str(len(result)) + ' < ' + str(self.dict_analysis[result[0]]['max_tokens']) + '\n'
             match_results.append('')

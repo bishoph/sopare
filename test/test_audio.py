@@ -27,7 +27,7 @@ import sys
 import test_multi
 sys.path.append('../sopare')
 import sopare.log
-import sopare.hatch
+import sopare.config
 import sopare.audio_factory
 
 class test_audio(unittest.TestCase):
@@ -42,10 +42,12 @@ class test_audio(unittest.TestCase):
         self.good_chunks = [ ]
         self.silence = [ ]
         self.stream = None
-        hatched = sopare.hatch.hatch()
+
+        cfg = sopare.config.config()
         logger = sopare.log.log(True, False)
-        hatched.add("logger", logger)
-        self.audio_factory = sopare.audio_factory.audio_factory(hatched)
+        cfg.addlogger(logger)
+
+        self.audio_factory = sopare.audio_factory.audio_factory(cfg)
         self.queue = multiprocessing.JoinableQueue()
         self.multi = test_multi.multi(self.queue)
 

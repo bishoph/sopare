@@ -18,13 +18,11 @@ under the License.
 """
 
 import numpy
-import sopare.config
-import sopare.hatch
 
 class characteristic:
 
-    def __init__(self, hatch):
-        self.hatch = hatch
+    def __init__(self, peak_factor):
+        self.peak_factor = peak_factor
 
     def getcharacteristic(self, fft, chunked_norm, meta):
         fft = numpy.abs(fft)
@@ -33,7 +31,7 @@ class characteristic:
         fc = 0
         peaks = [ ]
         if (len(chunked_norm) > 0):
-            where_range = numpy.mean(chunked_norm) / sopare.config.PEAK_FACTOR
+            where_range = numpy.mean(chunked_norm) / self.peak_factor
             peaks = list(numpy.array(numpy.where(chunked_norm > where_range))[0])
             where_range = numpy.mean(chunked_norm)
             npeaks = numpy.array(numpy.where(chunked_norm > where_range))

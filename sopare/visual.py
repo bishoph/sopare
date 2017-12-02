@@ -25,9 +25,15 @@ from sopare.path import __plotdestination__
 class visual:
 
     def __init__(self):
-        self.init = 1
+        self.plot_cache = [ ]
 
     def create_sample(self, data, filename):
         pyplot.plot(data)
         pyplot.savefig(__plotdestination__+filename)
         pyplot.clf()
+
+    def extend_plot_cache(self, data):
+        self.plot_cache.extend(data)
+
+    def get_plot_cache(self):
+        return self.plot_cache

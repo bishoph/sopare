@@ -31,9 +31,9 @@ from sopare.path import __wavedestination__
 
 class util:
 
-    def __init__(self, debug):
+    def __init__(self, debug, peak_factor):
         self.debug = debug
-        self.characteristic = sopare.characteristics.characteristic(debug)
+        self.characteristic = sopare.characteristics.characteristic(peak_factor)
         self.cache = { }
 
     def showdictentriesbyid(self):
