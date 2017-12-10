@@ -22,21 +22,22 @@ import logging
 class log():
 
     def __init__(self, debug, error, cfg = None):
-        logging.basicConfig()
+        if (error == True):
+            logging.basicConfig(filename='error.log', filemode='a', loglevel='ERROR')
+        else:
+            logging.basicConfig()
         self.logger = logging.getLogger()
         self.logformat = '%(levelname)s: %(message)s'
         self.loglevel = 'ERROR'
-        if (cfg != None and cfg.hasoption('misc', 'LOGLEVEL')):
+        if (error == False and cfg != None and cfg.hasoption('misc', 'LOGLEVEL')):
             check = cfg.getoption('misc', 'LOGLEVEL')
             if (check != ''):
                 self.loglevel = check
-        if (debug == True):
+        if (error == False and debug == True):
             self.loglevel = 'DEBUG'
         self.logger.setLevel(self.loglevel)
         ch = logging.StreamHandler()
         ch.setFormatter(self.logformat)
-        if (error == True):
-            logging.basicConfig(filename='error.log', filemode='a', loglevel=self.loglevel)
 
     def getlog(self):
         return self.logger

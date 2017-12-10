@@ -35,6 +35,8 @@ class analyze():
         self.learned_dict = self.util.getDICT()
         self.dict_analysis = self.util.compile_analysis(self.learned_dict)
         self.stm = sopare.stm.short_term_memory(self.cfg)
+        self.logger = self.cfg.getlogger().getlog()
+        self.logger = logging.getLogger(__name__)
         self.plugins = [ ]
         self.load_plugins()
         self.last_results = None
@@ -53,7 +55,7 @@ class analyze():
         matches = self.deep_search(framing, data)
         readable_results = self.get_match(matches)
         readable_results, self.debug_info = self.stm.get_results(readable_results, self.debug_info)
-        logging.debug(self.debug_info)
+        self.logger.debug(self.debug_info)
         if (readable_results != None):
             for p in self.plugins:
                 p.run(readable_results, self.debug_info, rawbuf)
@@ -69,7 +71,7 @@ class analyze():
                 if (row_result >= self.cfg.getfloatoption('compare', 'MARGINAL_VALUE')):
                     arr.append([row_result, i, id])
                 else:
-                    logging.debug('removing '+id + ' from potential start position '+str(i) + ' bc MARGINAL_VALUE > ' +str(row_result))
+                    self.logger.debug('removing '+id + ' from potential start position '+str(i) + ' bc MARGINAL_VALUE > ' +str(row_result))
         sorted_arr = sorted(arr, key=itemgetter(0), reverse = True)
         for el in sorted_arr:
             if (el[1] not in framing[el[2]] and (self.cfg.getintoption('compare', 'MAX_WORD_START_RESULTS') == 0 or len(framing[el[2]]) < self.cfg.getintoption('compare', 'MAX_WORD_START_RESULTS'))):
@@ -146,7 +148,7 @@ class analyze():
                 if (c > 0):
                     token_sim[0] = token_sim[0] / c
                     if (token_sim[0] > 1.0 and c >= self.cfg.getintoption('compare', 'MIN_START_TOKENS') and c >= self.dict_analysis[id]['min_tokens']):
-                        logging.warning('Your calculation basis seems to be wrong as we get results > 1.0!')
+                        self.logger.warning('Your calculation basis seems to be wrong as we get results > 1.0!')
                     token_sim[1] = token_sim[1] / c
                     token_sim[2] = token_sim[2] / c
                     token_sim[4] = int(c)
@@ -183,16 +185,16 @@ class analyze():
         return match_results
 
     def load_plugins(self):
-        logging.info('checking for plugins...')
+        self.logger.info('checking for plugins...')
         pluginsfound = os.listdir(sopare.path.__plugindestination__)
         for plugin in pluginsfound:
             try:
                 pluginpath = os.path.join(sopare.path.__plugindestination__, plugin)
-                logging.debug('loading and initialzing '+pluginpath)
+                self.logger.debug('loading and initialzing '+pluginpath)
                 f, filename, description = imp.find_module('__init__', [pluginpath])
                 self.plugins.append(imp.load_module(plugin, f, filename, description))
             except ImportError, err:
-                logging.error('ImportError: %s', err)
+                self.logger.error('ImportError: %s', err)
 
     def reset(self):
         self.last_results = None

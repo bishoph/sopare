@@ -90,7 +90,8 @@ Usage:
 
  -l --loop           : loop forever
 
- -e --error          : redirect sdterr to error.log
+ -e --error          : redirect outpout to error.log
+                       loglevel is forced to error!
 
  -p --plot           : plot results (only without loop option)
 
