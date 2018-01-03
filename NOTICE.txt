@@ -1,5 +1,5 @@
 SoPaRe
-Copyright 2015-2017
+Copyright 2015-2018
 
 This is the SOund PAttern REcognition project
 developed by Martin Kauss (yo@bishoph.org).
