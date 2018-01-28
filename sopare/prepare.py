@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright (C) 2015 - 2017 Martin Kauss (yo@bishoph.org)
+Copyright (C) 2015 - 2018 Martin Kauss (yo@bishoph.org)
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may
 not use this file except in compliance with the License. You may obtain
@@ -21,16 +21,14 @@ import numpy
 import filter
 import sopare.visual
 import sopare.util
-import sopare.config
-import sopare.hatch
 
 class preparing():
 
-    def __init__(self, hatch):
-        self.hatch = hatch
+    def __init__(self, cfg):
+        self.cfg = cfg
         self.visual = sopare.visual.visual()
-        self.util = sopare.util.util(self.hatch.get('debug'))
-        self.filter = sopare.filter.filtering(self.hatch)
+        self.util = sopare.util.util(self.cfg.getbool('cmdlopt', 'debug'), self.cfg.getfloatoption('characteristic', 'PEAK_FACTOR'))
+        self.filter = sopare.filter.filtering(self.cfg)
         self.silence = 0
         self.force = False
         self.counter = 0
@@ -65,11 +63,11 @@ class preparing():
         return True
 
     def stop(self):
-        if (self.hatch.get('plot') == True):
-            self.visual.create_sample(self.hatch.get_plot_cache(), 'sample.png')
+        if (self.cfg.getbool('cmdlopt', 'plot') == True):
+            self.visual.create_sample(self.visual.get_plot_cache(), 'sample.png')
         self.tokenize([{ 'token': 'stop' }])
-        self.filter.stop()
         self.filter_reset()
+        self.filter.stop()
         self.reset()
 
     def reset(self):
@@ -91,11 +89,11 @@ class preparing():
     def force_tokenizer(self):
         self.force = True
         self.tokenize([ { 'token': 'start analysis', 'silence': self.silence, 'pos': self.counter, 'adapting': 0, 'volume': 0, 'peaks': self.peaks } ])
-  
+
     def prepare(self, buf, volume):
         data = numpy.fromstring(buf, dtype=numpy.int16)
-        if (self.hatch.get('plot') == True and self.hatch.get('endless_loop') == False):
-            self.hatch.extend_plot_cache(data)
+        if (self.cfg.getbool('cmdlopt', 'plot') == True and self.cfg.getbool('cmdlopt', 'endless_loop') == False):
+            self.visual.extend_plot_cache(data)
         self.buffer.extend(data)
         self.counter += 1
         abs_data = abs(data)
@@ -103,21 +101,21 @@ class preparing():
         self.token_peaks.append(adaptive)
         meta = [ ]
 
-        if (volume < sopare.config.THRESHOLD):
+        if (volume < self.cfg.getintoption('stream', 'THRESHOLD')):
             self.silence += 1
-            if (self.silence == sopare.config.LONG_SILENCE):
+            if (self.silence == self.cfg.getintoption('stream', 'LONG_SILENCE')):
                 self.new_word = True
                 self.entered_silence = True
                 self.peaks.extend(self.token_peaks)
                 meta.append({ 'token': 'start analysis', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'token_peaks': self.token_peaks, 'peaks': self.peaks })
                 self.peaks = [ ]
-            elif (self.silence > sopare.config.LONG_SILENCE):
+            elif (self.silence > self.cfg.getintoption('stream', 'LONG_SILENCE')):
                 meta.append({ 'token': 'noop', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume })
         else:
             self.entered_silence = False
             self.silence = 0
 
-        if (len(self.buffer) == sopare.config.CHUNKS):
+        if (len(self.buffer) == self.cfg.getintoption('stream', 'CHUNKS')):
             self.new_token = True
             meta.append({ 'token': 'token', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'token_peaks': self.token_peaks })
 

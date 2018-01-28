@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright (C) 2015 - 2017 Martin Kauss (yo@bishoph.org)
+Copyright (C) 2015 - 2018 Martin Kauss (yo@bishoph.org)
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may
 not use this file except in compliance with the License. You may obtain
@@ -19,12 +19,13 @@ under the License.
 
 import time
 import logging
-import sopare.config
 
 class short_term_memory():
 
-    def __init__(self, debug):
-        self.debug = debug
+    def __init__(self, cfg):
+        self.cfg = cfg
+        self.debug = self.cfg.getbool('cmdlopt', 'debug')
+        self.last_debug_info = ''
         self.last_results = [ ]
         self.last_time = 0
 
@@ -33,13 +34,18 @@ class short_term_memory():
         stm_results.extend(results)
         return stm_results
 
-    def get_results(self, results):
+    def get_stm_debug_info(self, debug_info):
+        return self.last_debug_info + debug_info
+
+    def get_results(self, results, debug_info):
         if (results == None or len(results) == 0):
-            return results
+            return results, debug_info
         if (time.time() < self.last_time):
             logging.debug('stm input: ' + str(results) + ' '  + str(self.last_results))
             results = self.get_stm_results(results)
+            debug_info = self.get_stm_debug_info(debug_info)
             logging.debug('stm mnodification: ' + str(results))
         self.last_results = results
-        self.last_time = time.time() + sopare.config.STM_RETENTION
-        return results
+        self.last_debug_info = debug_info
+        self.last_time = time.time() + self.cfg.getfloatoption('compare', 'STM_RETENTION')
+        return results, debug_info

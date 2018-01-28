@@ -1,118 +1,61 @@
-#########################################################
-# Stream prep and silence configuration options #########
-#########################################################
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
-# Read chunk size
-CHUNK = 512
+"""
+Copyright (C) 2015 - 2018 Martin Kauss (yo@bishoph.org)
 
-# Sample rate
-SAMPLE_RATE = 48000
+Licensed under the Apache License, Version 2.0 (the "License"); you may
+not use this file except in compliance with the License. You may obtain
+a copy of the License at
 
-# Volume threshold when audio processing starts / silence 
-THRESHOLD = 400
+ http://www.apache.org/licenses/LICENSE-2.0
 
-# Silence time in seconds when analysis is called
-MAX_SILENCE_AFTER_START = 1.4
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+License for the specific language governing permissions and limitations
+under the License.
+"""
 
-# Time in seconds after the analysis is forced
-MAX_TIME = 2.4
+import ConfigParser
 
-# Start the analysis after reaching LONG_SILENCE
-LONG_SILENCE = 30
+class config():
 
-# Characteristic length
-CHUNKS = 1024*3
+    def __init__(self, config_file = 'config/default.ini'):
+        self.config = ConfigParser.ConfigParser(allow_no_value=True)
+        self.config.read(config_file)
+        self.logger = None
 
+    def getoption(self, section, option):
+        return self.config.get(section, option)
 
-#########################################################
-# Characteristic configuration options ##################
-#########################################################
+    def getfloatoption(self, section, option):
+        return self.config.getfloat(section, option)
 
-# Steps boil down the data into smaller chunks of data.
-# Smaller steps mean more precision but require
-# normally more learned entries in the dictionary.
-# Progressive value is used if you want to pack not
-# so relevant frequencies
-PROGRESSIVE_FACTOR = 0
-START_PROGRESSIVE_FACTOR = 600
-MIN_PROGRESSIVE_STEP = 10
-MAX_PROGRESSIVE_STEP = 10
+    def getintoption(self, section, option):
+        return self.config.getint(section, option)
 
-# Specifies freq ranges that are kept for further
-# analysis. Freq outside of the ranges are set to zero.
-# Human language can be found between 20 and 5000.
-LOW_FREQ = 20
-HIGH_FREQ = 600
+    def getbool(self, section, option):
+        return self.config.getboolean(section, option)
 
-# Make use of Hann window function
-HANNING = True
+    def addsection(self, section):
+        self.config.add_section(section)
 
-# Range factor for peaks
-PEAK_FACTOR = 0.8
+    def setoption(self, section, id, option):
+        self.config.set(section, id, option)
 
+    def hasoption(self, section, option):
+        return self.config.has_option(section, option)
 
+    def addlogger(self, logger):
+        self.logger = logger
 
-#########################################################
-# Compare configuration options #########################
-#########################################################
+    def getlogger(self):
+        return self.logger
 
-# Min. number of tokens to identify the beginning of a word
-MIN_START_TOKENS = 4
-
-# Min. value for potential beginning of a word
-MARGINAL_VALUE = 0.7
-
-# Minimal similarity across all comparison to
-# identify a complete word across all tokens
-MIN_CROSS_SIMILARITY = 0.8
-
-# Calculation basis or token/word comparison
-SIMILARITY_NORM = 0.6
-SIMILARITY_HEIGHT = 0.4
-SIMILARITY_DOMINANT_FREQUENCY = 0
-
-# Number of best matches to consider.
-# Value must be > 0
-# If not specified or value < 1 value is set to 1
-NUMBER_OF_BEST_MATCHES = 2
-
-# Min. distance to keep a word
-MIN_LEFT_DISTANCE = 0.5
-MIN_RIGHT_DISTANCE = 0.4
-
-# Use given number as results to assembly result
-# 0 for all predictions
-MAX_WORD_START_RESULTS = 2
-MAX_TOP_RESULTS = 3
-
-# Enable or disable strict length check for words
-STRICT_LENGTH_CHECK = True
-# Value to soften the strict length check a bit to still
-# get quite precise results but to be less strict
-STRICT_LENGTH_UNDERMINING = 2
-
-# Short term memory retention time in seconds. Zero to disable STM
-STM_RETENTION = 0.8
-
-# Fill result percentage
-# 0.5 means that half of the values can by empty to still get valid results
-# A lower value should theoretically avoid false positives
-FILL_RESULT_PERCENTAGE = 0.1
-
-
-
-#########################################################
-# Misc configuration options ############################
-#########################################################
-
-# Loglevel
-import logging
-LOGLEVEL = logging.ERROR
-
-
-#########################################################
-# Experimental configuration options ####################
-#########################################################
-
-# Additional FFT analysis and comparison for CHUNKS/2 length
-FFT_SHIFT = False
+    def showconfig(self):
+        print ('current config:')
+        for section in self.config.sections():
+            print (str(section))
+            for option in self.config.options(section):
+                print (' ' + str(option) + ' = ' + str(self.getoption(section, option)))

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright (C) 2015 - 2017 Martin Kauss (yo@bishoph.org)
+Copyright (C) 2015 - 2018 Martin Kauss (yo@bishoph.org)
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may
 not use this file except in compliance with the License. You may obtain
@@ -24,66 +24,49 @@ import numpy
 import time
 import sys
 import io
+import sopare.audio_factory
 import sopare.buffering
-import sopare.config
-import sopare.hatch
 import sopare.visual
 
 class recorder():
 
-    def __init__(self, hatch):
-        self.hatch = hatch
-        self.FORMAT = pyaudio.paInt16
-        # mono
-        self.CHANNELS = 1
-        self.pa = pyaudio.PyAudio()
+    def __init__(self, cfg):
+        self.cfg = cfg
+        self.audio_factory = sopare.audio_factory.audio_factory(cfg)
         self.queue = multiprocessing.JoinableQueue()
         self.running = True
         self.visual = sopare.visual.visual()
-  
-        # logging ###################
-        self.logger = self.hatch.get('logger').getlog()
+        self.logger = self.cfg.getlogger().getlog()
         self.logger = logging.getLogger(__name__)
+        self.buffering = sopare.buffering.buffering(self.cfg, self.queue)
 
-        self.stream = self.pa.open(format = self.FORMAT,
-                channels = self.CHANNELS,
-                rate=sopare.config.SAMPLE_RATE,
-                input=True,
-                output=False,
-                frames_per_buffer = sopare.config.CHUNK)
-
-        self.buffering = sopare.buffering.buffering(self.hatch, self.queue)
-        if (hatch.get('infile') == None):
+        if (self.cfg.getoption('cmdlopt', 'infile') == None):
             self.recording()
         else:
             self.readfromfile()
 
     def debug_info(self):
-        defaultCapability = self.pa.get_default_host_api_info()
-        self.logger.debug(str(defaultCapability))
-        self.logger.debug('SAMPLE_RATE: '+str(sopare.config.SAMPLE_RATE))
-        self.logger.debug('CHUNK: '+str(sopare.config.CHUNK))
-        
-
+        self.logger.debug('SAMPLE_RATE: '+str(self.cfg.getintoption('stream', 'SAMPLE_RATE')))
+        self.logger.debug('CHUNK: '+str(self.cfg.getintoption('stream', 'CHUNK')))
 
     def readfromfile(self):
         self.debug_info()
-        self.logger.info("* reading file " + self.hatch.get('infile'))
-        file = io.open(self.hatch.get('infile'), 'rb', buffering = sopare.config.CHUNK)
+        self.logger.info("* reading file " + self.cfg.getoption('cmdlopt', 'infile'))
+        file = io.open(self.cfg.getoption('cmdlopt', 'infile'), 'rb', buffering = self.cfg.getintoption('stream', 'CHUNK'))
         while True:
-            buf = file.read(sopare.config.CHUNK * 2)
+            buf = file.read(self.cfg.getintoption('stream', 'CHUNK') * 2)
             if buf:
                 self.queue.put(buf)
-                if (self.hatch.get('plot') == True):
+                if (self.cfg.getbool('cmdlopt', 'plot') == True):
                     data = numpy.fromstring(buf, dtype=numpy.int16)
-                    self.hatch.extend_plot_cache(data)
+                    self.visual.extend_plot_cache(data)
             else:
                 self.queue.close()
                 break
         file.close()
         once = False
-        if (self.hatch.get('plot') == True):
-            self.visual.create_sample(self.hatch.get_plot_cache(), 'sample.png')
+        if (self.cfg.getbool('cmdlopt', 'plot') == True):
+            self.visual.create_sample(self.visual.get_plot_cache(), 'sample.png')
         while (self.queue.qsize() > 0):
             if (once == False):
                 self.logger.debug('waiting for queue to finish...')
@@ -96,12 +79,13 @@ class recorder():
         sys.exit()
 
     def recording(self):
+        self.stream = self.audio_factory.open(self.cfg.getintoption('stream', 'SAMPLE_RATE'))
         self.debug_info()
         self.logger.info("start endless recording")
         while self.running:
             try:
                 if (self.buffering.is_alive()):
-                    buf = self.stream.read(sopare.config.CHUNK)
+                    buf = self.stream.read(self.cfg.getintoption('stream', 'CHUNK'))
                     self.queue.put(buf)
                 else:
                     self.logger.info("Buffering not alive, stop recording")
@@ -109,7 +93,6 @@ class recorder():
                     break
             except IOError as e:
                 self.logger.warning("stream read error "+str(e))
-
         self.stop()
         sys.exit()
 
@@ -121,6 +104,5 @@ class recorder():
             self.buffering.terminate()
         except:
             pass
-        self.stream.stop_stream()
-        self.stream.close()
-        self.pa.terminate()
+        self.audio_factory.close()
+        self.audio_factory.terminate()

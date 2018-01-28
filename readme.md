@@ -71,6 +71,7 @@ Next steps/TODOs:
 
   * Optimizations (e.g. word separation, performance)
   * Python3 compatibility and testing, install guides
+  * Individual loglevels per class
 
 
 Project status:
@@ -89,7 +90,8 @@ Usage:
 
  -l --loop           : loop forever
 
- -e --error          : redirect sdterr to error.log
+ -e --error          : redirect outpout to error.log
+                       loglevel is forced to error!
 
  -p --plot           : plot results (only without loop option)
 
@@ -113,6 +115,8 @@ Usage:
 
  -d --delete [word]  : delete [word] from dictionary and exits.
                        '*' deletes everything!
+
+ -i --ini    [file]  : use alternative configuration file
 
  -a --analysis       : show dictionary analysis and exits.
 
@@ -140,7 +144,7 @@ python2 sopare.py -c
 ./sopare.py -v -l
 
 
-Changing config options and new SOPARE versions requires re-training.
+Changing config options and new SOPARE versions require re-training.
 Delete your training files and the dictionary entries before continue:
 
 ./sopare.py -d "*"

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright (C) 2015 - 2017 Martin Kauss (yo@bishoph.org)
+Copyright (C) 2015 - 2018 Martin Kauss (yo@bishoph.org)
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may
 not use this file except in compliance with the License. You may obtain
@@ -25,10 +25,15 @@ from sopare.path import __plotdestination__
 class visual:
 
     def __init__(self):
-        self.init = 1
+        self.plot_cache = [ ]
 
     def create_sample(self, data, filename):
         pyplot.plot(data)
         pyplot.savefig(__plotdestination__+filename)
         pyplot.clf()
-   
+
+    def extend_plot_cache(self, data):
+        self.plot_cache.extend(data)
+
+    def get_plot_cache(self):
+        return self.plot_cache

@@ -22,8 +22,8 @@ import test_filter
 
 class unit_tests():
 
-    def __init__(self, debug):
+    def __init__(self, debug, cfg):
         print ('starting analyze tests...')
-        test_analyze.test_analyze(debug)
-        test_filter.test_filter(debug)
+        test_analyze.test_analyze(debug, cfg)
+        test_filter.test_filter(debug, cfg)
         print ('unit_tests run successful!')

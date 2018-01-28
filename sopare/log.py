@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright (C) 2015 - 2017 Martin Kauss (yo@bishoph.org)
+Copyright (C) 2015 - 2018 Martin Kauss (yo@bishoph.org)
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may
 not use this file except in compliance with the License. You may obtain
@@ -18,25 +18,26 @@ under the License.
 """
 
 import logging
-import sopare.config
 
 class log():
 
-    def __init__(self, debug, error):
+    def __init__(self, debug, error, cfg = None):
+        if (error == True):
+            logging.basicConfig(filename='error.log', filemode='a', loglevel='ERROR')
+        else:
+            logging.basicConfig()
         self.logger = logging.getLogger()
         self.logformat = '%(levelname)s: %(message)s'
-        self.loglevel = logging.ERROR
-        if (hasattr(sopare.config, 'LOGFORMAT')):
-            self.logformat = sopare.config.LOGFORMAT
-        if (debug == True):
-            self.loglevel = logging.DEBUG
-        elif (hasattr(sopare.config, 'LOGLEVEL')):
-            self.loglevel = sopare.config.LOGLEVEL
+        self.loglevel = 'ERROR'
+        if (error == False and cfg != None and cfg.hasoption('misc', 'LOGLEVEL')):
+            check = cfg.getoption('misc', 'LOGLEVEL')
+            if (check != ''):
+                self.loglevel = check
+        if (error == False and debug == True):
+            self.loglevel = 'DEBUG'
         self.logger.setLevel(self.loglevel)
         ch = logging.StreamHandler()
         ch.setFormatter(self.logformat)
-        if (error == True):
-            logging.basicConfig(filename='error.log', filemode='a', loglevel=self.loglevel)
 
     def getlog(self):
         return self.logger

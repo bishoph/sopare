@@ -19,15 +19,15 @@ under the License.
 
 import unittest
 import sopare.util as util
-import sopare.config as config
 import sopare.analyze as analyze
 
 class test_analyze(unittest.TestCase):
 
-    def __init__(self, debug):
+    def __init__(self, debug, cfg):
         print ('analyze test preparation...')
-        self.util = util.util(debug)
-        self.analyze = analyze.analyze(debug)
+        self.cfg = cfg
+        self.util = util.util(debug, cfg.getfloatoption('characteristic', 'PEAK_FACTOR'))
+        self.analyze = analyze.analyze(cfg)
         self.test_dict = self.create_test_dict()
         self.dict_analysis = self.analyze.prepare_test_analysis(self.test_dict)
         self.test_analyze_get_match()
@@ -39,7 +39,6 @@ class test_analyze(unittest.TestCase):
 
     def test_analyze_get_match(self):
         print ('testing analyze get_match...')
-  
         # Normal conditions
         for t in range(1,4):
             test_framing, correct_object = self.create_test_framing(t)
@@ -50,7 +49,7 @@ class test_analyze(unittest.TestCase):
         # Testing leading empty results
         test_framing, correct_object = self.create_test_framing(t)
         test_framing.insert(0, '')
-        config.FILL_RESULT_PERCENTAGE = 0.1
+        self.cfg.setoption('compare', 'FILL_RESULT_PERCENTAGE', '0.1')
         result = self.analyze.get_match(test_framing)
         print ('testing leading space '+str(result) + ' == ' + str(correct_object))
         self.assertSequenceEqual(result, correct_object, 'test_analyze_get_match leading results failed!')
@@ -69,7 +68,7 @@ class test_analyze(unittest.TestCase):
         self.assertSequenceEqual(result, correct_object, 'test_analyze_get_match order results failed!')
 
         # Testing strict length
-        config.STRICT_LENGTH_CHECK = True
+        self.cfg.setoption('compare' , 'STRICT_LENGTH_CHECK', 'True')
         #config.STRICT_LENGTH_UNDERMINING = 2
         test_framing, correct_object = self.create_test_framing_order_strict_length()
         result = self.analyze.get_match(test_framing)
@@ -77,12 +76,12 @@ class test_analyze(unittest.TestCase):
         self.assertSequenceEqual(result, correct_object, 'test_analyze_get_match strict length results failed!')
 
         # Testing false leading results
-        config.STRICT_LENGTH_CHECK = True
+        self.cfg.setoption('compare' , 'STRICT_LENGTH_CHECK', 'True')
         test_framing, correct_object = self.create_test_framing_false_leading_results()
         result = self.analyze.get_match(test_framing)
         print ('testing false leading results '+str(result) + ' == ' + str(correct_object))
         self.assertSequenceEqual(result, correct_object, 'test_analyze_get_match false leading results failed!')
-        
+
     def create_test_framing(self, number):
         test_framing = [ ]
         correct_object = [ ]
@@ -116,7 +115,7 @@ class test_analyze(unittest.TestCase):
             single_frames.append(frame)
         test_framing.extend(single_frames[0])
         test_framing.extend(single_frames[1])
-        too_short = single_frames[0][0: len(single_frames[0]) - (config.STRICT_LENGTH_UNDERMINING + 1)]
+        too_short = single_frames[0][0: len(single_frames[0]) - (self.cfg.getintoption('compare', 'STRICT_LENGTH_UNDERMINING') + 1)]
         test_framing.extend(too_short)
         test_framing.extend(single_frames[2])
         correct_object.insert(2, '')

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright (C) 2015 - 2017 Martin Kauss (yo@bishoph.org)
+Copyright (C) 2015 - 2018 Martin Kauss (yo@bishoph.org)
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may
 not use this file except in compliance with the License. You may obtain
@@ -31,9 +31,9 @@ from sopare.path import __wavedestination__
 
 class util:
 
-    def __init__(self, debug):
+    def __init__(self, debug, peak_factor):
         self.debug = debug
-        self.characteristic = sopare.characteristics.characteristic(debug)
+        self.characteristic = sopare.characteristics.characteristic(peak_factor)
         self.cache = { }
 
     def showdictentriesbyid(self):
@@ -118,7 +118,7 @@ class util:
         for o in characteristics:
             characteristic, meta = o
             for m in meta:
-                token = m['token']            
+                token = m['token']
                 if (token != 'stop'):
                     if (characteristic != None):
                         tokens.append(characteristic)
@@ -200,13 +200,13 @@ class util:
         wf.setnchannels(1)
         wf.setsampwidth(2)
         wf.setframerate(44100)
-        data = raw[start:end] 
+        data = raw[start:end]
         wf.writeframes(b''.join(data))
 
     @staticmethod
     def savefilteredwave(filename, buffer):
         scaled = numpy.int16(buffer/numpy.max(numpy.abs(buffer)) * 32767)
-        write(__wavedestination__+filename+'.wav', 44100, scaled)  
+        write(__wavedestination__+filename+'.wav', 44100, scaled)
 
     @staticmethod
     def manhatten_distance(arr1, arr2):

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright (C) 2015 - 2017 Martin Kauss (yo@bishoph.org)
+Copyright (C) 2015 - 2018 Martin Kauss (yo@bishoph.org)
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may
 not use this file except in compliance with the License. You may obtain
@@ -21,22 +21,20 @@ import multiprocessing
 import logging
 import numpy
 import sopare.worker
-import sopare.config
 import sopare.characteristics
-import sopare.hatch
 
 class filtering():
 
-    def __init__(self, hatch):
-        self.hatch = hatch
+    def __init__(self, cfg):
+        self.cfg = cfg
         self.first = True
         self.queue = multiprocessing.Queue()
-        self.characteristic = sopare.characteristics.characteristic(self.hatch)
-        self.worker = sopare.worker.worker(self.hatch, self.queue)
+        self.characteristic = sopare.characteristics.characteristic(self.cfg.getfloatoption('characteristic', 'PEAK_FACTOR'))
+        self.worker = sopare.worker.worker(self.cfg, self.queue)
         self.data_shift = [ ]
         self.last_data = None
         self.data_shift_counter = 0
-        self.logger = self.hatch.get('logger').getlog()
+        self.logger = self.cfg.getlogger().getlog()
         self.logger = logging.getLogger(__name__)
 
     def stop(self):
@@ -54,17 +52,16 @@ class filtering():
                 return True
         return False
 
-    @staticmethod
-    def get_chunked_norm(nfft):
+    def get_chunked_norm(self, nfft):
         chunked_norm = [ ]
         progessive = 1
-        i = sopare.config.MIN_PROGRESSIVE_STEP
+        i = self.cfg.getintoption('characteristic', 'MIN_PROGRESSIVE_STEP')
         for x in range(0, nfft.size, i):
-            if (hasattr(sopare.config, 'START_PROGRESSIVE_FACTOR')  and x >= sopare.config.START_PROGRESSIVE_FACTOR):
-                progessive += progessive * sopare.config.PROGRESSIVE_FACTOR
+            if (self.cfg.hasoption('characteristic', 'START_PROGRESSIVE_FACTOR') and x >= self.cfg.getfloatoption('characteristic', 'START_PROGRESSIVE_FACTOR')):
+                progessive += progessive * pf
                 i += int(progessive)
-                if (i > sopare.config.MAX_PROGRESSIVE_STEP):
-                    i = sopare.config.MAX_PROGRESSIVE_STEP
+                if (i > self.cfg.getintoption('characteristic', 'MAX_PROGRESSIVE_STEP')):
+                    i = self.cfg.getintoption('characteristic', 'MAX_PROGRESSIVE_STEP')
             chunked_norm.append( nfft[x:x+i].sum() )
         return numpy.array(chunked_norm)
 
@@ -80,7 +77,7 @@ class filtering():
             self.data_shift = [ ]
             self.data_shift_counter = 0
         if (self.data_shift_counter == 0):
-            self.data_shift = [ v for v in range(0, sopare.config.CHUNKS/2) ]
+            self.data_shift = [ v for v in range(0, self.cfg.getintoption('stream', 'CHUNKS')/2) ]
             self.data_shift.extend(data[len(data)/2:])
         elif (self.data_shift_counter == 1):
             self.data_shift = self.data_shift[len(self.data_shift)/2:]
@@ -91,13 +88,13 @@ class filtering():
 
         self.last_data = data
         self.data_shift_counter += 1
-                    
+
     def filter(self, data, meta):
         self.n_shift(data)
         shift_fft = None
-        if (self.first == False or sopare.config.HANNING == False or len(data) < sopare.config.CHUNK):
+        if (self.first == False or self.cfg.getbool('characteristic', 'HANNING') == False or len(data) < self.cfg.getintoption('stream', 'CHUNKS')):
             fft = numpy.fft.rfft(data)
-            if (len(self.data_shift) >= sopare.config.CHUNKS):
+            if (len(self.data_shift) >= self.cfg.getintoption('stream', 'CHUNKS')):
                 shift_fft = numpy.fft.rfft(self.data_shift)
             self.first = self.check_for_windowing(meta)
         elif (self.first == True):
@@ -107,17 +104,17 @@ class filtering():
                 hl += 1
             hw = numpy.hanning(hl)
             fft = numpy.fft.rfft(data * hw)
-            if (len(self.data_shift) >= sopare.config.CHUNKS):
+            if (len(self.data_shift) >= self.cfg.getintoption('stream', 'CHUNKS')):
                 hl = len(self.data_shift)
                 if (hl % 2 != 0):
                     hl += 1
                 hw = numpy.hanning(hl)
                 shift_fft = numpy.fft.rfft(self.data_shift * hw)
                 self.first = False
-        fft[sopare.config.HIGH_FREQ:] = 0
-        fft[:sopare.config.LOW_FREQ] = 0
+        fft[self.cfg.getintoption('characteristic', 'HIGH_FREQ'):] = 0
+        fft[:self.cfg.getintoption('characteristic', 'LOW_FREQ')] = 0
         data = numpy.fft.irfft(fft)
-        nfft = fft[sopare.config.LOW_FREQ:sopare.config.HIGH_FREQ]
+        nfft = fft[self.cfg.getintoption('characteristic', 'LOW_FREQ'):self.cfg.getintoption('characteristic', 'HIGH_FREQ')]
         nfft = numpy.abs(nfft)
         nfft[nfft == 0] = numpy.NaN
         nfft = numpy.log10(nfft)**2
@@ -130,11 +127,11 @@ class filtering():
             normalized = self.normalize(chunked_norm)
         characteristic = self.characteristic.getcharacteristic(fft, normalized, meta)
 
-        if (shift_fft != None and (hasattr(sopare.config, 'FFT_SHIFT') and sopare.config.FFT_SHIFT == True)):
-            shift_fft[sopare.config.HIGH_FREQ:] = 0
-            shift_fft[:sopare.config.LOW_FREQ] = 0
+        if ((shift_fft is not None) and self.cfg.hasoption('experimental', 'FFT_SHIFT') and self.cfg.getbool('experimental', 'FFT_SHIFT') == True):
+            shift_fft[self.cfg.getintoption('characteristic', 'HIGH_FREQ'):] = 0
+            shift_fft[:self.cfg.getintoption('characteristic', 'LOW_FREQ')] = 0
             shift_data = numpy.fft.irfft(shift_fft)
-            shift_nfft = fft[sopare.config.LOW_FREQ:sopare.config.HIGH_FREQ]
+            shift_nfft = fft[self.cfg.getintoption('characteristic', 'LOW_FREQ'):self.cfg.getintoption('characteristic', 'HIGH_FREQ')]
             shift_nfft = numpy.abs(nfft)
             shift_nfft[nfft == 0] = numpy.NaN
             shift_nfft = numpy.log10(nfft)**2
@@ -147,7 +144,7 @@ class filtering():
                 shift_normalized = self.normalize(shift_chunked_norm)
             # TODO: Do some shift meta magic!
             shift_characteristic = self.characteristic.getcharacteristic(shift_fft, shift_normalized, meta)
-            characteristic['shift'] = shift_characteristic 
+            characteristic['shift'] = shift_characteristic
 
         obj = { 'action': 'data', 'token': data, 'fft': fft, 'norm': normalized, 'meta': meta, 'characteristic': characteristic }
         self.queue.put(obj)

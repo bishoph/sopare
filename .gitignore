@@ -7,4 +7,5 @@
 *.png
 error.log
 plugins/*
+config/*
 

@@ -22,6 +22,13 @@ import unittest
 import pyaudio
 import audioop
 import math
+import time
+import sys
+import test_multi
+sys.path.append('../sopare')
+import sopare.log
+import sopare.config
+import sopare.audio_factory
 
 class test_audio(unittest.TestCase):
 
@@ -35,25 +42,14 @@ class test_audio(unittest.TestCase):
         self.good_chunks = [ ]
         self.silence = [ ]
         self.stream = None
-        self.pa = pyaudio.PyAudio()
-        print ('\n\n##### Default input device info #####')
-        for k, v in self.pa.get_default_input_device_info().iteritems():
-            print (str(k) + ': ' + str(v))
-        print ('#####################################\n\n')
 
-    def open(self, sample_rate, chunk):
-        test_result = False
-        try:
-            self.stream = self.pa.open(format = pyaudio.paInt16,
-                channels = 1,
-                rate=sample_rate,
-                input=True,
-                output=False)
-            test_result = True
-        except IOError as e:
-            test_result = False
-            print ("Error: " + str(e))
-        return test_result
+        cfg = sopare.config.config()
+        logger = sopare.log.log(True, False)
+        cfg.addlogger(logger)
+
+        self.audio_factory = sopare.audio_factory.audio_factory(cfg)
+        self.queue = multiprocessing.JoinableQueue()
+        self.multi = test_multi.multi(self.queue)
 
     def read(self, chunks, loops):
         test_result = False
@@ -61,6 +57,7 @@ class test_audio(unittest.TestCase):
         try:
             for x in range(loops):
                 buf = self.stream.read(chunks)
+                self.queue.put(buf)
                 current_vol = audioop.rms(buf, 2)
                 if (current_vol > vol):
                     vol = current_vol
@@ -78,27 +75,24 @@ class test_audio(unittest.TestCase):
     def test_sample_rates(self):
         print ('testing different SAMPLE_RATEs ... this may take a while!\n\n')
         for test_sample_rate in test_audio.SAMPLE_RATES:
-            test_result = ta.open(test_sample_rate, test_sample_rate)
-            if (test_result == True):
-                self.good_sample_rates.append(test_sample_rate)
+            self.stream = self.audio_factory.open(test_sample_rate)
             if (self.stream != None):
-                self.stream.close()
+                self.good_sample_rates.append(test_sample_rate)
+                self.audio_factory.close()
 
     def test_chunks(self):
         print ('testing different CHUNK sizes ... this may take a while!\n\n')
         for good_sample_rate in self.good_sample_rates:
             for chunks in test_audio.CHUNKS:
-                test_result = ta.open(good_sample_rate, chunks)
-                if (test_result == True):
+                self.stream = self.audio_factory.open(good_sample_rate)
+                if (self.stream != None):
                     if (good_sample_rate not in test_audio.TEST_RESULTS):
                         test_audio.TEST_RESULTS[good_sample_rate] = [ ]
                     read_test_result = ta.read(chunks, 10)
                     if (read_test_result == True):
                         self.good_chunks.append(chunks)
                         test_audio.TEST_RESULTS[good_sample_rate].append(chunks)
-                        
-                if (self.stream != None):
-                    self.stream.close()
+                self.audio_factory.close()
 
     def test_results(self):
         recommendations = { }
@@ -109,7 +103,7 @@ class test_audio(unittest.TestCase):
                 found = True
         print ('\n\n')
         if (found == True):
-            best = sorted(recommendations, key=recommendations.__getitem__, reverse=True)
+            best = sorted(recommendations, key=recommendations.__getitem__, reverse = True)
             print ('Your sopare/config.py recommendations:\n')
             print ('SAMPLE_RATE = '+str(max(best)))
             print ('CHUNK = '+str(min(test_audio.TEST_RESULTS[best[0]])))
@@ -120,8 +114,19 @@ class test_audio(unittest.TestCase):
             print ('However, here are the sucessful tested sample rates:')
             print (str(test_audio.TEST_RESULTS))
 
+    def stop(self):
+        while (self.queue.qsize() > 0):
+            time.sleep(.1) # wait for all threads to finish their work
+        self.queue.close()
+        self.multi.stop()
+        self.queue.join_thread()
+        self.audio_factory.close()
+        self.audio_factory.terminate()
+        sys.exit()
+
 ta = test_audio()
 ta.test_environment()
 ta.test_sample_rates()
 ta.test_chunks()
 ta.test_results()
+ta.stop()
