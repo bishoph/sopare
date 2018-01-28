@@ -127,7 +127,7 @@ class filtering():
             normalized = self.normalize(chunked_norm)
         characteristic = self.characteristic.getcharacteristic(fft, normalized, meta)
 
-        if (shift_fft != None and self.cfg.hasoption('experimental', 'FFT_SHIFT') and self.cfg.getbool('experimental', 'FFT_SHIFT') == True):
+        if ((shift_fft is not None) and self.cfg.hasoption('experimental', 'FFT_SHIFT') and self.cfg.getbool('experimental', 'FFT_SHIFT') == True):
             shift_fft[self.cfg.getintoption('characteristic', 'HIGH_FREQ'):] = 0
             shift_fft[:self.cfg.getintoption('characteristic', 'LOW_FREQ')] = 0
             shift_data = numpy.fft.irfft(shift_fft)
