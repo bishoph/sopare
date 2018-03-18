@@ -117,7 +117,9 @@ class analyze():
         sim_norm = self.util.similarity(characteristic['norm'], dcharacteristic['norm']) * self.cfg.getfloatoption('compare', 'SIMILARITY_NORM')
         sim_token_peaks = self.util.similarity(characteristic['token_peaks'], dcharacteristic['token_peaks']) * self.cfg.getfloatoption('compare', 'SIMILARITY_HEIGHT')
         sim_df = self.util.single_similarity(characteristic['df'], dcharacteristic['df']) * self.cfg.getfloatoption('compare', 'SIMILARITY_DOMINANT_FREQUENCY')
-        sim = sim_norm + sim_token_peaks + sim_df
+        sim_zcr = self.util.single_similarity(characteristic['zcr'], dcharacteristic['zcr']) * self.cfg.getfloatoption('compare', 'SIMILARITY_ZERO_CROSSING_RATE')
+
+        sim = sim_norm + sim_token_peaks + sim_df + sim_zcr
         sl, sr = self.util.manhatten_distance(characteristic['norm'], dcharacteristic['norm'])
         return sim, sl, sr
 

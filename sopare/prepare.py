@@ -92,6 +92,7 @@ class preparing():
 
     def prepare(self, buf, volume):
         data = numpy.fromstring(buf, dtype=numpy.int16)
+        zcr = ((data[:-1] * data[1:]) < 0).sum()
         if (self.cfg.getbool('cmdlopt', 'plot') == True and self.cfg.getbool('cmdlopt', 'endless_loop') == False):
             self.visual.extend_plot_cache(data)
         self.buffer.extend(data)
@@ -107,7 +108,7 @@ class preparing():
                 self.new_word = True
                 self.entered_silence = True
                 self.peaks.extend(self.token_peaks)
-                meta.append({ 'token': 'start analysis', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'token_peaks': self.token_peaks, 'peaks': self.peaks })
+                meta.append({ 'token': 'start analysis', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume, 'zcr': zcr, 'token_peaks': self.token_peaks, 'peaks': self.peaks })
                 self.peaks = [ ]
             elif (self.silence > self.cfg.getintoption('stream', 'LONG_SILENCE')):
                 meta.append({ 'token': 'noop', 'silence': self.silence, 'pos': self.counter, 'adapting': adaptive, 'volume': volume })

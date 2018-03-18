@@ -38,7 +38,8 @@ class characteristic:
             fc = round(numpy.sum(numpy.sqrt(npeaks)), 1)
         token_peaks = self.get_token_peaks(meta)
         volume = self.get_volume(meta)
-        model_characteristic = {'df': df, 'dfm': dfm, 'fc': fc, 'peaks': peaks, 'token_peaks': token_peaks, 'volume': volume, 'norm': chunked_norm }
+        zcr =  self.get_zcr(meta)
+        model_characteristic = {'df': df, 'dfm': dfm, 'fc': fc, 'zcr': zcr, 'peaks': peaks, 'token_peaks': token_peaks, 'volume': volume, 'norm': chunked_norm }
         return model_characteristic
 
     @staticmethod
@@ -56,3 +57,12 @@ class characteristic:
             if ('volume' in m):
                 return m['volume']
         return volume
+
+    @staticmethod
+    def get_zcr(meta):
+        zcr = 0
+        for m in meta:
+            if ('zcr' in m):
+                return m['zcr']
+        return zcr
+
