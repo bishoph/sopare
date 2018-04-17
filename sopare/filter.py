@@ -59,7 +59,8 @@ class filtering():
         for x in range(0, nfft.size, i):
             if (self.cfg.hasoption('characteristic', 'START_PROGRESSIVE_FACTOR') and x >= self.cfg.getfloatoption('characteristic', 'START_PROGRESSIVE_FACTOR')):
                 progessive += progessive * self.cfg.getfloatoption('characteristic', 'START_PROGRESSIVE_FACTOR')
-                i += int(progessive)
+                if (progessive != float('inf')):
+                    i += int(progessive)
                 if (i > self.cfg.getintoption('characteristic', 'MAX_PROGRESSIVE_STEP')):
                     i = self.cfg.getintoption('characteristic', 'MAX_PROGRESSIVE_STEP')
             chunked_norm.append( nfft[x:x+i].sum() )
