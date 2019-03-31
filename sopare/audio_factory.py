@@ -34,7 +34,11 @@ class audio_factory():
         if (self.debug_once == False):
             self.logger.debug('#### Default input device info #####')
             for k, v in self.pa.get_default_input_device_info().iteritems():
-                self.logger.debug(str(k) + ': ' + str(v))
+                if (not isinstance(k, str)):
+                    k = str(k)
+                if (not isinstance(v, str)):
+                    v = str(v)
+                self.logger.debug(k.encode('utf-8') + ': ' + v.encode('utf-8'))
             self.debug_once = True
         try:
             self.stream = self.pa.open(format = input_format,
