@@ -133,7 +133,7 @@ def delete_word(dict, debug):
     if (dict != "*"):
         print ("deleting "+dict+" from dictionary")
     else:
-        print ("deleting all enttries from dictionary")
+        print ("deleting all entries from dictionary")
     utilities = util.util(debug, None)
     utilities.deletefromdict(dict)
 
