@@ -36,6 +36,7 @@ class filtering():
         self.data_shift_counter = 0
         self.logger = self.cfg.getlogger().getlog()
         self.logger = logging.getLogger(__name__)
+        numpy.seterr(divide = 'ignore') 
 
     def stop(self):
         self.queue.put({ 'action': 'stop' })
@@ -119,7 +120,7 @@ class filtering():
         nfft = numpy.abs(nfft)
         nfft[nfft == 0] = numpy.NaN
         nfft = numpy.log10(nfft)**2
-        nfft[numpy.isnan(nfft)] = 0
+        nfft[numpy.isnan(nfft)] = 10**-10
         nam = numpy.amax(nfft)
         normalized = [0]
         if (nam > 0):
@@ -136,7 +137,7 @@ class filtering():
             shift_nfft = numpy.abs(nfft)
             shift_nfft[nfft == 0] = numpy.NaN
             shift_nfft = numpy.log10(nfft)**2
-            shift_nfft[numpy.isnan(shift_nfft)] = 0
+            shift_nfft[numpy.isnan(shift_nfft)] = 10**-10
             shift_nam = numpy.amax(shift_nfft)
             shift_normalized = [0]
             if (shift_nam > 0):
