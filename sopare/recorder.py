@@ -67,7 +67,7 @@ class recorder():
         once = False
         if (self.cfg.getbool('cmdlopt', 'plot') == True):
             self.visual.create_sample(self.visual.get_plot_cache(), 'sample.png')
-        while (self.queue.qsize() > 0):
+        while (self.queue.full()):
             if (once == False):
                 self.logger.debug('waiting for queue to finish...')
                 once = True
