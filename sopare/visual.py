@@ -17,6 +17,7 @@ License for the specific language governing permissions and limitations
 under the License.
 """
 
+import numpy
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as pyplot
@@ -28,7 +29,7 @@ class visual:
         self.plot_cache = [ ]
 
     def create_sample(self, data, filename):
-        pyplot.plot(data)
+        pyplot.plot(numpy.real(data))
         pyplot.savefig(__plotdestination__+filename)
         pyplot.clf()
 
