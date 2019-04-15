@@ -36,7 +36,7 @@ class filtering():
         self.data_shift_counter = 0
         self.logger = self.cfg.getlogger().getlog()
         self.logger = logging.getLogger(__name__)
-        numpy.seterr(divide = 'ignore') 
+        numpy.seterr(divide = 'ignore')
 
     def stop(self):
         self.queue.put({ 'action': 'stop' })

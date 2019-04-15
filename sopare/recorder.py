@@ -72,6 +72,7 @@ class recorder():
                 self.logger.debug('waiting for queue to finish...')
                 once = True
             time.sleep(.1) # wait for all threads to finish their work
+        self.queue.join_thread()
         self.queue.close()
         self.buffering.flush('end of file')
         self.logger.info("* done ")
