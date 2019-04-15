@@ -72,8 +72,8 @@ class recorder():
                 self.logger.debug('waiting for queue to finish...')
                 once = True
             time.sleep(.1) # wait for all threads to finish their work
-        self.queue.join_thread()
         self.queue.close()
+        self.queue.join_thread()
         self.buffering.flush('end of file')
         self.logger.info("* done ")
         self.stop()
@@ -90,6 +90,7 @@ class recorder():
                     self.queue.put(buf)
                 else:
                     self.logger.info("Buffering not alive, stop recording")
+                    time.sleep(.1) # wait for other threads to avoid broken pipe
                     self.queue.close()
                     break
             except IOError as e:

@@ -129,6 +129,7 @@ class worker(multiprocessing.Process):
             self.save_wave_buf()
 
         self.queue.close()
+        self.queue.join_thread()
 
         if (self.cfg.getbool('cmdlopt', 'plot') == True):
             self.visual.create_sample(self.rawfft, 'fft.png')
