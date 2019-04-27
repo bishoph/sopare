@@ -59,6 +59,8 @@ class processor():
             self.silence_timer = time.time()
             if (self.append == False):
                 self.logger.info('starting append mode')
+                self.logger.debug('volume: ' + str(volume))
+                self.logger.debug('THRESHOLD: ' + str(self.cfg.getintoption('stream', 'THRESHOLD')))
                 self.timer = time.time()
                 for sbuf in self.silence_buffer:
                     self.prepare.prepare(sbuf, audioop.rms(sbuf, 2))
