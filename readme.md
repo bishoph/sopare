@@ -44,17 +44,8 @@ Installation:
 
  Just checkout the project and resolve the dependencies:
 
- git clone https://github.com/bishoph/sopare.git
+ `git clone https://github.com/bishoph/sopare.git`
 
- Then you should create the following directories:
-
-`
- tokens
-`
-
-` 
- samples
-`
 
 Abstract:
 
