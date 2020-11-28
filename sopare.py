@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright (C) 2015 - 2018 Martin Kauss (yo@bishoph.org)
+Copyright (C) 2015 - 2019 Martin Kauss (yo@bishoph.org)
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may
 not use this file except in compliance with the License. You may obtain
@@ -133,7 +133,7 @@ def delete_word(dict, debug):
     if (dict != "*"):
         print ("deleting "+dict+" from dictionary")
     else:
-        print ("deleting all enttries from dictionary")
+        print ("deleting all entries from dictionary")
     utilities = util.util(debug, None)
     utilities.deletefromdict(dict)
 

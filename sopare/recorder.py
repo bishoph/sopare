@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright (C) 2015 - 2018 Martin Kauss (yo@bishoph.org)
+Copyright (C) 2015 - 2019 Martin Kauss (yo@bishoph.org)
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may
 not use this file except in compliance with the License. You may obtain
@@ -67,12 +67,13 @@ class recorder():
         once = False
         if (self.cfg.getbool('cmdlopt', 'plot') == True):
             self.visual.create_sample(self.visual.get_plot_cache(), 'sample.png')
-        while (self.queue.qsize() > 0):
+        while (self.queue.full()):
             if (once == False):
                 self.logger.debug('waiting for queue to finish...')
                 once = True
             time.sleep(.1) # wait for all threads to finish their work
         self.queue.close()
+        self.queue.join_thread()
         self.buffering.flush('end of file')
         self.logger.info("* done ")
         self.stop()
@@ -89,6 +90,7 @@ class recorder():
                     self.queue.put(buf)
                 else:
                     self.logger.info("Buffering not alive, stop recording")
+                    time.sleep(.1) # wait for other threads to avoid broken pipe
                     self.queue.close()
                     break
             except IOError as e:

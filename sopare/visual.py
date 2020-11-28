@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright (C) 2015 - 2018 Martin Kauss (yo@bishoph.org)
+Copyright (C) 2015 - 2019 Martin Kauss (yo@bishoph.org)
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may
 not use this file except in compliance with the License. You may obtain
@@ -17,6 +17,7 @@ License for the specific language governing permissions and limitations
 under the License.
 """
 
+import numpy
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as pyplot
@@ -28,7 +29,7 @@ class visual:
         self.plot_cache = [ ]
 
     def create_sample(self, data, filename):
-        pyplot.plot(data)
+        pyplot.plot(numpy.real(data))
         pyplot.savefig(__plotdestination__+filename)
         pyplot.clf()
 

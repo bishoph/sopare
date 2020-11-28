@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright (C) 2015 - 2018 Martin Kauss (yo@bishoph.org)
+Copyright (C) 2015 - 2019 Martin Kauss (yo@bishoph.org)
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may
 not use this file except in compliance with the License. You may obtain
@@ -36,6 +36,7 @@ class filtering():
         self.data_shift_counter = 0
         self.logger = self.cfg.getlogger().getlog()
         self.logger = logging.getLogger(__name__)
+        numpy.seterr(divide = 'ignore')
 
     def stop(self):
         self.queue.put({ 'action': 'stop' })
@@ -54,12 +55,13 @@ class filtering():
 
     def get_chunked_norm(self, nfft):
         chunked_norm = [ ]
-        progessive = 1
+        progressive = 1
         i = self.cfg.getintoption('characteristic', 'MIN_PROGRESSIVE_STEP')
         for x in range(0, nfft.size, i):
             if (self.cfg.hasoption('characteristic', 'START_PROGRESSIVE_FACTOR') and x >= self.cfg.getfloatoption('characteristic', 'START_PROGRESSIVE_FACTOR')):
-                progessive += progessive * pf
-                i += int(progessive)
+                progressive += progressive * self.cfg.getfloatoption('characteristic', 'START_PROGRESSIVE_FACTOR')
+                if (progressive != float('inf')):
+                    i += int(progressive)
                 if (i > self.cfg.getintoption('characteristic', 'MAX_PROGRESSIVE_STEP')):
                     i = self.cfg.getintoption('characteristic', 'MAX_PROGRESSIVE_STEP')
             chunked_norm.append( nfft[x:x+i].sum() )
@@ -118,7 +120,7 @@ class filtering():
         nfft = numpy.abs(nfft)
         nfft[nfft == 0] = numpy.NaN
         nfft = numpy.log10(nfft)**2
-        nfft[numpy.isnan(nfft)] = 0
+        nfft[numpy.isnan(nfft)] = 10**-10
         nam = numpy.amax(nfft)
         normalized = [0]
         if (nam > 0):
@@ -135,7 +137,7 @@ class filtering():
             shift_nfft = numpy.abs(nfft)
             shift_nfft[nfft == 0] = numpy.NaN
             shift_nfft = numpy.log10(nfft)**2
-            shift_nfft[numpy.isnan(shift_nfft)] = 0
+            shift_nfft[numpy.isnan(shift_nfft)] = 10**-10
             shift_nam = numpy.amax(shift_nfft)
             shift_normalized = [0]
             if (shift_nam > 0):
