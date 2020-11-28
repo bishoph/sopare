@@ -9,3 +9,5 @@ error.log
 plugins/*
 config/*
 
+/tokens
+/samples
