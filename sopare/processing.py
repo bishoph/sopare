@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright (C) 2015 - 2019 Martin Kauss (yo@bishoph.org)
+Copyright (C) 2015 - 2021 Martin Kauss (yo@bishoph.org)
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may
 not use this file except in compliance with the License. You may obtain
@@ -19,7 +19,7 @@ under the License.
 
 import logging
 import audioop
-import prepare
+import sopare.prepare
 import time
 import io
 
@@ -36,7 +36,7 @@ class processor():
         self.timer = 0
         self.silence_timer = 0
         self.silence_buffer = [ ]
-        self.prepare = prepare.preparing(self.cfg)
+        self.prepare = sopare.prepare.preparing(self.cfg)
         self.logger = self.cfg.getlogger().getlog()
         self.logger = logging.getLogger(__name__)
 

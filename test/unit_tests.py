@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright (C) 2015 - 2019 Martin Kauss (yo@bishoph.org)
+Copyright (C) 2015 - 2021 Martin Kauss (yo@bishoph.org)
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may
 not use this file except in compliance with the License. You may obtain
@@ -17,13 +17,13 @@ License for the specific language governing permissions and limitations
 under the License.
 """
 
-import test_analyze
-import test_filter
+import test.test_analyze
+import test.test_filter
 
 class unit_tests():
 
     def __init__(self, debug, cfg):
         print ('starting analyze tests...')
-        test_analyze.test_analyze(debug, cfg)
-        test_filter.test_filter(debug, cfg)
+        test.test_analyze.test_analyze(debug, cfg)
+        test.test_filter.test_filter(debug, cfg)
         print ('unit_tests run successful!')

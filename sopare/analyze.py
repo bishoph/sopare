@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright (C) 2015 - 2019 Martin Kauss (yo@bishoph.org)
+Copyright (C) 2015 - 2021 Martin Kauss (yo@bishoph.org)
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may
 not use this file except in compliance with the License. You may obtain
@@ -195,7 +195,7 @@ class analyze():
                 self.logger.debug('loading and initialzing '+pluginpath)
                 f, filename, description = imp.find_module('__init__', [pluginpath])
                 self.plugins.append(imp.load_module(plugin, f, filename, description))
-            except ImportError, err:
+            except ImportError as err:
                 self.logger.error('ImportError: %s', err)
 
     def reset(self):

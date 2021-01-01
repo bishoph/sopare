@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright (C) 2015 - 2019 Martin Kauss (yo@bishoph.org)
+Copyright (C) 2015 - 2021 Martin Kauss (yo@bishoph.org)
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may
 not use this file except in compliance with the License. You may obtain
@@ -58,7 +58,7 @@ class audio_factory():
                 except IOError as ioe:
                     raise Exception('Could not open device number {0}: {1}'
                                     .format(device, ioe))
-            for k, v in device_info.iteritems():
+            for k, v in device_info.items():
                 self.logger.debug(str(k) + ': ' + str(v))
             self.debug_once = True
         try:

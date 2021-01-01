@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright (C) 2015 - 2019 Martin Kauss (yo@bishoph.org)
+Copyright (C) 2015 - 2021 Martin Kauss (yo@bishoph.org)
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may
 not use this file except in compliance with the License. You may obtain
@@ -17,12 +17,20 @@ License for the specific language governing permissions and limitations
 under the License.
 """
 
-import ConfigParser
+
+try:
+    import configparser
+except ImportError:
+    import ConfigParser
 
 class config():
 
     def __init__(self, config_file = 'config/default.ini'):
-        self.config = ConfigParser.ConfigParser(allow_no_value=True)
+        self.config = None
+        try:
+            self.config = configparser.ConfigParser(allow_no_value=True)
+        except:
+            self.config = ConfigParser.ConfigParser(allow_no_value=True)
         self.config.read(config_file)
         self.logger = None
 

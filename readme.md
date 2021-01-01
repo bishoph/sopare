@@ -2,7 +2,7 @@ This is the **SO**und **PA**ttern **RE**cognition project written in Python.
 In a nutshell the project is able to listen in real time to microphone input
 and detect patterns (like words) in the stream based on simple characteristics.
 The output is an array of potential best guess matches. SOPARE works offline
-and was tested successfully on a Raspberry Pi 2/3 and on a Banana Pi.
+and was tested successfully on a Raspberry Pi 2/3/4 and on a Banana Pi.
 
 
 Here is an example output for the spoken words 'light off' in German:
@@ -33,11 +33,17 @@ Examples of use:
 
 Dependencies:
 
-  * python
+  * python2
   * pyaudio (apt-get install python-pyaudio)
   * numpy (apt-get install python-numpy)
   * scipy (apt-get install python-scipy)
   * mathplot (apt-get install python-matplotlib)
+
+  * python3
+  * pyaudio (apt-get install python3-pyaudio)
+  * numpy (apt-get install python3-numpy)
+  * scipy (apt-get install python3-scipy)
+  * mathplot (apt-get install python3-matplotlib)
 
 
 Installation:
@@ -71,7 +77,7 @@ Project status:
   * Word separation is not perfect
   * Runs on several PIs 24/7 and controls smart home devices, smart mirrors, robots and alike
   * False positive rate is near zero for two-word recognition
-  * Help needed in terms of python3 (numpy/scipy/pyaudio dependencies, installation, documentation, ...)
+  * Help needed in terms of python 3 testing
 
 
 Usage:
